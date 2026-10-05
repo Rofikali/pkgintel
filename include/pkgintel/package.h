@@ -2,22 +2,8 @@
 #define PKGINTEL_PACKAGE_H
 #include <stdint.h>
 #include "snapshot.h"
-typedef enum pkg_installation_state {
-    PKG_INSTALLATION_UNKNOWN = 0,
-    PKG_INSTALLATION_INSTALLED = 1,
-    PKG_INSTALLATION_PARTIAL = 2,
-    PKG_INSTALLATION_REMOVED = 3
-} pkg_installation_state;
-typedef enum pkg_consistency_state {
-    PKG_CONSISTENCY_UNKNOWN = 0,
-    PKG_CONSISTENCY_CONSISTENT = 1,
-    PKG_CONSISTENCY_INCONSISTENT = 2,
-    PKG_CONSISTENCY_MISSING_ARTIFACT = 3,
-    PKG_CONSISTENCY_BROKEN_LINK = 4,
-    PKG_CONSISTENCY_PERMISSION_DENIED = 5,
-    PKG_CONSISTENCY_UNEXPECTED_ARTIFACT = 6,
-    PKG_CONSISTENCY_UNVERIFIABLE = 7
-} pkg_consistency_state;
+typedef enum pkg_installation_state { PKG_INSTALLATION_UNKNOWN=0, PKG_INSTALLATION_INSTALLED=1, PKG_INSTALLATION_PARTIAL=2, PKG_INSTALLATION_REMOVED=3 } pkg_installation_state;
+typedef enum pkg_consistency_state { PKG_CONSISTENCY_UNKNOWN=0, PKG_CONSISTENCY_CONSISTENT=1, PKG_CONSISTENCY_INCONSISTENT=2, PKG_CONSISTENCY_MISSING_ARTIFACT=3, PKG_CONSISTENCY_BROKEN_LINK=4, PKG_CONSISTENCY_PERMISSION_DENIED=5, PKG_CONSISTENCY_UNEXPECTED_ARTIFACT=6, PKG_CONSISTENCY_UNVERIFIABLE=7 } pkg_consistency_state;
 pkg_string_view pkg_package_name(const pkg_package *package);
 pkg_string_view pkg_package_version(const pkg_package *package);
 pkg_string_view pkg_package_architecture(const pkg_package *package);
