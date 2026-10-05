@@ -11,9 +11,7 @@ static char *trim_newline(char *value) {
     size_t len;
     if (value == NULL) return NULL;
     len = strlen(value);
-    while (len > 0U && (value[len - 1U] == '\n' || value[len - 1U] == '\r')) {
-        value[--len] = '\0';
-    }
+    while (len > 0U && (value[len - 1U] == '\n' || value[len - 1U] == '\r')) value[--len] = '\0';
     return value;
 }
 
@@ -28,14 +26,13 @@ static int parse_u64_decimal(const char *value, uint64_t *out) {
     return 0;
 }
 
-static int append_package(pkg_scan_result *result, const pkg_scan_options *options,
+static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
                           const char *name, const char *version, const char *architecture,
                           uint64_t installed_size) {
     pkg_package_record *grown;
     size_t next_count;
     if (result == NULL || name == NULL || version == NULL || architecture == NULL) return -1;
-    if (options != NULL && options->max_packages != 0U &&
-        result->package_count >= (size_t)options->max_packages) return 1;
+    if (options != NULL && options->max_packages != 0U && result->package_count >= (size_t)options->max_packages) return 1;
     if (result->package_count > SIZE_MAX / sizeof(*grown) - 1U) return -1;
     next_count = result->package_count + 1U;
     grown = realloc(result->packages, next_count * sizeof(*grown));
@@ -51,9 +48,7 @@ static int append_package(pkg_scan_result *result, const pkg_scan_options *optio
     grown[result->package_count].invalid_path_count = 0U;
     grown[result->package_count].artifact_start = 0U;
     grown[result->package_count].artifact_count = 0U;
-    if (grown[result->package_count].name == NULL ||
-        grown[result->package_count].version == NULL ||
-        grown[result->package_count].architecture == NULL) {
+    if (grown[result->package_count].name == NULL || grown[result->package_count].version == NULL || grown[result->package_count].architecture == NULL) {
         free(grown[result->package_count].name);
         free(grown[result->package_count].version);
         free(grown[result->package_count].architecture);
@@ -76,40 +71,22 @@ static int package_record_compare(const void *left, const void *right) {
     return strcmp(a->version, b->version);
 }
 
-static int is_installed_status(const char *status) {
-    const char *last_space;
-    if (status == NULL) return 0;
-    last_space = strrchr(status, ' ');
-    return last_space != NULL && strcmp(last_space + 1, "installed") == 0;
-}
-
 static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_package_record *package,
                              const pkg_scan_options *options) {
     char path[4096];
-    int written;
-    int fd;
+    int written, fd;
     FILE *file;
     char *line = NULL;
     size_t capacity = 0U;
-    uint64_t count = 0U;
-    uint64_t missing = 0U;
-    uint64_t invalid = 0U;
+    uint64_t count = 0U, missing = 0U, invalid = 0U;
     int malformed = 0;
-
     if (target == NULL || result == NULL || package == NULL) return -1;
     written = snprintf(path, sizeof(path), "/var/lib/dpkg/info/%s.list", package->name);
     if (written < 0 || (size_t)written >= sizeof(path)) return -1;
-
     fd = pkg_target_open_path(target, path, O_RDONLY | O_CLOEXEC);
-    if (fd < 0) {
-        if (errno == ENOENT) return 1;
-        return -1;
-    }
+    if (fd < 0) return errno == ENOENT ? 1 : -1;
     file = fdopen(fd, "rb");
-    if (file == NULL) {
-        (void)close(fd);
-        return -1;
-    }
+    if (file == NULL) { (void)close(fd); return -1; }
 
     while (getline(&line, &capacity, file) >= 0) {
         char *entry;
@@ -125,23 +102,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             (void)fclose(file);
             return 2;
         }
-
-        if (*entry == '\0') {
-            malformed = 1;
-            ++count;
-            continue;
-        }
+        ++count; /* Every record, including malformed records, consumes budget. */
+        if (*entry == '\0') { malformed = 1; continue; }
         if (entry[0] != '/') {
             ++invalid;
             malformed = 1;
-            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry),
-                                               PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
-            ++count;
-            if (add_rc != 0) {
-                free(line);
-                (void)fclose(file);
-                return -1;
-            }
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
+            if (add_rc != 0) { free(line); (void)fclose(file); return -1; }
             continue;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
@@ -150,45 +117,28 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             else if (errno == EACCES || errno == EPERM) { ++missing; artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
             else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
-            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry),
-                                               PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
         } else {
             pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
             if (S_ISREG(st.st_mode)) kind = PKG_ARTIFACT_REGULAR;
             else if (S_ISDIR(st.st_mode)) kind = PKG_ARTIFACT_DIRECTORY;
             else if (S_ISLNK(st.st_mode)) kind = PKG_ARTIFACT_SYMLINK;
-            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry),
-                                               kind, PKG_ARTIFACT_PRESENT, &st);
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, PKG_ARTIFACT_PRESENT, &st);
         }
-        ++count;
-        if (add_rc != 0) {
-            free(line);
-            (void)fclose(file);
-            return -1;
-        }
+        if (add_rc != 0) { free(line); (void)fclose(file); return -1; }
     }
-
-    if (ferror(file) != 0) {
-        free(line);
-        (void)fclose(file);
-        return -1;
-    }
-
+    if (ferror(file) != 0) { free(line); (void)fclose(file); return -1; }
     free(line);
     (void)fclose(file);
     package->file_count = count;
     package->missing_file_count = missing;
     package->invalid_path_count = invalid;
-    if (malformed) {
-        if (pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-                                        "PKG_DPKG_FILELIST_MALFORMED",
-                                        "package file list contains malformed entries") != 0) return -1;
-    }
+    if (malformed && pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+        "PKG_DPKG_FILELIST_MALFORMED", "package file list contains malformed entries") != 0) return -1;
     return 0;
 }
 
-static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *result,
-                                          const pkg_scan_options *options) {
+static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *result, const pkg_scan_options *options) {
     size_t i;
     int limited = 0;
     if (target == NULL || result == NULL) return PKG_ERR_INVALID_ARGUMENT;
@@ -197,41 +147,24 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
         int rc = package_file_list(target, result, &result->packages[i], options);
         result->packages[i].artifact_start = before;
         result->packages[i].artifact_count = result->artifact_count - before;
-        if (rc == 2) {
-            limited = 1;
-            continue;
-        }
-        if (rc < 0) {
-            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-                                            "PKG_DPKG_FILELIST_READ_FAILED",
-                                            "package file list could not be read") != 0) return PKG_ERR_OUT_OF_MEMORY;
-        }
-        if (rc == 1) {
-            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-                                            "PKG_DPKG_FILELIST_MISSING",
-                                            "package file list is missing") != 0) return PKG_ERR_OUT_OF_MEMORY;
-        }
+        if (rc == 2) { limited = 1; continue; }
+        if (rc < 0 && pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+            "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read") != 0) return PKG_ERR_INTERNAL;
+        if (rc == 1 && pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+            "PKG_DPKG_FILELIST_MISSING", "package file list is missing") != 0) return PKG_ERR_INTERNAL;
     }
     return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
 }
 
-pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
-                         const pkg_scan_options *options, pkg_snapshot *result) {
+pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_options *options, pkg_snapshot *result) {
     int fd;
     FILE *file;
     char *line = NULL;
     size_t capacity = 0U;
-    char *name = NULL;
-    char *version = NULL;
-    char *architecture = NULL;
-    char *status = NULL;
+    char *name = NULL, *version = NULL, *architecture = NULL, *status = NULL;
     uint64_t installed_size = 0U;
-    int parse_error = 0;
-    int truncated = 0;
-
-    if (context == NULL || target == NULL || result == NULL || target->root_fd < 0)
-        return PKG_ERR_INVALID_ARGUMENT;
-
+    int parse_error = 0, truncated = 0;
+    if (context == NULL || target == NULL || result == NULL || target->root_fd < 0) return PKG_ERR_INVALID_ARGUMENT;
     fd = pkg_target_open_path(target, "/var/lib/dpkg/status", O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
         if (errno == ENOENT) return PKG_ERR_NOT_FOUND;
@@ -239,11 +172,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
         return PKG_ERR_IO;
     }
     file = fdopen(fd, "rb");
-    if (file == NULL) {
-        (void)close(fd);
-        return PKG_ERR_IO;
-    }
-
+    if (file == NULL) { (void)close(fd); return PKG_ERR_IO; }
     while (getline(&line, &capacity, file) >= 0) {
         if (line[0] == '\n' || line[0] == '\r') {
             int rc = append_package(result, options, name, version, architecture, installed_size);
@@ -263,7 +192,6 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
             else installed_size = kib * UINT64_C(1024);
         }
     }
-
     if (truncated == 0 && parse_error == 0 && name != NULL && version != NULL && architecture != NULL) {
         int rc = append_package(result, options, name, version, architecture, installed_size);
         if (rc == 1) truncated = 1;
@@ -273,13 +201,10 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
     if (fclose(file) != 0 && parse_error == 0) parse_error = 1;
     if (parse_error != 0) return PKG_ERR_PARSE;
     if (truncated != 0) return PKG_ERR_RESOURCE_LIMIT;
-
     {
         pkg_status correlation = correlate_package_files(target, result, options);
         if (correlation != PKG_OK && correlation != PKG_ERR_RESOURCE_LIMIT) return correlation;
     }
-    if (result->package_count > 1U) {
-        qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
-    }
+    if (result->package_count > 1U) qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
     return PKG_OK;
 }
