@@ -69,6 +69,85 @@ static int is_installed_status(const char *status) {
     return last_space != NULL && strcmp(last_space + 1, "installed") == 0;
 }
 
+static int package_file_list(const pkg_target *target, const pkg_package_record *package,
+                             const pkg_scan_options *options) {
+    char path[4096];
+    int written;
+    int fd;
+    FILE *file;
+    char *line = NULL;
+    size_t capacity = 0U;
+    uint64_t count = 0U;
+    uint64_t missing = 0U;
+
+    if (target == NULL || package == NULL) return -1;
+    written = snprintf(path, sizeof(path), "/var/lib/dpkg/info/%s.list", package->name);
+    if (written < 0 || (size_t)written >= sizeof(path)) return -1;
+
+    fd = pkg_target_open_path(target, path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) {
+        if (errno == ENOENT) return 1;
+        return -1;
+    }
+    file = fdopen(fd, "rb");
+    if (file == NULL) {
+        (void)close(fd);
+        return -1;
+    }
+
+    while (getline(&line, &capacity, file) >= 0) {
+        char *entry;
+        struct stat st;
+        trim_newline(line);
+        entry = line;
+        if (*entry == '\0') continue;
+        if (options != NULL && options->max_package_files != 0U &&
+            count >= options->max_package_files) {
+            free(line);
+            (void)fclose(file);
+            return 2;
+        }
+        if (pkg_target_lstat_path(target, entry, &st) != 0) {
+            if (errno == ENOENT) ++missing;
+            else ++missing;
+        }
+        ++count;
+    }
+
+    if (ferror(file) != 0) {
+        free(line);
+        (void)fclose(file);
+        return -1;
+    }
+
+    free(line);
+    (void)fclose(file);
+    ((pkg_package_record *)package)->file_count = count;
+    ((pkg_package_record *)package)->missing_file_count = missing;
+    return 0;
+}
+
+static pkg_status correlate_package_files(pkg_target *target, pkg_scan_result *result,
+                                          const pkg_scan_options *options) {
+    size_t i;
+    int limited = 0;
+    if (target == NULL || result == NULL) return PKG_ERR_INVALID_ARGUMENT;
+    for (i = 0U; i < result->package_count; ++i) {
+        int rc = package_file_list(target, &result->packages[i], options);
+        if (rc == 2) {
+            limited = 1;
+            continue;
+        }
+        if (rc < 0) {
+            ++result->diagnostic_count;
+        }
+        if (rc == 1) {
+            ++result->diagnostic_count;
+        }
+    }
+    return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
+}
+
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
                          const pkg_scan_options *options, pkg_scan_result *result) {
     int fd;
@@ -86,7 +165,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
     if (context == NULL || target == NULL || result == NULL || target->root_fd < 0)
         return PKG_ERR_INVALID_ARGUMENT;
 
-    fd = openat(target->root_fd, "var/lib/dpkg/status", O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    fd = pkg_target_open_path(target, "/var/lib/dpkg/status", O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
         if (errno == ENOENT) return PKG_ERR_NOT_FOUND;
         if (errno == EACCES || errno == EPERM) return PKG_ERR_PERMISSION;
@@ -154,5 +233,10 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
 
     if (parse_error) return PKG_ERR_PARSE;
     if (truncated) return PKG_ERR_RESOURCE_LIMIT;
+
+    {
+        pkg_status correlation = correlate_package_files(target, result, options);
+        if (correlation != PKG_OK) return correlation;
+    }
     return PKG_OK;
 }
