@@ -113,6 +113,8 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         struct stat st;
         trim_newline(line);
         entry = line;
+        if (options->max_package_files != 0U && file_count >= options->max_package_files) return PKG_ERR_RESOURCE_LIMIT;
+        ++file_count;
         if (*entry == '\0') { malformed = 1; continue; }
         if (entry[0] != '/') {
             ++invalid;
