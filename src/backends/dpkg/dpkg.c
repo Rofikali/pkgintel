@@ -69,7 +69,7 @@ static int is_installed_status(const char *status) {
     return last_space != NULL && strcmp(last_space + 1, "installed") == 0;
 }
 
-static int package_file_list(const pkg_target *target, const pkg_package_record *package,
+static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_package_record *package,
                              const pkg_scan_options *options) {
     char path[4096];
     int written;
@@ -81,7 +81,7 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
     uint64_t missing = 0U;
     uint64_t invalid = 0U;
 
-    if (target == NULL || package == NULL) return -1;
+    if (target == NULL || result == NULL || package == NULL) return -1;
     written = snprintf(path, sizeof(path), "/var/lib/dpkg/info/%s.list", package->name);
     if (written < 0 || (size_t)written >= sizeof(path)) return -1;
 
@@ -105,6 +105,7 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
         if (entry[0] != '/') {
             ++invalid;
             ++count;
+            (void)pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
             continue;
         }
         if (options != NULL && options->max_package_files != 0U &&
@@ -114,10 +115,18 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
             return 2;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
-            if (errno == ENOENT) ++missing;
-            else if (errno == EACCES || errno == EPERM) ++missing;
-            else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) ++invalid;
-            else ++missing;
+            pkg_artifact_state artifact_state = PKG_ARTIFACT_UNVERIFIABLE;
+            if (errno == ENOENT) { ++missing; artifact_state = PKG_ARTIFACT_MISSING; }
+            else if (errno == EACCES || errno == EPERM) { ++missing; artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
+            else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
+            else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
+            (void)pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
+        } else {
+            pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
+            if (S_ISREG(st.st_mode)) kind = PKG_ARTIFACT_REGULAR;
+            else if (S_ISDIR(st.st_mode)) kind = PKG_ARTIFACT_DIRECTORY;
+            else if (S_ISLNK(st.st_mode)) kind = PKG_ARTIFACT_SYMLINK;
+            (void)pkg_snapshot_add_artifact(result, entry, kind, PKG_ARTIFACT_PRESENT, &st);
         }
         ++count;
     }
@@ -136,22 +145,25 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
     return 0;
 }
 
-static pkg_status correlate_package_files(pkg_target *target, pkg_scan_result *result,
+static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *result,
                                           const pkg_scan_options *options) {
     size_t i;
     int limited = 0;
     if (target == NULL || result == NULL) return PKG_ERR_INVALID_ARGUMENT;
     for (i = 0U; i < result->package_count; ++i) {
-        int rc = package_file_list(target, &result->packages[i], options);
+        size_t before = result->artifact_count;
+        int rc = package_file_list(target, result, &result->packages[i], options);
+        result->packages[i].artifact_start = before;
+        result->packages[i].artifact_count = result->artifact_count - before;
         if (rc == 2) {
             limited = 1;
             continue;
         }
         if (rc < 0) {
-            ++result->diagnostic_count;
+            (void)pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
         }
         if (rc == 1) {
-            ++result->diagnostic_count;
+            (void)pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_MISSING", "package file list is missing");
         }
     }
     return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
