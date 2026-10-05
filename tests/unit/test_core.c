@@ -129,7 +129,8 @@ int main(void) {
       assert(pkg_package_artifact_at(package, 3U, &artifact) == PKG_OK);
       assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_SYMLINK);
     }
-    assert(pkg_scan_result_diagnostic_count(result) == 0U);
+    assert(pkg_scan_result_diagnostic_count(result) == 1U);
+    { const pkg_diagnostic *diagnostic = NULL; assert(pkg_snapshot_diagnostic_at(result, 0U, &diagnostic) == PKG_OK); assert(strcmp(pkg_diagnostic_code(diagnostic), "PKG_DPKG_FILELIST_MALFORMED") == 0); }
 
     pkg_scan_result_destroy(result);
     pkg_target_destroy(target);
