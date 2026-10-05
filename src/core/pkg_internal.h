@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/stat.h>
 
 typedef struct pkg_package_record {
     char *name;
@@ -38,5 +39,7 @@ char *pkg_strdup_internal(const char *value);
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
                          const pkg_scan_options *options, pkg_scan_result *result);
 pkg_status pkg_target_open_root(pkg_target *target);
+int pkg_target_open_path(const pkg_target *target, const char *path, int flags);
+int pkg_target_lstat_path(const pkg_target *target, const char *path, struct stat *st);
 
 #endif
