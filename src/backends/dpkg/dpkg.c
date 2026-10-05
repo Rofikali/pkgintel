@@ -5,15 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
-
-static int path_join(char *out, size_t out_size, const char *root, const char *relative) {
-    int written;
-    if (out == NULL || out_size == 0U || root == NULL || relative == NULL) return -1;
-    written = snprintf(out, out_size, "%s%s", root, relative);
-    return (written < 0 || (size_t)written >= out_size) ? -1 : 0;
-}
 
 static char *trim_newline(char *value) {
     size_t len;
@@ -31,7 +23,7 @@ static int parse_u64_decimal(const char *value, uint64_t *out) {
     if (value == NULL || out == NULL || *value == '\0') return -1;
     errno = 0;
     parsed = strtoull(value, &end, 10);
-    if (errno != 0 || end == value || *end != '\0') return -1;
+    if (errno != 0 || end == value || *end != '\0' || parsed > UINT64_MAX) return -1;
     *out = (uint64_t)parsed;
     return 0;
 }
@@ -44,7 +36,7 @@ static int append_package(pkg_scan_result *result, const pkg_scan_options *optio
     if (result == NULL || name == NULL || version == NULL || architecture == NULL) return -1;
     if (options != NULL && options->max_packages != 0U &&
         result->package_count >= (size_t)options->max_packages) return 1;
-    if (result->package_count == SIZE_MAX) return -1;
+    if (result->package_count > SIZE_MAX / sizeof(*grown) - 1U) return -1;
     next_count = result->package_count + 1U;
     grown = realloc(result->packages, next_count * sizeof(*grown));
     if (grown == NULL) return -1;
@@ -79,7 +71,7 @@ static int is_installed_status(const char *status) {
 
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
                          const pkg_scan_options *options, pkg_scan_result *result) {
-    char status_path[4096];
+    int fd;
     FILE *file;
     char *line = NULL;
     size_t capacity = 0U;
@@ -91,14 +83,18 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
     int parse_error = 0;
     int truncated = 0;
 
-    if (context == NULL || target == NULL || result == NULL) return PKG_ERR_INVALID_ARGUMENT;
-    if (path_join(status_path, sizeof(status_path), target->root, "/var/lib/dpkg/status") != 0)
-        return PKG_ERR_RESOURCE_LIMIT;
+    if (context == NULL || target == NULL || result == NULL || target->root_fd < 0)
+        return PKG_ERR_INVALID_ARGUMENT;
 
-    file = fopen(status_path, "rb");
-    if (file == NULL) {
+    fd = openat(target->root_fd, "var/lib/dpkg/status", O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    if (fd < 0) {
         if (errno == ENOENT) return PKG_ERR_NOT_FOUND;
         if (errno == EACCES || errno == EPERM) return PKG_ERR_PERMISSION;
+        return PKG_ERR_IO;
+    }
+    file = fdopen(fd, "rb");
+    if (file == NULL) {
+        (void)close(fd);
         return PKG_ERR_IO;
     }
 
@@ -137,8 +133,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
             free(status); status = pkg_strdup_internal(value);
         } else if (strcmp(key, "Installed-Size") == 0) {
             uint64_t parsed;
-            if (parse_u64_decimal(value, &parsed) != 0) parse_error = 1;
-            else if (parsed > UINT64_MAX / 1024U) parse_error = 1;
+            if (parse_u64_decimal(value, &parsed) != 0 || parsed > UINT64_MAX / 1024U) parse_error = 1;
             else installed_size = parsed * 1024U;
         }
     }
