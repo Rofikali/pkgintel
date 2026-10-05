@@ -425,7 +425,7 @@ uint64_t pkg_artifact_logical_size_bytes(const pkg_artifact *artifact) {
 }
 bool pkg_artifact_logical_size_available(const pkg_artifact *artifact) {
     const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a != NULL && (a->kind == PKG_ARTIFACT_REGULAR);
+    return a != NULL && a->state == PKG_ARTIFACT_PRESENT && a->kind == PKG_ARTIFACT_REGULAR && a->logical_size <= UINT64_MAX;
 }
 uint64_t pkg_artifact_allocated_size_bytes(const pkg_artifact *artifact) {
     const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
