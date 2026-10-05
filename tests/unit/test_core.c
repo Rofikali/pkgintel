@@ -67,6 +67,9 @@ int main(void) {
     assert(strcmp(pkg_scan_result_package_version(result, 0U), "1.2.3") == 0);
     assert(strcmp(pkg_scan_result_package_architecture(result, 0U), "amd64") == 0);
     assert(pkg_scan_result_package_installed_size(result, 0U) == 10240U);
+    assert(pkg_scan_result_package_file_count(result, 0U) == 0U);
+    assert(pkg_scan_result_package_missing_file_count(result, 0U) == 0U);
+    assert(pkg_scan_result_diagnostic_count(result) == 1U);
 
     pkg_scan_result_destroy(result);
     pkg_target_destroy(target);
