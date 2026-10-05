@@ -403,9 +403,17 @@ uint64_t pkg_artifact_logical_size_bytes(const pkg_artifact *artifact) {
     const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
     return a == NULL ? 0U : a->logical_size;
 }
+bool pkg_artifact_logical_size_available(const pkg_artifact *artifact) {
+    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
+    return a != NULL && (a->kind == PKG_ARTIFACT_REGULAR);
+}
 uint64_t pkg_artifact_allocated_size_bytes(const pkg_artifact *artifact) {
     const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
     return a == NULL || !a->allocated_size_valid ? 0U : a->allocated_size;
+}
+bool pkg_artifact_allocated_size_available(const pkg_artifact *artifact) {
+    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
+    return a != NULL && a->allocated_size_valid;
 }
 pkg_string_view pkg_cache_backend(const pkg_cache *cache) { (void)cache; return (pkg_string_view){NULL,0U}; }
 pkg_path pkg_cache_path(const pkg_cache *cache) { (void)cache; return (pkg_path){NULL,0U}; }
