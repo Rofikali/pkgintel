@@ -2,22 +2,17 @@
 #define PKGINTEL_SCAN_H
 #include <stdint.h>
 #include "target.h"
-typedef struct pkg_snapshot pkg_snapshot;
+#include "snapshot.h"
+typedef enum pkg_scan_mode { PKG_SCAN_FAST=0, PKG_SCAN_NORMAL=1, PKG_SCAN_DEEP=2 } pkg_scan_mode;
 typedef struct pkg_scan_options {
-    uint32_t struct_size;
-    uint32_t flags;
-    uint64_t max_files;
-    uint64_t max_directories;
-    uint64_t max_file_bytes;
-    uint64_t max_total_bytes;
-    uint64_t max_duration_ms;
-    uint64_t max_packages;
-    uint64_t max_package_files;
+ uint32_t struct_size; uint32_t flags;
+ uint64_t max_files; uint64_t max_directories; uint64_t max_file_bytes; uint64_t max_total_bytes; uint64_t max_duration_ms;
+ uint64_t max_packages; uint64_t max_package_files;
 } pkg_scan_options;
-#define PKG_SCAN_INCLUDE_ELF          (1u << 0)
-#define PKG_SCAN_INCLUDE_CACHES       (1u << 1)
-#define PKG_SCAN_INCLUDE_CAPABILITIES (1u << 2)
-#define PKG_SCAN_CORRELATE_FILES     (1u << 3)
-#define PKG_SCAN_OPTIONS_INIT { (uint32_t)sizeof(pkg_scan_options), 0u, 0u, 0u, 0u, 0u, 0u, 0u, 0u }
-pkg_status pkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_options *options, pkg_snapshot **out_snapshot);
+#define PKG_SCAN_INCLUDE_ELF (1u<<0)
+#define PKG_SCAN_INCLUDE_CACHES (1u<<1)
+#define PKG_SCAN_INCLUDE_CAPABILITIES (1u<<2)
+#define PKG_SCAN_CORRELATE_FILES (1u<<3)
+#define PKG_SCAN_OPTIONS_INIT { (uint32_t)sizeof(pkg_scan_options),0u,0u,0u,0u,0u,0u,0u,0u }
+pkg_status pkg_scan(pkg_context *context,pkg_target *target,const pkg_scan_options *options,pkg_snapshot **out_snapshot);
 #endif
