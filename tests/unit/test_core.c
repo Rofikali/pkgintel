@@ -38,7 +38,7 @@ static void make_fixture(char *root, size_t root_size) {
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root);
     file = fopen(path, "wb");
     assert(file != NULL);
-    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n/usr/bin/adir\n/usr/bin/fifo\n/usr/bin/present\n/restricted/secret\n../escape\n", file) >= 0);
+    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n/usr/bin/adir\n/usr/bin/fifo\n/usr/bin/present\n/restricted/secret\n../escape\n\n", file) >= 0);
     assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);
@@ -154,6 +154,20 @@ int main(void) {
         assert(pkg_scan_result_package_count(limited_result) == 1U);
         assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U);
         assert(pkg_snapshot_artifact_count(limited_result) == 1U);
+    }
+    pkg_scan_result_destroy(limited_result);
+    pkg_target_destroy(target);
+
+    /* A malformed/empty record must still consume the same bounded work budget. */
+    assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
+    {
+        pkg_scan_options malformed_limited = PKG_SCAN_OPTIONS_INIT;
+        malformed_limited.max_packages = 10U;
+        malformed_limited.max_package_files = 9U;
+        assert(pkg_scan(context, target, &malformed_limited, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
+        assert(limited_result != NULL);
+        assert(pkg_scan_result_package_file_count(limited_result, 0U) == 9U);
+        assert(pkg_snapshot_artifact_count(limited_result) == 9U);
     }
     pkg_scan_result_destroy(limited_result);
     pkg_target_destroy(target);
