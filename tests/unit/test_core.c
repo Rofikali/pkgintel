@@ -81,6 +81,7 @@ int main(void) {
     pkg_target *target = NULL;
     pkg_scan_result *result = NULL;
     pkg_scan_result *limited_result = NULL;
+    pkg_scan_result *second_result = NULL;
     pkg_scan_options options = PKG_SCAN_OPTIONS_INIT;
     options.max_packages = 10U;
     options.max_package_files = 100U;
@@ -95,6 +96,12 @@ int main(void) {
     assert(result != NULL);
     assert(strcmp(pkg_scan_result_target_root(result), fixture) == 0);
     assert(pkg_scan_result_package_count(result) == 1U);
+    assert(pkg_scan(context, target, &options, &second_result) == PKG_OK);
+    assert(pkg_scan_result_package_count(second_result) == pkg_scan_result_package_count(result));
+    assert(strcmp(pkg_scan_result_package_name(second_result, 0U), pkg_scan_result_package_name(result, 0U)) == 0);
+    assert(pkg_snapshot_artifact_count(second_result) == pkg_snapshot_artifact_count(result));
+    pkg_scan_result_destroy(second_result);
+    second_result = NULL;
     assert(strcmp(pkg_scan_result_package_name(result, 0U), "fixture-pkg") == 0);
     assert(strcmp(pkg_scan_result_package_version(result, 0U), "1.2.3") == 0);
     assert(strcmp(pkg_scan_result_package_architecture(result, 0U), "amd64") == 0);
