@@ -154,8 +154,8 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target,
     pkg_scan_options defaults = {
         .struct_size = (uint32_t)sizeof(pkg_scan_options),
         .flags = PKG_SCAN_CORRELATE_FILES,
-        .max_packages = context != NULL ? context->options.max_files : 0U,
-        .max_package_files = context != NULL ? context->options.max_files : 0U
+        .max_packages = 1000000U,
+        .max_package_files = 1000000U
     };
 
     if (context == NULL || target == NULL || out_result == NULL) return PKG_ERR_INVALID_ARGUMENT;
