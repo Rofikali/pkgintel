@@ -240,3 +240,90 @@ uint64_t pkg_scan_result_package_invalid_path_count(const pkg_scan_result *resul
 uint64_t pkg_scan_result_diagnostic_count(const pkg_scan_result *result) {
     return result == NULL ? 0U : result->diagnostic_count;
 }
+
+
+pkg_status pkg_target_local_create(pkg_context *context, pkg_target **out_target) {
+    return pkg_target_create_local(context, out_target);
+}
+
+pkg_status pkg_target_rootfs_create(pkg_context *context, pkg_path root, pkg_target **out_target) {
+    char *text;
+    pkg_status status;
+    if (root.data == NULL || root.size == 0U || root.size > SIZE_MAX - 1U) return PKG_ERR_INVALID_ARGUMENT;
+    if (memchr(root.data, '\\0', root.size) != NULL) return PKG_ERR_INVALID_ARGUMENT;
+    text = malloc(root.size + 1U);
+    if (text == NULL) return PKG_ERR_INTERNAL;
+    memcpy(text, root.data, root.size);
+    text[root.size] = '\\0';
+    status = pkg_target_create_rootfs(context, text, out_target);
+    free(text);
+    return status;
+}
+
+void pkg_snapshot_destroy(pkg_snapshot *snapshot) {
+    pkg_scan_result_destroy(snapshot);
+}
+
+size_t pkg_snapshot_package_count(const pkg_snapshot *snapshot) {
+    return pkg_scan_result_package_count(snapshot);
+}
+
+pkg_status pkg_snapshot_package_at(const pkg_snapshot *snapshot, size_t index, const pkg_package **out_package) {
+    if (out_package == NULL) return PKG_ERR_INVALID_ARGUMENT;
+    *out_package = NULL;
+    if (snapshot == NULL || index >= snapshot->package_count) return PKG_ERR_NOT_FOUND;
+    *out_package = (const pkg_package *)&snapshot->packages[index];
+    return PKG_OK;
+}
+
+size_t pkg_snapshot_artifact_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
+pkg_status pkg_snapshot_artifact_at(const pkg_snapshot *snapshot, size_t index, const pkg_artifact **out_artifact) {
+    (void)snapshot; (void)index; if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_artifact = NULL; return PKG_ERR_NOT_FOUND;
+}
+size_t pkg_snapshot_cache_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
+pkg_status pkg_snapshot_cache_at(const pkg_snapshot *snapshot, size_t index, const pkg_cache **out_cache) {
+    (void)snapshot; (void)index; if (out_cache == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_cache = NULL; return PKG_ERR_NOT_FOUND;
+}
+size_t pkg_snapshot_capability_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
+pkg_status pkg_snapshot_capability_at(const pkg_snapshot *snapshot, size_t index, const pkg_capability **out_capability) {
+    (void)snapshot; (void)index; if (out_capability == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_capability = NULL; return PKG_ERR_NOT_FOUND;
+}
+size_t pkg_snapshot_diagnostic_count(const pkg_snapshot *snapshot) { return snapshot == NULL ? 0U : (size_t)snapshot->diagnostic_count; }
+pkg_status pkg_snapshot_diagnostic_at(const pkg_snapshot *snapshot, size_t index, const pkg_diagnostic **out_diagnostic) {
+    (void)snapshot; (void)index; if (out_diagnostic == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_diagnostic = NULL; return PKG_ERR_NOT_FOUND;
+}
+
+pkg_string_view pkg_package_name(const pkg_package *package) {
+    const pkg_package_record *p = (const pkg_package_record *)package;
+    return (pkg_string_view){ p != NULL ? p->name : NULL, p != NULL && p->name != NULL ? strlen(p->name) : 0U };
+}
+pkg_string_view pkg_package_version(const pkg_package *package) {
+    const pkg_package_record *p = (const pkg_package_record *)package;
+    return (pkg_string_view){ p != NULL ? p->version : NULL, p != NULL && p->version != NULL ? strlen(p->version) : 0U };
+}
+pkg_string_view pkg_package_architecture(const pkg_package *package) {
+    const pkg_package_record *p = (const pkg_package_record *)package;
+    return (pkg_string_view){ p != NULL ? p->architecture : NULL, p != NULL && p->architecture != NULL ? strlen(p->architecture) : 0U };
+}
+pkg_string_view pkg_package_source(const pkg_package *package) { (void)package; return (pkg_string_view){NULL,0U}; }
+pkg_installation_state pkg_package_get_state(const pkg_package *package) { return package != NULL ? PKG_INSTALLATION_INSTALLED : PKG_INSTALLATION_UNKNOWN; }
+pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
+    const pkg_package_record *p = (const pkg_package_record *)package;
+    if (p == NULL) return PKG_CONSISTENCY_UNKNOWN;
+    if (p->invalid_path_count != 0U || p->missing_file_count != 0U) return PKG_CONSISTENCY_INCONSISTENT;
+    return PKG_CONSISTENCY_CONSISTENT;
+}
+uint64_t pkg_package_declared_size_bytes(const pkg_package *package) {
+    return pkg_package_installed_size_bytes(package);
+}
+uint64_t pkg_package_installed_size_bytes(const pkg_package *package) {
+    const pkg_package_record *p = (const pkg_package_record *)package;
+    return p != NULL ? p->installed_size : 0U;
+}
+size_t pkg_package_artifact_count(const pkg_package *package) {
+    const pkg_package_record *p = (const pkg_package_record *)package;
+    return p != NULL ? (size_t)p->file_count : 0U;
+}
+pkg_status pkg_package_artifact_at(const pkg_package *package, size_t index, const pkg_artifact **out_artifact) {
+    (void)package; (void)index; if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_artifact = NULL; return PKG_ERR_NOT_FOUND;
+}
