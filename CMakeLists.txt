@@ -8,7 +8,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 option(PKGINTEL_BUILD_TESTS "Build pkgintel tests" ON)
 option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
 
-add_library(pkgintel SHARED src/pkgintel.c)
+add_library(pkgintel SHARED
+    src/pkgintel.c
+    src/backends/dpkg/dpkg.c
+)
 set_target_properties(pkgintel PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 0
@@ -19,6 +22,7 @@ set_target_properties(pkgintel PROPERTIES
 target_include_directories(pkgintel
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:include>
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_compile_options(pkgintel PRIVATE
@@ -26,7 +30,7 @@ target_compile_options(pkgintel PRIVATE
     -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
 )
 
-target_compile_definitions(pkgintel PRIVATE PKGINTEL_BUILDING_LIBRARY=1)
+target_compile_definitions(pkgintel PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
 
 if(PKGINTEL_BUILD_CLI)
     add_executable(pkgintel_cli src/cli/main.c)
