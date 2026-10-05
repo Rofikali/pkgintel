@@ -380,9 +380,10 @@ pkg_status pkg_package_artifact_at(const pkg_package *package, size_t index, con
     const pkg_package_record *p = (const pkg_package_record *)package;
     if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT;
     *out_artifact = NULL;
-    if (p == NULL || index >= p->artifact_count) return PKG_ERR_NOT_FOUND;
-    /* The package record's artifact range is owned by the containing snapshot. */
-    return PKG_ERR_UNSUPPORTED;
+    if (p == NULL || index >= p->artifact_count || p->owner_snapshot == NULL) return PKG_ERR_NOT_FOUND;
+    if (p->artifact_start > p->owner_snapshot->artifact_count || index > p->owner_snapshot->artifact_count - p->artifact_start) return PKG_ERR_INTERNAL;
+    *out_artifact = (const pkg_artifact *)&p->owner_snapshot->artifacts[p->artifact_start + index];
+    return PKG_OK;
 }
 
 
