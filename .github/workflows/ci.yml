@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -21,6 +24,7 @@ jobs:
       - name: Configure
         env:
           CC: ${{ matrix.compiler }}
+          CFLAGS: -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fno-common
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DPKGINTEL_BUILD_TESTS=ON
       - name: Build
         run: cmake --build build --parallel
@@ -38,7 +42,7 @@ jobs:
       - name: Configure
         env:
           CC: clang
-          CFLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer
+          CFLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer -fno-common
           LDFLAGS: -fsanitize=address,undefined
         run: cmake -S . -B build-sanitized -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPKGINTEL_BUILD_TESTS=ON
       - name: Build
