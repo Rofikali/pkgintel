@@ -1,7 +1,9 @@
 #include "core/pkg_internal.h"
 
 #include <errno.h>
-#include <fcntl.h>\n#include <linux/openat2.h>\n#include <sys/syscall.h>
+#include <fcntl.h>
+#include <linux/openat2.h>
+#include <sys/syscall.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
