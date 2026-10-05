@@ -73,6 +73,34 @@ static pkg_status target_create(pkg_context *context, pkg_target_type type,
     return PKG_OK;
 }
 
+int pkg_target_open_path(const pkg_target *target, const char *path, int flags) {
+    const char *relative;
+    if (target == NULL || target->root_fd < 0 || path == NULL || path[0] != '/') {
+        errno = EINVAL;
+        return -1;
+    }
+    relative = path + 1U;
+    if (*relative == '\0') {
+        errno = EINVAL;
+        return -1;
+    }
+    return openat(target->root_fd, relative, flags | O_NOFOLLOW);
+}
+
+int pkg_target_lstat_path(const pkg_target *target, const char *path, struct stat *st) {
+    const char *relative;
+    if (target == NULL || target->root_fd < 0 || path == NULL || path[0] != '/' || st == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    relative = path + 1U;
+    if (*relative == '\0') {
+        errno = EINVAL;
+        return -1;
+    }
+    return fstatat(target->root_fd, relative, st, AT_SYMLINK_NOFOLLOW);
+}
+
 pkg_status pkg_target_open_root(pkg_target *target) {
     if (target == NULL || target->root == NULL) return PKG_ERR_INVALID_ARGUMENT;
     if (target->root_fd >= 0) return PKG_OK;
