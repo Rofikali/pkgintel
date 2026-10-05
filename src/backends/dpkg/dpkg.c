@@ -81,6 +81,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     uint64_t count = 0U;
     uint64_t missing = 0U;
     uint64_t invalid = 0U;
+    int malformed = 0;
 
     if (target == NULL || result == NULL || package == NULL) return -1;
     written = snprintf(path, sizeof(path), "/var/lib/dpkg/info/%s.list", package->name);
@@ -102,9 +103,10 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         struct stat st;
         trim_newline(line);
         entry = line;
-        if (*entry == '\0') continue;
+        if (*entry == '\0') { malformed = 1; continue; }
         if (entry[0] != '/') {
             ++invalid;
+            malformed = 1;
             ++count;
             if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
             continue;
@@ -146,6 +148,9 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     ((pkg_package_record *)package)->file_count = count;
     ((pkg_package_record *)package)->missing_file_count = missing;
     ((pkg_package_record *)package)->invalid_path_count = invalid;
+    if (malformed) {
+        if (pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_MALFORMED", "package file list contains malformed entries") != PKG_OK) return -1;
+    }
     return 0;
 }
 
