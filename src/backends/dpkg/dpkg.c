@@ -45,6 +45,7 @@ static int append_package(pkg_scan_result *result, const pkg_scan_options *optio
     grown[result->package_count].version = pkg_strdup_internal(version);
     grown[result->package_count].architecture = pkg_strdup_internal(architecture);
     grown[result->package_count].installed_size = installed_size;
+    grown[result->package_count].owner_snapshot = result;
     grown[result->package_count].file_count = 0U;
     grown[result->package_count].missing_file_count = 0U;
     if (grown[result->package_count].name == NULL ||
@@ -110,6 +111,9 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         }
         if (options != NULL && options->max_package_files != 0U &&
             count >= options->max_package_files) {
+            package->file_count = count;
+            package->missing_file_count = missing;
+            package->invalid_path_count = invalid;
             free(line);
             (void)fclose(file);
             return 2;
@@ -170,7 +174,7 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
 }
 
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
-                         const pkg_scan_options *options, pkg_scan_result *result) {
+                         const pkg_scan_options *options, pkg_snapshot *result) {
     int fd;
     FILE *file;
     char *line = NULL;
