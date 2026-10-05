@@ -14,6 +14,20 @@ The public API is intentionally small. `pkg_context`, `pkg_target`, and `pkg_sca
 
 Functions return `pkg_status`. `PKG_OK` is zero. NULL output parameters are rejected. Invalid object relationships return `PKG_ERR_STATE`.
 
+`PKG_ERR_RESOURCE_LIMIT` is not equivalent to a complete successful scan. A caller must inspect the returned status before treating a result as complete.
+
+Permission failures and unavailable package metadata may become diagnostics in later result versions rather than silently disappearing.
+
+## Scan result semantics
+
+`pkg_scan_result_package_installed_size()` exposes the package manager's declared installed size converted from dpkg's KiB unit to bytes. It is **not** the sum of filesystem allocation and is not dependency-closure size.
+
+`pkg_scan_result_package_file_count()` and `pkg_scan_result_package_missing_file_count()` are reserved for the package/file-correlation phase. They currently report zero until that phase is implemented.
+
+## Resource limits
+
+Limits are explicit inputs to scanning. Zero means use the context default. Reaching a limit produces `PKG_ERR_RESOURCE_LIMIT` and must never be represented as a clean complete scan.
+
 ## ABI policy
 
 v0.1 is **not yet declared ABI-stable**. Before v1.0 the project must add:
