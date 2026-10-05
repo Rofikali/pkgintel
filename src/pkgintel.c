@@ -96,6 +96,8 @@ int pkg_target_open_path(const pkg_target *target, const char *path, int flags) 
 
 int pkg_target_lstat_path(const pkg_target *target, const char *path, struct stat *st) {
     const char *relative;
+    struct open_how how = {0};
+    int fd;
     if (target == NULL || target->root_fd < 0 || path == NULL || path[0] != '/' || st == NULL) {
         errno = EINVAL;
         return -1;
@@ -105,9 +107,19 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
         errno = EINVAL;
         return -1;
     }
-    return fstatat(target->root_fd, relative, st, AT_SYMLINK_NOFOLLOW);
+    how.flags = (uint64_t)(O_PATH | O_NOFOLLOW | O_CLOEXEC);
+    how.resolve = RESOLVE_BENEATH | RESOLVE_NO_MAGICLINKS;
+    fd = (int)syscall(SYS_openat2, target->root_fd, relative, &how, sizeof(how));
+    if (fd < 0) return -1;
+    if (fstat(fd, st) != 0) {
+        int saved_errno = errno;
+        (void)close(fd);
+        errno = saved_errno;
+        return -1;
+    }
+    (void)close(fd);
+    return 0;
 }
-
 pkg_status pkg_target_open_root(pkg_target *target) {
     if (target == NULL || target->root == NULL) return PKG_ERR_INVALID_ARGUMENT;
     if (target->root_fd >= 0) return PKG_OK;
