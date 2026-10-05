@@ -48,6 +48,9 @@ static int append_package(pkg_scan_result *result, const pkg_scan_options *optio
     grown[result->package_count].owner_snapshot = result;
     grown[result->package_count].file_count = 0U;
     grown[result->package_count].missing_file_count = 0U;
+    grown[result->package_count].invalid_path_count = 0U;
+    grown[result->package_count].artifact_start = 0U;
+    grown[result->package_count].artifact_count = 0U;
     if (grown[result->package_count].name == NULL ||
         grown[result->package_count].version == NULL ||
         grown[result->package_count].architecture == NULL) {
@@ -111,9 +114,10 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     while (getline(&line, &capacity, file) >= 0) {
         char *entry;
         struct stat st;
+        int add_rc;
         trim_newline(line);
         entry = line;
-        if (options->max_package_files != 0U && file_count >= options->max_package_files) {
+        if (options != NULL && options->max_package_files != 0U && count >= options->max_package_files) {
             package->file_count = count;
             package->missing_file_count = missing;
             package->invalid_path_count = invalid;
@@ -121,13 +125,23 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             (void)fclose(file);
             return 2;
         }
-        ++file_count;
-        if (*entry == '\0') { malformed = 1; continue; }
+
+        if (*entry == '\0') {
+            malformed = 1;
+            ++count;
+            continue;
+        }
         if (entry[0] != '/') {
             ++invalid;
             malformed = 1;
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry),
+                                               PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
             ++count;
-            if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            if (add_rc != 0) {
+                free(line);
+                (void)fclose(file);
+                return -1;
+            }
             continue;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
@@ -136,15 +150,22 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             else if (errno == EACCES || errno == EPERM) { ++missing; artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
             else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
-            if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, artifact_state, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry),
+                                               PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
         } else {
             pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
             if (S_ISREG(st.st_mode)) kind = PKG_ARTIFACT_REGULAR;
             else if (S_ISDIR(st.st_mode)) kind = PKG_ARTIFACT_DIRECTORY;
             else if (S_ISLNK(st.st_mode)) kind = PKG_ARTIFACT_SYMLINK;
-            if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, PKG_ARTIFACT_PRESENT, &st) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry),
+                                               kind, PKG_ARTIFACT_PRESENT, &st);
         }
         ++count;
+        if (add_rc != 0) {
+            free(line);
+            (void)fclose(file);
+            return -1;
+        }
     }
 
     if (ferror(file) != 0) {
@@ -155,11 +176,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
 
     free(line);
     (void)fclose(file);
-    ((pkg_package_record *)package)->file_count = count;
-    ((pkg_package_record *)package)->missing_file_count = missing;
-    ((pkg_package_record *)package)->invalid_path_count = invalid;
+    package->file_count = count;
+    package->missing_file_count = missing;
+    package->invalid_path_count = invalid;
     if (malformed) {
-        if (pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_MALFORMED", "package file list contains malformed entries") != PKG_OK) return -1;
+        if (pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                                        "PKG_DPKG_FILELIST_MALFORMED",
+                                        "package file list contains malformed entries") != 0) return -1;
     }
     return 0;
 }
@@ -179,10 +202,14 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
             continue;
         }
         if (rc < 0) {
-            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read") != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                                            "PKG_DPKG_FILELIST_READ_FAILED",
+                                            "package file list could not be read") != 0) return PKG_ERR_OUT_OF_MEMORY;
         }
         if (rc == 1) {
-            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_MISSING", "package file list is missing") != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                                            "PKG_DPKG_FILELIST_MISSING",
+                                            "package file list is missing") != 0) return PKG_ERR_OUT_OF_MEMORY;
         }
     }
     return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
@@ -218,65 +245,38 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
     }
 
     while (getline(&line, &capacity, file) >= 0) {
-        char *colon;
-        char *key;
-        char *value;
-        trim_newline(line);
-        if (line[0] == '\0') {
-            if (name != NULL && version != NULL && architecture != NULL && is_installed_status(status)) {
-                int append_result = append_package(result, options, name, version, architecture, installed_size);
-                if (append_result < 0) { parse_error = 1; break; }
-                if (append_result > 0) { truncated = 1; break; }
-            }
-            free(name); name = NULL;
-            free(version); version = NULL;
-            free(architecture); architecture = NULL;
-            free(status); status = NULL;
-            installed_size = 0U;
+        if (line[0] == '\n' || line[0] == '\r') {
+            int rc = append_package(result, options, name, version, architecture, installed_size);
+            if (rc == 1) { truncated = 1; break; }
+            if (rc != 0) { parse_error = 1; break; }
+            free(name); free(version); free(architecture); free(status);
+            name = NULL; version = NULL; architecture = NULL; status = NULL; installed_size = 0U;
             continue;
         }
-        colon = strchr(line, ':');
-        if (colon == NULL || colon == line) { parse_error = 1; continue; }
-        *colon = '\0';
-        key = line;
-        value = colon + 1;
-        while (*value == ' ' || *value == '\t') ++value;
-
-        if (strcmp(key, "Package") == 0) {
-            free(name); name = pkg_strdup_internal(value);
-        } else if (strcmp(key, "Version") == 0) {
-            free(version); version = pkg_strdup_internal(value);
-        } else if (strcmp(key, "Architecture") == 0) {
-            free(architecture); architecture = pkg_strdup_internal(value);
-        } else if (strcmp(key, "Status") == 0) {
-            free(status); status = pkg_strdup_internal(value);
-        } else if (strcmp(key, "Installed-Size") == 0) {
-            uint64_t parsed;
-            if (parse_u64_decimal(value, &parsed) != 0 || parsed > UINT64_MAX / 1024U) parse_error = 1;
-            else installed_size = parsed * 1024U;
+        if (strncmp(line, "Package: ", 9U) == 0) { free(name); name = pkg_strdup_internal(trim_newline(line + 9U)); }
+        else if (strncmp(line, "Version: ", 9U) == 0) { free(version); version = pkg_strdup_internal(trim_newline(line + 9U)); }
+        else if (strncmp(line, "Architecture: ", 14U) == 0) { free(architecture); architecture = pkg_strdup_internal(trim_newline(line + 14U)); }
+        else if (strncmp(line, "Status: ", 8U) == 0) { free(status); status = pkg_strdup_internal(trim_newline(line + 8U)); }
+        else if (strncmp(line, "Installed-Size: ", 16U) == 0) {
+            uint64_t kib = 0U;
+            if (parse_u64_decimal(trim_newline(line + 16U), &kib) != 0 || kib > UINT64_MAX / UINT64_C(1024)) parse_error = 1;
+            else installed_size = kib * UINT64_C(1024);
         }
     }
 
-    if (ferror(file) != 0 && !parse_error) parse_error = 1;
-    if (feof(file) != 0 && name != NULL && version != NULL && architecture != NULL && is_installed_status(status)) {
-        int append_result = append_package(result, options, name, version, architecture, installed_size);
-        if (append_result < 0) parse_error = 1;
-        if (append_result > 0) truncated = 1;
+    if (truncated == 0 && parse_error == 0 && name != NULL && version != NULL && architecture != NULL) {
+        int rc = append_package(result, options, name, version, architecture, installed_size);
+        if (rc == 1) truncated = 1;
+        else if (rc != 0) parse_error = 1;
     }
-
-    free(name);
-    free(version);
-    free(architecture);
-    free(status);
-    free(line);
-    (void)fclose(file);
-
-    if (parse_error) return PKG_ERR_PARSE;
-    if (truncated) return PKG_ERR_RESOURCE_LIMIT;
+    free(name); free(version); free(architecture); free(status); free(line);
+    if (fclose(file) != 0 && parse_error == 0) parse_error = 1;
+    if (parse_error != 0) return PKG_ERR_PARSE;
+    if (truncated != 0) return PKG_ERR_RESOURCE_LIMIT;
 
     {
         pkg_status correlation = correlate_package_files(target, result, options);
-        if (correlation != PKG_OK) return correlation;
+        if (correlation != PKG_OK && correlation != PKG_ERR_RESOURCE_LIMIT) return correlation;
     }
     if (result->package_count > 1U) {
         qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
