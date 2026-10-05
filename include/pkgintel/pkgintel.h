@@ -78,6 +78,9 @@ PKGINTEL_API const char *pkg_scan_result_package_name(const pkg_scan_result *res
 PKGINTEL_API const char *pkg_scan_result_package_version(const pkg_scan_result *result, size_t index);
 PKGINTEL_API const char *pkg_scan_result_package_architecture(const pkg_scan_result *result, size_t index);
 PKGINTEL_API uint64_t pkg_scan_result_package_installed_size(const pkg_scan_result *result, size_t index);
+PKGINTEL_API uint64_t pkg_scan_result_package_file_count(const pkg_scan_result *result, size_t index);
+PKGINTEL_API uint64_t pkg_scan_result_package_missing_file_count(const pkg_scan_result *result, size_t index);
+PKGINTEL_API uint64_t pkg_scan_result_diagnostic_count(const pkg_scan_result *result);
 
 PKGINTEL_API const char *pkg_status_string(pkg_status status);
 
