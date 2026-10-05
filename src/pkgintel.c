@@ -327,3 +327,22 @@ size_t pkg_package_artifact_count(const pkg_package *package) {
 pkg_status pkg_package_artifact_at(const pkg_package *package, size_t index, const pkg_artifact **out_artifact) {
     (void)package; (void)index; if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_artifact = NULL; return PKG_ERR_NOT_FOUND;
 }
+
+
+pkg_path pkg_artifact_path(const pkg_artifact *artifact) { (void)artifact; return (pkg_path){NULL,0U}; }
+pkg_artifact_kind pkg_artifact_get_kind(const pkg_artifact *artifact) { (void)artifact; return PKG_ARTIFACT_UNKNOWN; }
+pkg_artifact_state pkg_artifact_get_state(const pkg_artifact *artifact) { (void)artifact; return PKG_ARTIFACT_STATE_UNKNOWN; }
+uint64_t pkg_artifact_logical_size_bytes(const pkg_artifact *artifact) { (void)artifact; return 0U; }
+uint64_t pkg_artifact_allocated_size_bytes(const pkg_artifact *artifact) { (void)artifact; return 0U; }
+pkg_string_view pkg_cache_backend(const pkg_cache *cache) { (void)cache; return (pkg_string_view){NULL,0U}; }
+pkg_path pkg_cache_path(const pkg_cache *cache) { (void)cache; return (pkg_path){NULL,0U}; }
+pkg_cache_entry_state pkg_cache_get_state(const pkg_cache *cache) { (void)cache; return PKG_CACHE_ENTRY_UNKNOWN; }
+uint64_t pkg_cache_size_bytes(const pkg_cache *cache) { (void)cache; return 0U; }
+pkg_string_view pkg_capability_name(const pkg_capability *capability) { (void)capability; return (pkg_string_view){NULL,0U}; }
+pkg_capability_kind pkg_capability_get_kind(const pkg_capability *capability) { (void)capability; return PKG_CAPABILITY_UNKNOWN; }
+pkg_path pkg_capability_executable_path(const pkg_capability *capability) { (void)capability; return (pkg_path){NULL,0U}; }
+pkg_diagnostic_severity pkg_diagnostic_get_severity(const pkg_diagnostic *diagnostic) { (void)diagnostic; return PKG_DIAGNOSTIC_INFO; }
+pkg_status pkg_diagnostic_get_status(const pkg_diagnostic *diagnostic) { (void)diagnostic; return PKG_STATUS_OK; }
+pkg_string_view pkg_diagnostic_code(const pkg_diagnostic *diagnostic) { (void)diagnostic; return (pkg_string_view){NULL,0U}; }
+pkg_string_view pkg_diagnostic_message(const pkg_diagnostic *diagnostic) { (void)diagnostic; return (pkg_string_view){NULL,0U}; }
+pkg_evidence_source pkg_diagnostic_get_evidence_source(const pkg_diagnostic *diagnostic) { (void)diagnostic; return PKG_EVIDENCE_UNKNOWN; }
