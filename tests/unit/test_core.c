@@ -31,7 +31,7 @@ static void make_fixture(char *root, size_t root_size) {
     assert(written > 0 && (size_t)written < sizeof(path));
     file = fopen(path, "wb");
     assert(file != NULL);
-    assert(fputs("Package: fixture-pkg\\nVersion: 1.2.3\\nArchitecture: amd64\\nStatus: install ok installed\\nInstalled-Size: 10\\n\\nPackage: removed-pkg\\nVersion: 9.9\\nArchitecture: amd64\\nStatus: deinstall ok config-files\\nInstalled-Size: 999\\n", file) >= 0);
+    assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\nPackage: removed-pkg\nVersion: 9.9\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 999\n", file) >= 0);
     assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root);
     assert(mkdir(path, 0700) == 0);
@@ -45,6 +45,11 @@ static void make_fixture(char *root, size_t root_size) {
     written = snprintf(path, sizeof(path), "%s/usr/bin/present", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("x", file) == 1); assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/link", root); assert(symlink("/usr/bin/present", path) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/broken", root); assert(symlink("/usr/bin/nope", path) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin/adir", root); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin/fifo", root); assert(mkfifo(path, 0600) == 0);
+    written = snprintf(path, sizeof(path), "%s/restricted", root); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/restricted/secret", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("secret", file) == 6); assert(fclose(file) == 0);
+    written = snprintf(path, sizeof(path), "%s/restricted", root); assert(chmod(path, 0000) == 0);
 }
 
 static void remove_fixture(const char *root) {
@@ -53,11 +58,14 @@ static void remove_fixture(const char *root) {
     assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin/fifo", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin/adir", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/broken", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/link", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/present", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/restricted", root) > 0); assert(chmod(path, 0700) == 0); assert(snprintf(path, sizeof(path), "%s/restricted/secret", root) > 0); assert(unlink(path) == 0); assert(snprintf(path, sizeof(path), "%s/restricted", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) > 0);
     assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib", root) > 0);
@@ -91,10 +99,10 @@ int main(void) {
     assert(strcmp(pkg_scan_result_package_version(result, 0U), "1.2.3") == 0);
     assert(strcmp(pkg_scan_result_package_architecture(result, 0U), "amd64") == 0);
     assert(pkg_scan_result_package_installed_size(result, 0U) == 10240U);
-    assert(pkg_scan_result_package_file_count(result, 0U) == 5U);
+    assert(pkg_scan_result_package_file_count(result, 0U) == 9U);
     assert(pkg_scan_result_package_missing_file_count(result, 0U) == 1U);
     assert(pkg_scan_result_package_invalid_path_count(result, 0U) == 1U);
-    assert(pkg_snapshot_artifact_count(result) == 5U);
+    assert(pkg_snapshot_artifact_count(result) == 9U);
     {
         const pkg_artifact *artifact = NULL;
         assert(pkg_snapshot_artifact_at(result, 1U, &artifact) == PKG_OK);
@@ -103,6 +111,14 @@ int main(void) {
         assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_SYMLINK);
         assert(pkg_snapshot_artifact_at(result, 3U, &artifact) == PKG_OK);
         assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_SYMLINK);
+        assert(pkg_snapshot_artifact_at(result, 4U, &artifact) == PKG_OK);
+        assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_DIRECTORY);
+        assert(pkg_snapshot_artifact_at(result, 5U, &artifact) == PKG_OK);
+        assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_OTHER);
+        assert(pkg_snapshot_artifact_at(result, 6U, &artifact) == PKG_OK);
+        assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_REGULAR);
+        assert(pkg_snapshot_artifact_at(result, 7U, &artifact) == PKG_OK);
+        if (geteuid() != 0) assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_PERMISSION_DENIED);
     }
     { const pkg_package *package = NULL; const pkg_artifact *artifact = NULL; pkg_path path_view;
       assert(pkg_snapshot_package_at(result, 0U, &package) == PKG_OK);
