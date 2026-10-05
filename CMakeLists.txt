@@ -15,9 +15,11 @@ add_library(pkgintel SHARED
 set_target_properties(pkgintel PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 0
-    C_VISIBILITY_PRESET hidden
-    VISIBILITY_INLINES_HIDDEN YES
 )
+
+# v0.1 ABI symbols are intentionally default-visible while the public export
+# set is being stabilized. Before v1.0, replace this with an explicit linker
+# version script so only reviewed ABI symbols are exported.
 
 target_include_directories(pkgintel
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
