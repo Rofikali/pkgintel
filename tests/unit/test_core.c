@@ -31,16 +31,49 @@ static void make_fixture(char *root, size_t root_size) {
     assert(written > 0 && (size_t)written < sizeof(path));
     file = fopen(path, "wb");
     assert(file != NULL);
-    assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\nPackage: removed-pkg\nVersion: 9.9\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 999\n", file) >= 0);
+    assert(fputs("Package: fixture-pkg
+Version: 1.2.3
+Architecture: amd64
+Status: install ok installed
+Installed-Size: 10
+
+Package: removed-pkg
+Version: 9.9
+Architecture: amd64
+Status: deinstall ok config-files
+Installed-Size: 999
+", file) >= 0);
     assert(fclose(file) == 0);
-    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root);\n    assert(mkdir(path, 0700) == 0);\n    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root);\n    file = fopen(path, "wb");\n    assert(file != NULL);\n    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n../escape\n", file) >= 0);\n    assert(fclose(file) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin/present", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("x", file) == 1); assert(fclose(file) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin/link", root); assert(symlink("/usr/bin/present", path) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin/broken", root); assert(symlink("/usr/bin/nope", path) == 0);
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root);
+    assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root);
+    file = fopen(path, "wb");
+    assert(file != NULL);
+    assert(fputs("/usr/bin/present
+/usr/bin/missing
+/usr/bin/link
+/usr/bin/broken
+../escape
+", file) >= 0);
+    assert(fclose(file) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin/present", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("x", file) == 1); assert(fclose(file) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin/link", root); assert(symlink("/usr/bin/present", path) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin/broken", root); assert(symlink("/usr/bin/nope", path) == 0);
 }
 
 static void remove_fixture(const char *root) {
     char path[512];
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", root) > 0);
     assert(unlink(path) == 0);
-    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) > 0); assert(rmdir(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin/broken", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin/link", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin/present", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin", root) > 0); assert(rmdir(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin/broken", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin/link", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin/present", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) > 0);
     assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib", root) > 0);
@@ -55,8 +88,10 @@ int main(void) {
     pkg_context *context = NULL;
     pkg_target *target = NULL;
     pkg_scan_result *result = NULL;
+    pkg_scan_result *limited_result = NULL;
     pkg_scan_options options = PKG_SCAN_OPTIONS_INIT;
-    options.max_packages = 10U;\n    options.max_package_files = 100U;
+    options.max_packages = 10U;
+    options.max_package_files = 100U;
 
     assert(pkg_context_create(NULL, &context) == PKG_OK);
     assert(context != NULL);
@@ -88,6 +123,22 @@ int main(void) {
     assert(pkg_scan_result_diagnostic_count(result) == 0U);
 
     pkg_scan_result_destroy(result);
+    pkg_target_destroy(target);
+
+    /* Resource-limit behavior: one package-file observation is permitted, so
+     * the scan must return a partial snapshot with LIMIT_EXCEEDED. */
+    assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
+    {
+        pkg_scan_options limited = PKG_SCAN_OPTIONS_INIT;
+        limited.max_packages = 10U;
+        limited.max_package_files = 1U;
+        assert(pkg_scan(context, target, &limited, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
+        assert(limited_result != NULL);
+        assert(pkg_scan_result_package_count(limited_result) == 1U);
+        assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U);
+        assert(pkg_snapshot_artifact_count(limited_result) == 1U);
+    }
+    pkg_scan_result_destroy(limited_result);
     pkg_target_destroy(target);
     remove_fixture(fixture);
 
