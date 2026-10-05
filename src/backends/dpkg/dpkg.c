@@ -79,6 +79,7 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
     size_t capacity = 0U;
     uint64_t count = 0U;
     uint64_t missing = 0U;
+    uint64_t invalid = 0U;
 
     if (target == NULL || package == NULL) return -1;
     written = snprintf(path, sizeof(path), "/var/lib/dpkg/info/%s.list", package->name);
@@ -101,6 +102,11 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
         trim_newline(line);
         entry = line;
         if (*entry == '\0') continue;
+        if (entry[0] != '/') {
+            ++invalid;
+            ++count;
+            continue;
+        }
         if (options != NULL && options->max_package_files != 0U &&
             count >= options->max_package_files) {
             free(line);
@@ -109,6 +115,8 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
             if (errno == ENOENT) ++missing;
+            else if (errno == EACCES || errno == EPERM) ++missing;
+            else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) ++invalid;
             else ++missing;
         }
         ++count;
@@ -124,6 +132,7 @@ static int package_file_list(const pkg_target *target, const pkg_package_record 
     (void)fclose(file);
     ((pkg_package_record *)package)->file_count = count;
     ((pkg_package_record *)package)->missing_file_count = missing;
+    ((pkg_package_record *)package)->invalid_path_count = invalid;
     return 0;
 }
 
