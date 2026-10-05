@@ -8,6 +8,7 @@ static int command_scan(void) {
     pkg_target *target = NULL;
     pkg_scan_result *result = NULL;
     pkg_status status;
+    size_t i;
 
     status = pkg_context_create(NULL, &context);
     if (status != PKG_OK) {
@@ -23,7 +24,7 @@ static int command_scan(void) {
     }
 
     status = pkg_scan(context, target, NULL, &result);
-    if (status != PKG_OK) {
+    if (status != PKG_OK && status != PKG_ERR_RESOURCE_LIMIT) {
         fprintf(stderr, "pkgintel: scan: %s\n", pkg_status_string(status));
         pkg_target_destroy(target);
         pkg_context_destroy(context);
@@ -32,11 +33,21 @@ static int command_scan(void) {
 
     printf("Target: %s\n", pkg_scan_result_target_root(result));
     printf("Packages: %zu\n", pkg_scan_result_package_count(result));
+    if (status == PKG_ERR_RESOURCE_LIMIT) printf("Warning: resource limit reached\n");
+
+    for (i = 0U; i < pkg_scan_result_package_count(result) && i < 20U; ++i) {
+        printf("  %s %s [%s] %llu bytes\n",
+               pkg_scan_result_package_name(result, i),
+               pkg_scan_result_package_version(result, i),
+               pkg_scan_result_package_architecture(result, i),
+               (unsigned long long)pkg_scan_result_package_installed_size(result, i));
+    }
+    if (pkg_scan_result_package_count(result) > 20U) printf("  ...\n");
 
     pkg_scan_result_destroy(result);
     pkg_target_destroy(target);
     pkg_context_destroy(context);
-    return 0;
+    return status == PKG_ERR_RESOURCE_LIMIT ? 3 : 0;
 }
 
 static void usage(const char *program) {
