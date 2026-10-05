@@ -16,6 +16,7 @@ typedef struct pkg_artifact_record {
     bool allocated_size_valid;
 } pkg_artifact_record;
 
+struct pkg_snapshot;
 typedef struct pkg_package_record {
     char *name;
     char *version;
@@ -26,6 +27,7 @@ typedef struct pkg_package_record {
     uint64_t invalid_path_count;
     size_t artifact_start;
     size_t artifact_count;
+    struct pkg_snapshot *owner_snapshot;
 } pkg_package_record;
 
 typedef struct pkg_diagnostic_record {
