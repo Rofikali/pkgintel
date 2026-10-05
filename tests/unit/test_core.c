@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <unistd.h>\n#include <fcntl.h>\n#include <sys/types.h>
 
 static void make_fixture(char *root, size_t root_size) {
     char path[512];
@@ -30,13 +30,13 @@ static void make_fixture(char *root, size_t root_size) {
     file = fopen(path, "wb");
     assert(file != NULL);
     assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\nPackage: removed-pkg\nVersion: 9.9\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 999\n", file) >= 0);
-    assert(fclose(file) == 0);
+    assert(fclose(file) == 0);\n    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root);\n    assert(mkdir(path, 0700) == 0);\n    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root);\n    file = fopen(path, "wb");\n    assert(file != NULL);\n    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n../escape\n", file) >= 0);\n    assert(fclose(file) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin/present", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("x", file) == 1); assert(fclose(file) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin/link", root); assert(symlink("/usr/bin/present", path) == 0);\n    written = snprintf(path, sizeof(path), "%s/usr/bin/broken", root); assert(symlink("/usr/bin/nope", path) == 0);
 }
 
 static void remove_fixture(const char *root) {
     char path[512];
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", root) > 0);
-    assert(unlink(path) == 0);
+    assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) > 0); assert(rmdir(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin/broken", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin/link", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin/present", root) > 0); assert(unlink(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr/bin", root) > 0); assert(rmdir(path) == 0);\n    assert(snprintf(path, sizeof(path), "%s/usr", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) > 0);
     assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var/lib", root) > 0);
@@ -51,7 +51,7 @@ int main(void) {
     pkg_context *context = NULL;
     pkg_target *target = NULL;
     pkg_scan_result *result = NULL;
-    pkg_scan_options options = { PKG_SCAN_NORMAL, 10U, 100U };
+    pkg_scan_options options = PKG_SCAN_OPTIONS_INIT;\n    options.max_packages = 10U;\n    options.max_package_files = 100U;
 
     assert(pkg_context_create(NULL, &context) == PKG_OK);
     assert(context != NULL);
@@ -67,9 +67,9 @@ int main(void) {
     assert(strcmp(pkg_scan_result_package_version(result, 0U), "1.2.3") == 0);
     assert(strcmp(pkg_scan_result_package_architecture(result, 0U), "amd64") == 0);
     assert(pkg_scan_result_package_installed_size(result, 0U) == 10240U);
-    assert(pkg_scan_result_package_file_count(result, 0U) == 0U);
-    assert(pkg_scan_result_package_missing_file_count(result, 0U) == 0U);
-    assert(pkg_scan_result_diagnostic_count(result) == 1U);
+    assert(pkg_scan_result_package_file_count(result, 0U) == 5U);
+    assert(pkg_scan_result_package_missing_file_count(result, 0U) == 1U);\n    assert(pkg_scan_result_package_invalid_path_count(result, 0U) == 1U);\n    assert(pkg_snapshot_artifact_count(result) == 5U);
+    assert(pkg_scan_result_diagnostic_count(result) == 0U);
 
     pkg_scan_result_destroy(result);
     pkg_target_destroy(target);
