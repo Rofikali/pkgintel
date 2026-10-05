@@ -63,6 +63,16 @@ static int append_package(pkg_scan_result *result, const pkg_scan_options *optio
     return 0;
 }
 
+static int package_record_compare(const void *left, const void *right) {
+    const pkg_package_record *a = (const pkg_package_record *)left;
+    const pkg_package_record *b = (const pkg_package_record *)right;
+    int cmp = strcmp(a->name, b->name);
+    if (cmp != 0) return cmp;
+    cmp = strcmp(a->architecture, b->architecture);
+    if (cmp != 0) return cmp;
+    return strcmp(a->version, b->version);
+}
+
 static int is_installed_status(const char *status) {
     const char *last_space;
     if (status == NULL) return 0;
@@ -267,6 +277,9 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
     {
         pkg_status correlation = correlate_package_files(target, result, options);
         if (correlation != PKG_OK) return correlation;
+    }
+    if (result->package_count > 1U) {
+        qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
     }
     return PKG_OK;
 }
