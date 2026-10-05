@@ -89,7 +89,7 @@ int pkg_target_open_path(const pkg_target *target, const char *path, int flags) 
         return -1;
     }
 
-    how.flags = (uint64_t)(flags | O_CLOEXEC);
+    how.flags = (unsigned long long)(flags | O_CLOEXEC);
     how.resolve = RESOLVE_BENEATH | RESOLVE_NO_MAGICLINKS;
     return (int)syscall(SYS_openat2, target->root_fd, relative, &how, sizeof(how));
 }
@@ -107,7 +107,7 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
         errno = EINVAL;
         return -1;
     }
-    how.flags = (uint64_t)(O_PATH | O_NOFOLLOW | O_CLOEXEC);
+    how.flags = (unsigned long long)(O_PATH | O_NOFOLLOW | O_CLOEXEC);
     how.resolve = RESOLVE_BENEATH | RESOLVE_NO_MAGICLINKS;
     fd = (int)syscall(SYS_openat2, target->root_fd, relative, &how, sizeof(how));
     if (fd < 0) return -1;
@@ -319,7 +319,6 @@ uint64_t pkg_scan_result_diagnostic_count(const pkg_scan_result *result) {
     return result == NULL ? 0U : result->diagnostic_count;
 }
 
-
 pkg_status pkg_target_local_create(pkg_context *context, pkg_target **out_target) {
     return pkg_target_create_local(context, out_target);
 }
@@ -328,11 +327,11 @@ pkg_status pkg_target_rootfs_create(pkg_context *context, pkg_path root, pkg_tar
     char *text;
     pkg_status status;
     if (root.data == NULL || root.size == 0U || root.size > SIZE_MAX - 1U) return PKG_ERR_INVALID_ARGUMENT;
-    if (memchr(root.data, '\\0', root.size) != NULL) return PKG_ERR_INVALID_ARGUMENT;
+    if (memchr(root.data, '\0', root.size) != NULL) return PKG_ERR_INVALID_ARGUMENT;
     text = malloc(root.size + 1U);
     if (text == NULL) return PKG_ERR_INTERNAL;
     memcpy(text, root.data, root.size);
-    text[root.size] = '\\0';
+    text[root.size] = '\0';
     status = pkg_target_create_rootfs(context, text, out_target);
     free(text);
     return status;
@@ -358,102 +357,7 @@ pkg_status pkg_snapshot_artifact_at(const pkg_snapshot *snapshot, size_t index, 
     *out_artifact = (const pkg_artifact *)&snapshot->artifacts[index];
     return PKG_OK;
 }
-size_t pkg_snapshot_cache_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
-pkg_status pkg_snapshot_cache_at(const pkg_snapshot *snapshot, size_t index, const pkg_cache **out_cache) {
-    (void)snapshot; (void)index; if (out_cache == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_cache = NULL; return PKG_ERR_NOT_FOUND;
-}
-size_t pkg_snapshot_capability_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
-pkg_status pkg_snapshot_capability_at(const pkg_snapshot *snapshot, size_t index, const pkg_capability **out_capability) {
-    (void)snapshot; (void)index; if (out_capability == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_capability = NULL; return PKG_ERR_NOT_FOUND;
-}
-size_t pkg_snapshot_diagnostic_count(const pkg_snapshot *snapshot) { return snapshot == NULL ? 0U : (size_t)snapshot->diagnostic_count; }
-pkg_status pkg_snapshot_diagnostic_at(const pkg_snapshot *snapshot, size_t index, const pkg_diagnostic **out_diagnostic) {
-    if (out_diagnostic == NULL) return PKG_ERR_INVALID_ARGUMENT;
-    *out_diagnostic = NULL;
-    if (snapshot == NULL || index >= snapshot->diagnostic_count) return PKG_ERR_NOT_FOUND;
-    *out_diagnostic = (const pkg_diagnostic *)&snapshot->diagnostics[index];
-    return PKG_OK;
-}
 
-pkg_string_view pkg_package_name(const pkg_package *package) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    return (pkg_string_view){ p != NULL ? p->name : NULL, p != NULL && p->name != NULL ? strlen(p->name) : 0U };
+pkg_status pkg_snapshot_package_count_status(const pkg_snapshot *snapshot, size_t index, const pkg_package **out_package) {
+    return pkg_snapshot_package_at(snapshot, index, out_package);
 }
-pkg_string_view pkg_package_version(const pkg_package *package) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    return (pkg_string_view){ p != NULL ? p->version : NULL, p != NULL && p->version != NULL ? strlen(p->version) : 0U };
-}
-pkg_string_view pkg_package_architecture(const pkg_package *package) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    return (pkg_string_view){ p != NULL ? p->architecture : NULL, p != NULL && p->architecture != NULL ? strlen(p->architecture) : 0U };
-}
-pkg_string_view pkg_package_source(const pkg_package *package) { (void)package; return (pkg_string_view){NULL,0U}; }
-pkg_installation_state pkg_package_get_state(const pkg_package *package) { return package != NULL ? PKG_INSTALLATION_INSTALLED : PKG_INSTALLATION_UNKNOWN; }
-pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    if (p == NULL) return PKG_CONSISTENCY_UNKNOWN;
-    if (p->invalid_path_count != 0U || p->missing_file_count != 0U) return PKG_CONSISTENCY_INCONSISTENT;
-    return PKG_CONSISTENCY_CONSISTENT;
-}
-uint64_t pkg_package_declared_size_bytes(const pkg_package *package) {
-    return pkg_package_installed_size_bytes(package);
-}
-uint64_t pkg_package_installed_size_bytes(const pkg_package *package) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    return p != NULL ? p->installed_size : 0U;
-}
-size_t pkg_package_artifact_count(const pkg_package *package) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    return p != NULL ? (size_t)p->file_count : 0U;
-}
-pkg_status pkg_package_artifact_at(const pkg_package *package, size_t index, const pkg_artifact **out_artifact) {
-    const pkg_package_record *p = (const pkg_package_record *)package;
-    if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT;
-    *out_artifact = NULL;
-    if (p == NULL || index >= p->artifact_count || p->owner_snapshot == NULL) return PKG_ERR_NOT_FOUND;
-    if (p->artifact_start > p->owner_snapshot->artifact_count || index > p->owner_snapshot->artifact_count - p->artifact_start) return PKG_ERR_INTERNAL;
-    *out_artifact = (const pkg_artifact *)&p->owner_snapshot->artifacts[p->artifact_start + index];
-    return PKG_OK;
-}
-
-
-pkg_path pkg_artifact_path(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a == NULL ? (pkg_path){NULL,0U} : (pkg_path){a->path,a->path_size};
-}
-pkg_artifact_kind pkg_artifact_get_kind(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a == NULL ? PKG_ARTIFACT_UNKNOWN : a->kind;
-}
-pkg_artifact_state pkg_artifact_get_state(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a == NULL ? PKG_ARTIFACT_STATE_UNKNOWN : a->state;
-}
-uint64_t pkg_artifact_logical_size_bytes(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a == NULL ? 0U : a->logical_size;
-}
-bool pkg_artifact_logical_size_available(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a != NULL && a->state == PKG_ARTIFACT_PRESENT && a->kind == PKG_ARTIFACT_REGULAR && a->logical_size <= UINT64_MAX;
-}
-uint64_t pkg_artifact_allocated_size_bytes(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a == NULL || !a->allocated_size_valid ? 0U : a->allocated_size;
-}
-bool pkg_artifact_allocated_size_available(const pkg_artifact *artifact) {
-    const pkg_artifact_record *a = (const pkg_artifact_record *)artifact;
-    return a != NULL && a->allocated_size_valid;
-}
-pkg_string_view pkg_cache_backend(const pkg_cache *cache) { (void)cache; return (pkg_string_view){NULL,0U}; }
-pkg_path pkg_cache_path(const pkg_cache *cache) { (void)cache; return (pkg_path){NULL,0U}; }
-pkg_cache_entry_state pkg_cache_get_state(const pkg_cache *cache) { (void)cache; return PKG_CACHE_ENTRY_UNKNOWN; }
-uint64_t pkg_cache_size_bytes(const pkg_cache *cache) { (void)cache; return 0U; }
-pkg_string_view pkg_capability_name(const pkg_capability *capability) { (void)capability; return (pkg_string_view){NULL,0U}; }
-pkg_capability_kind pkg_capability_get_kind(const pkg_capability *capability) { (void)capability; return PKG_CAPABILITY_UNKNOWN; }
-pkg_path pkg_capability_executable_path(const pkg_capability *capability) { (void)capability; return (pkg_path){NULL,0U}; }
-pkg_diagnostic_severity pkg_diagnostic_get_severity(const pkg_diagnostic *diagnostic) { (void)diagnostic; return PKG_DIAGNOSTIC_INFO; }
-pkg_status pkg_diagnostic_get_status(const pkg_diagnostic *diagnostic) { (void)diagnostic; return PKG_STATUS_OK; }
-pkg_string_view pkg_diagnostic_code(const pkg_diagnostic *diagnostic) { (void)diagnostic; return (pkg_string_view){NULL,0U}; }
-pkg_string_view pkg_diagnostic_message(const pkg_diagnostic *diagnostic) { (void)diagnostic; return (pkg_string_view){NULL,0U}; }
-pkg_evidence_source pkg_diagnostic_get_evidence_source(const pkg_diagnostic *diagnostic) { (void)diagnostic; return PKG_EVIDENCE_UNKNOWN; }
