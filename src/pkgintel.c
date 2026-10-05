@@ -1,7 +1,7 @@
 #include "core/pkg_internal.h"
 
 #include <errno.h>
-#include <fcntl.h>
+#include <fcntl.h>\n#include <linux/openat2.h>\n#include <sys/syscall.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -75,6 +75,8 @@ static pkg_status target_create(pkg_context *context, pkg_target_type type,
 
 int pkg_target_open_path(const pkg_target *target, const char *path, int flags) {
     const char *relative;
+    struct open_how how = {0};
+
     if (target == NULL || target->root_fd < 0 || path == NULL || path[0] != '/') {
         errno = EINVAL;
         return -1;
@@ -84,11 +86,16 @@ int pkg_target_open_path(const pkg_target *target, const char *path, int flags) 
         errno = EINVAL;
         return -1;
     }
-    return openat(target->root_fd, relative, flags | O_NOFOLLOW);
+
+    how.flags = (uint64_t)(flags | O_CLOEXEC);
+    how.resolve = RESOLVE_BENEATH | RESOLVE_NO_MAGICLINKS;
+    return (int)syscall(SYS_openat2, target->root_fd, relative, &how, sizeof(how));
 }
 
 int pkg_target_lstat_path(const pkg_target *target, const char *path, struct stat *st) {
     const char *relative;
+    int fd;
+
     if (target == NULL || target->root_fd < 0 || path == NULL || path[0] != '/' || st == NULL) {
         errno = EINVAL;
         return -1;
@@ -98,7 +105,17 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
         errno = EINVAL;
         return -1;
     }
-    return fstatat(target->root_fd, relative, st, AT_SYMLINK_NOFOLLOW);
+
+    fd = pkg_target_open_path(target, path, O_PATH | O_NOFOLLOW);
+    if (fd < 0) return -1;
+    if (fstat(fd, st) != 0) {
+        int saved_errno = errno;
+        (void)close(fd);
+        errno = saved_errno;
+        return -1;
+    }
+    (void)close(fd);
+    return 0;
 }
 
 pkg_status pkg_target_open_root(pkg_target *target) {
