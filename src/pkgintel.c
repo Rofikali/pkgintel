@@ -178,16 +178,24 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target,
         return status;
     }
 
-    if (options == NULL) options = &defaults;
-    if (options->struct_size < sizeof(uint32_t) * 2U) {
-        pkg_snapshot_destroy(result);
-        return PKG_ERR_INVALID_ARGUMENT;
+    {
+        pkg_scan_options normalized = defaults;
+        size_t supplied;
+        if (options != NULL) {
+            if (options->struct_size < sizeof(uint32_t) * 2U) {
+                pkg_snapshot_destroy(result);
+                return PKG_ERR_INVALID_ARGUMENT;
+            }
+            supplied = options->struct_size;
+            if (supplied > sizeof(normalized)) supplied = sizeof(normalized);
+            memcpy(&normalized, options, supplied);
+            if ((normalized.flags & ~(PKG_SCAN_INCLUDE_ELF | PKG_SCAN_INCLUDE_CACHES | PKG_SCAN_INCLUDE_CAPABILITIES | PKG_SCAN_CORRELATE_FILES)) != 0U) {
+                pkg_snapshot_destroy(result);
+                return PKG_ERR_INVALID_ARGUMENT;
+            }
+        }
+        status = pkg_dpkg_scan(context, target, &normalized, result);
     }
-    if ((options->flags & ~(PKG_SCAN_INCLUDE_ELF | PKG_SCAN_INCLUDE_CACHES | PKG_SCAN_INCLUDE_CAPABILITIES | PKG_SCAN_CORRELATE_FILES)) != 0U) {
-        pkg_snapshot_destroy(result);
-        return PKG_ERR_INVALID_ARGUMENT;
-    }
-    status = pkg_dpkg_scan(context, target, options, result);
     if (status != PKG_OK && status != PKG_ERR_RESOURCE_LIMIT) {
         pkg_snapshot_destroy(result);
         return status;
@@ -237,7 +245,7 @@ int pkg_snapshot_add_artifact(pkg_snapshot *snapshot, const unsigned char *path,
     grown[n - 1U].state = state;
     if (st != NULL) {
         grown[n - 1U].logical_size = S_ISREG(st->st_mode) ? (uint64_t)st->st_size : 0U;
-        if (st->st_blocks >= 0) {
+        if (st->st_blocks >= 0 && (uint64_t)st->st_blocks <= UINT64_MAX / UINT64_C(512)) {
             grown[n - 1U].allocated_size = (uint64_t)st->st_blocks * UINT64_C(512);
             grown[n - 1U].allocated_size_valid = true;
         }
