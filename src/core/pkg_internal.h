@@ -52,8 +52,6 @@ struct pkg_snapshot {
     size_t diagnostic_count;
 };
 
-typedef struct pkg_scan_result pkg_scan_result;
-
 char *pkg_strdup_internal(const char *value);
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
                          const pkg_scan_options *options, struct pkg_snapshot *result);
