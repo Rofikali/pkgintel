@@ -233,6 +233,10 @@ uint64_t pkg_scan_result_package_missing_file_count(const pkg_scan_result *resul
     return result != NULL && index < result->package_count ? result->packages[index].missing_file_count : 0U;
 }
 
+uint64_t pkg_scan_result_package_invalid_path_count(const pkg_scan_result *result, size_t index) {
+    return result != NULL && index < result->package_count ? result->packages[index].invalid_path_count : 0U;
+}
+
 uint64_t pkg_scan_result_diagnostic_count(const pkg_scan_result *result) {
     return result == NULL ? 0U : result->diagnostic_count;
 }
