@@ -15,6 +15,7 @@ typedef struct pkg_package_record {
     uint64_t installed_size;
     uint64_t file_count;
     uint64_t missing_file_count;
+    uint64_t invalid_path_count;
 } pkg_package_record;
 
 struct pkg_context {
