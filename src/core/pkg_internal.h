@@ -1,5 +1,6 @@
 #ifndef PKGINTEL_INTERNAL_H
 #define PKGINTEL_INTERNAL_H
+
 #include "pkgintel/pkgintel.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -59,11 +60,12 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target,
 pkg_status pkg_target_open_root(pkg_target *target);
 int pkg_target_open_path(const pkg_target *target, const char *path, int flags);
 int pkg_target_lstat_path(const pkg_target *target, const char *path, struct stat *st);
-int pkg_snapshot_add_artifact(struct pkg_snapshot *snapshot, const char *path,
-                              pkg_artifact_kind kind, pkg_artifact_state state,
-                              const struct stat *st);
+int pkg_snapshot_add_artifact(struct pkg_snapshot *snapshot, const unsigned char *path,
+                              size_t path_size, pkg_artifact_kind kind,
+                              pkg_artifact_state state, const struct stat *st);
 int pkg_snapshot_add_diagnostic(struct pkg_snapshot *snapshot, pkg_status status,
                                 pkg_diagnostic_severity severity,
                                 pkg_evidence_source source,
                                 const char *code, const char *message);
+
 #endif
