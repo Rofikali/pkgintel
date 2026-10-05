@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include "status.h"
 typedef struct pkg_snapshot pkg_snapshot;
+typedef pkg_snapshot pkg_scan_result;
 typedef struct pkg_package pkg_package;
 typedef struct pkg_artifact pkg_artifact;
 typedef struct pkg_cache pkg_cache;
