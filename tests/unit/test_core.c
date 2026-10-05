@@ -95,6 +95,15 @@ int main(void) {
     assert(pkg_scan_result_package_missing_file_count(result, 0U) == 1U);
     assert(pkg_scan_result_package_invalid_path_count(result, 0U) == 1U);
     assert(pkg_snapshot_artifact_count(result) == 5U);
+    {
+        const pkg_artifact *artifact = NULL;
+        assert(pkg_snapshot_artifact_at(result, 1U, &artifact) == PKG_OK);
+        assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_MISSING);
+        assert(pkg_snapshot_artifact_at(result, 2U, &artifact) == PKG_OK);
+        assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_SYMLINK);
+        assert(pkg_snapshot_artifact_at(result, 3U, &artifact) == PKG_OK);
+        assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_SYMLINK);
+    }
     { const pkg_package *package = NULL; const pkg_artifact *artifact = NULL; pkg_path path_view;
       assert(pkg_snapshot_package_at(result, 0U, &package) == PKG_OK);
       assert(pkg_package_artifact_count(package) == 5U);
