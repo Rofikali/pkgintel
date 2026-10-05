@@ -179,6 +179,14 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target,
     }
 
     if (options == NULL) options = &defaults;
+    if (options->struct_size < sizeof(uint32_t) * 2U) {
+        pkg_snapshot_destroy(result);
+        return PKG_ERR_INVALID_ARGUMENT;
+    }
+    if ((options->flags & ~(PKG_SCAN_INCLUDE_ELF | PKG_SCAN_INCLUDE_CACHES | PKG_SCAN_INCLUDE_CAPABILITIES | PKG_SCAN_CORRELATE_FILES)) != 0U) {
+        pkg_snapshot_destroy(result);
+        return PKG_ERR_INVALID_ARGUMENT;
+    }
     status = pkg_dpkg_scan(context, target, options, result);
     if (status != PKG_OK && status != PKG_ERR_RESOURCE_LIMIT) {
         pkg_snapshot_destroy(result);
