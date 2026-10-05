@@ -113,7 +113,14 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         struct stat st;
         trim_newline(line);
         entry = line;
-        if (options->max_package_files != 0U && file_count >= options->max_package_files) return PKG_ERR_RESOURCE_LIMIT;
+        if (options->max_package_files != 0U && file_count >= options->max_package_files) {
+            package->file_count = count;
+            package->missing_file_count = missing;
+            package->invalid_path_count = invalid;
+            free(line);
+            (void)fclose(file);
+            return 2;
+        }
         ++file_count;
         if (*entry == '\0') { malformed = 1; continue; }
         if (entry[0] != '/') {
@@ -122,15 +129,6 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             ++count;
             if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
             continue;
-        }
-        if (options != NULL && options->max_package_files != 0U &&
-            count >= options->max_package_files) {
-            package->file_count = count;
-            package->missing_file_count = missing;
-            package->invalid_path_count = invalid;
-            free(line);
-            (void)fclose(file);
-            return 2;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
             pkg_artifact_state artifact_state = PKG_ARTIFACT_UNVERIFIABLE;
