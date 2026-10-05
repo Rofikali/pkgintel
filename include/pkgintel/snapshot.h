@@ -20,4 +20,16 @@ size_t pkg_snapshot_capability_count(const pkg_snapshot *snapshot);
 pkg_status pkg_snapshot_capability_at(const pkg_snapshot *snapshot, size_t index, const pkg_capability **out_capability);
 size_t pkg_snapshot_diagnostic_count(const pkg_snapshot *snapshot);
 pkg_status pkg_snapshot_diagnostic_at(const pkg_snapshot *snapshot, size_t index, const pkg_diagnostic **out_diagnostic);
+/* 0.x compatibility accessors. */
+void pkg_scan_result_destroy(pkg_scan_result *result);
+size_t pkg_scan_result_package_count(const pkg_scan_result *result);
+const char *pkg_scan_result_target_root(const pkg_scan_result *result);
+const char *pkg_scan_result_package_name(const pkg_scan_result *result, size_t index);
+const char *pkg_scan_result_package_version(const pkg_scan_result *result, size_t index);
+const char *pkg_scan_result_package_architecture(const pkg_scan_result *result, size_t index);
+uint64_t pkg_scan_result_package_installed_size(const pkg_scan_result *result, size_t index);
+uint64_t pkg_scan_result_package_file_count(const pkg_scan_result *result, size_t index);
+uint64_t pkg_scan_result_package_missing_file_count(const pkg_scan_result *result, size_t index);
+uint64_t pkg_scan_result_package_invalid_path_count(const pkg_scan_result *result, size_t index);
+uint64_t pkg_scan_result_diagnostic_count(const pkg_scan_result *result);
 #endif
