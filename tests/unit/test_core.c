@@ -31,30 +31,14 @@ static void make_fixture(char *root, size_t root_size) {
     assert(written > 0 && (size_t)written < sizeof(path));
     file = fopen(path, "wb");
     assert(file != NULL);
-    assert(fputs("Package: fixture-pkg
-Version: 1.2.3
-Architecture: amd64
-Status: install ok installed
-Installed-Size: 10
-
-Package: removed-pkg
-Version: 9.9
-Architecture: amd64
-Status: deinstall ok config-files
-Installed-Size: 999
-", file) >= 0);
+    assert(fputs("Package: fixture-pkg\\nVersion: 1.2.3\\nArchitecture: amd64\\nStatus: install ok installed\\nInstalled-Size: 10\\n\\nPackage: removed-pkg\\nVersion: 9.9\\nArchitecture: amd64\\nStatus: deinstall ok config-files\\nInstalled-Size: 999\\n", file) >= 0);
     assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root);
     assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root);
     file = fopen(path, "wb");
     assert(file != NULL);
-    assert(fputs("/usr/bin/present
-/usr/bin/missing
-/usr/bin/link
-/usr/bin/broken
-../escape
-", file) >= 0);
+    assert(fputs("/usr/bin/present\\n/usr/bin/missing\\n/usr/bin/link\\n/usr/bin/broken\\n../escape\\n", file) >= 0);
     assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);
