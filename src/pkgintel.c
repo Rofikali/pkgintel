@@ -96,8 +96,6 @@ int pkg_target_open_path(const pkg_target *target, const char *path, int flags) 
 
 int pkg_target_lstat_path(const pkg_target *target, const char *path, struct stat *st) {
     const char *relative;
-    int fd;
-
     if (target == NULL || target->root_fd < 0 || path == NULL || path[0] != '/' || st == NULL) {
         errno = EINVAL;
         return -1;
@@ -107,17 +105,7 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
         errno = EINVAL;
         return -1;
     }
-
-    fd = pkg_target_open_path(target, path, O_PATH | O_NOFOLLOW);
-    if (fd < 0) return -1;
-    if (fstat(fd, st) != 0) {
-        int saved_errno = errno;
-        (void)close(fd);
-        errno = saved_errno;
-        return -1;
-    }
-    (void)close(fd);
-    return 0;
+    return fstatat(target->root_fd, relative, st, AT_SYMLINK_NOFOLLOW);
 }
 
 pkg_status pkg_target_open_root(pkg_target *target) {
@@ -148,8 +136,8 @@ void pkg_target_destroy(pkg_target *target) {
 }
 
 pkg_status pkg_scan(pkg_context *context, pkg_target *target,
-                    const pkg_scan_options *options, pkg_scan_result **out_result) {
-    pkg_scan_result *result;
+                    const pkg_scan_options *options, pkg_snapshot **out_result) {
+    pkg_snapshot *result;
     pkg_status status;
     pkg_scan_options defaults = {
         .mode = PKG_SCAN_NORMAL,
@@ -180,7 +168,7 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target,
     if (options == NULL) options = &defaults;
     status = pkg_dpkg_scan(context, target, options, result);
     if (status != PKG_OK && status != PKG_ERR_RESOURCE_LIMIT) {
-        pkg_scan_result_destroy(result);
+        pkg_snapshot_destroy(result);
         return status;
     }
 
@@ -188,7 +176,7 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target,
     return status;
 }
 
-void pkg_scan_result_destroy(pkg_scan_result *result) {
+void pkg_snapshot_destroy(pkg_snapshot *result) {
     size_t i;
     if (result == NULL) return;
     for (i = 0; i < result->package_count; ++i) {
@@ -197,8 +185,67 @@ void pkg_scan_result_destroy(pkg_scan_result *result) {
         free(result->packages[i].architecture);
     }
     free(result->packages);
+    for (i = 0; i < result->artifact_count; ++i) free(result->artifacts[i].path);
+    free(result->artifacts);
+    for (i = 0; i < result->diagnostic_count; ++i) { free(result->diagnostics[i].code); free(result->diagnostics[i].message); }
+    free(result->diagnostics);
     free(result->target_root);
     free(result);
+}
+
+void pkg_scan_result_destroy(pkg_scan_result *result) { pkg_snapshot_destroy(result); }
+
+int pkg_snapshot_add_artifact(pkg_snapshot *snapshot, const char *path,
+                              pkg_artifact_kind kind, pkg_artifact_state state,
+                              const struct stat *st) {
+    pkg_artifact_record *grown;
+    size_t n;
+    if (snapshot == NULL || path == NULL) return -1;
+    n = snapshot->artifact_count + 1U;
+    if (n < snapshot->artifact_count || n > SIZE_MAX / sizeof(*grown)) return -1;
+    grown = realloc(snapshot->artifacts, n * sizeof(*grown));
+    if (grown == NULL) return -1;
+    snapshot->artifacts = grown;
+    memset(&grown[n - 1U], 0, sizeof(grown[n - 1U]));
+    grown[n - 1U].path = (unsigned char *)pkg_strdup_internal(path);
+    if (grown[n - 1U].path == NULL) return -1;
+    grown[n - 1U].path_size = strlen(path);
+    grown[n - 1U].kind = kind;
+    grown[n - 1U].state = state;
+    if (st != NULL) {
+        grown[n - 1U].logical_size = S_ISREG(st->st_mode) ? (uint64_t)st->st_size : 0U;
+        if (st->st_blocks >= 0) {
+            grown[n - 1U].allocated_size = (uint64_t)st->st_blocks * UINT64_C(512);
+            grown[n - 1U].allocated_size_valid = true;
+        }
+    }
+    snapshot->artifact_count = n;
+    return 0;
+}
+
+int pkg_snapshot_add_diagnostic(pkg_snapshot *snapshot, pkg_status status,
+                                pkg_diagnostic_severity severity,
+                                pkg_evidence_source source,
+                                const char *code, const char *message) {
+    pkg_diagnostic_record *grown;
+    size_t n;
+    if (snapshot == NULL || code == NULL || message == NULL) return -1;
+    n = snapshot->diagnostic_count + 1U;
+    if (n < snapshot->diagnostic_count || n > SIZE_MAX / sizeof(*grown)) return -1;
+    grown = realloc(snapshot->diagnostics, n * sizeof(*grown));
+    if (grown == NULL) return -1;
+    snapshot->diagnostics = grown;
+    memset(&grown[n - 1U], 0, sizeof(grown[n - 1U]));
+    grown[n - 1U].code = pkg_strdup_internal(code);
+    grown[n - 1U].message = pkg_strdup_internal(message);
+    if (grown[n - 1U].code == NULL || grown[n - 1U].message == NULL) {
+        free(grown[n - 1U].code); free(grown[n - 1U].message); return -1;
+    }
+    grown[n - 1U].status = status;
+    grown[n - 1U].severity = severity;
+    grown[n - 1U].evidence_source = source;
+    snapshot->diagnostic_count = n;
+    return 0;
 }
 
 size_t pkg_scan_result_package_count(const pkg_scan_result *result) {
