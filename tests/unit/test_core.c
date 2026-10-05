@@ -38,7 +38,7 @@ static void make_fixture(char *root, size_t root_size) {
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root);
     file = fopen(path, "wb");
     assert(file != NULL);
-    assert(fputs("/usr/bin/present\\n/usr/bin/missing\\n/usr/bin/link\\n/usr/bin/broken\\n../escape\\n", file) >= 0);
+    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n/usr/bin/adir\n/usr/bin/fifo\n/usr/bin/present\n/restricted/secret\n../escape\n", file) >= 0);
     assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);
@@ -122,7 +122,7 @@ int main(void) {
     }
     { const pkg_package *package = NULL; const pkg_artifact *artifact = NULL; pkg_path path_view;
       assert(pkg_snapshot_package_at(result, 0U, &package) == PKG_OK);
-      assert(pkg_package_artifact_count(package) == 5U);
+      assert(pkg_package_artifact_count(package) == 9U);
       assert(pkg_package_artifact_at(package, 0U, &artifact) == PKG_OK);
       assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_REGULAR);
       path_view = pkg_artifact_path(artifact); assert(path_view.size == strlen("/usr/bin/present"));
