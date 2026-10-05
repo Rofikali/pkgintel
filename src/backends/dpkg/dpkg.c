@@ -106,7 +106,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         if (entry[0] != '/') {
             ++invalid;
             ++count;
-            (void)pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
+            if (pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
             continue;
         }
         if (options != NULL && options->max_package_files != 0U &&
@@ -124,13 +124,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             else if (errno == EACCES || errno == EPERM) { ++missing; artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
             else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
-            (void)pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
+            if (pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, artifact_state, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
         } else {
             pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
             if (S_ISREG(st.st_mode)) kind = PKG_ARTIFACT_REGULAR;
             else if (S_ISDIR(st.st_mode)) kind = PKG_ARTIFACT_DIRECTORY;
             else if (S_ISLNK(st.st_mode)) kind = PKG_ARTIFACT_SYMLINK;
-            (void)pkg_snapshot_add_artifact(result, entry, kind, PKG_ARTIFACT_PRESENT, &st);
+            if (pkg_snapshot_add_artifact(result, entry, kind, PKG_ARTIFACT_PRESENT, &st) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
         }
         ++count;
     }
@@ -164,10 +164,10 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
             continue;
         }
         if (rc < 0) {
-            (void)pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
+            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read") != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
         }
         if (rc == 1) {
-            (void)pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_MISSING", "package file list is missing");
+            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG, "PKG_DPKG_FILELIST_MISSING", "package file list is missing") != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
         }
     }
     return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
