@@ -106,7 +106,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         if (entry[0] != '/') {
             ++invalid;
             ++count;
-            if (pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
             continue;
         }
         if (options != NULL && options->max_package_files != 0U &&
@@ -124,13 +124,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             else if (errno == EACCES || errno == EPERM) { ++missing; artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
             else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
-            if (pkg_snapshot_add_artifact(result, entry, PKG_ARTIFACT_UNKNOWN, artifact_state, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, artifact_state, NULL) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
         } else {
             pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
             if (S_ISREG(st.st_mode)) kind = PKG_ARTIFACT_REGULAR;
             else if (S_ISDIR(st.st_mode)) kind = PKG_ARTIFACT_DIRECTORY;
             else if (S_ISLNK(st.st_mode)) kind = PKG_ARTIFACT_SYMLINK;
-            if (pkg_snapshot_add_artifact(result, entry, kind, PKG_ARTIFACT_PRESENT, &st) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
+            if (pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, PKG_ARTIFACT_PRESENT, &st) != PKG_OK) return PKG_ERR_OUT_OF_MEMORY;
         }
         ++count;
     }
