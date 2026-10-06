@@ -22,7 +22,7 @@ Permission failures and unavailable package metadata may become diagnostics in l
 
 `pkg_scan_result_package_installed_size()` exposes the package manager's declared installed size converted from dpkg's KiB unit to bytes. It is **not** the sum of filesystem allocation and is not dependency-closure size.
 
-`pkg_scan_result_package_file_count()` and `pkg_scan_result_package_missing_file_count()` are reserved for the package/file-correlation phase. They currently report zero until that phase is implemented.
+`pkg_scan_result_package_file_count()` reports the number of non-empty package-file records consumed for the package. `pkg_scan_result_package_missing_file_count()` reports records whose absolute paths could not be found. `pkg_scan_result_package_invalid_path_count()` reports malformed or otherwise unverifiable path records counted by the current dpkg correlation policy.
 
 ## Resource limits
 
