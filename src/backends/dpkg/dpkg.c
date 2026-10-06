@@ -1,4 +1,4 @@
-#include "core/pkg_internal.h"
+#include "pkgintel/internal/pkg_internal.h"
 
 #include <errno.h>
 #include <fcntl.h>
