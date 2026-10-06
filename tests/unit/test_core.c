@@ -80,6 +80,28 @@ int main(void) {
     pkg_scan_result_destroy(limited_result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
     {
+        char path[512];
+        FILE *file;
+        char oversized[65538];
+        memset(oversized, 'x', sizeof(oversized));
+        oversized[sizeof(oversized) - 2U] = '\\n';
+        oversized[sizeof(oversized) - 1U] = '\\0';
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", fixture) > 0);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fwrite(oversized, 1U, sizeof(oversized) - 1U, file) == sizeof(oversized) - 1U);
+        assert(fclose(file) == 0);
+        assert(pkg_scan(context, target, NULL, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
+        assert(limited_result != NULL);
+        assert(pkg_scan_result_package_count(limited_result) == 1U);
+        assert(pkg_scan_result_package_file_count(limited_result, 0U) == 0U);
+        assert(pkg_snapshot_artifact_count(limited_result) == 0U);
+        pkg_scan_result_destroy(limited_result); limited_result = NULL;
+        assert(fopen(path, "wb") != NULL);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("/usr/bin/present\\n", file) >= 0);
+        assert(fclose(file) == 0);
+    }
+    {
         pkg_scan_options unsupported = PKG_SCAN_OPTIONS_INIT;
         unsupported.max_files = 1U;
         assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
