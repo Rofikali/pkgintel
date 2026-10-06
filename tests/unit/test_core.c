@@ -84,8 +84,8 @@ int main(void) {
         FILE *file;
         char oversized[65539];
         memset(oversized, 'x', sizeof(oversized));
-        oversized[sizeof(oversized) - 2U] = '\\n';
-        oversized[sizeof(oversized) - 1U] = '\\0';
+        oversized[sizeof(oversized) - 2U] = '\n';
+        oversized[sizeof(oversized) - 1U] = '\0';
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", fixture) > 0);
         file = fopen(path, "wb"); assert(file != NULL);
         assert(fwrite(oversized, 1U, sizeof(oversized) - 1U, file) == sizeof(oversized) - 1U);
@@ -104,7 +104,6 @@ int main(void) {
         file = fopen(path, "wb"); assert(file != NULL);
         assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\n", file) >= 0);
         assert(fwrite(oversized, 1U, sizeof(oversized) - 1U, file) == sizeof(oversized) - 1U);
-        assert(fclose(file) == 0);
         assert(pkg_scan(context, target, NULL, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
         assert(limited_result != NULL);
         assert(pkg_scan_result_package_count(limited_result) == 1U);
