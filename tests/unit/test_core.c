@@ -78,6 +78,7 @@ int main(void) {
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
     { pkg_scan_options exact_limit = PKG_SCAN_OPTIONS_INIT; const pkg_artifact *artifact = NULL; exact_limit.max_packages = 10U; exact_limit.max_package_files = 9U; assert(pkg_scan(context, target, &exact_limit, &limited_result) == PKG_OK); assert(limited_result != NULL); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 9U); assert(pkg_snapshot_artifact_count(limited_result) == 9U); assert(pkg_snapshot_artifact_at(limited_result, 8U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_UNKNOWN); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_UNVERIFIABLE); }
     pkg_scan_result_destroy(limited_result); pkg_target_destroy(target);
+    assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
     {
         pkg_scan_options unsupported = PKG_SCAN_OPTIONS_INIT;
         unsupported.max_files = 1U;
@@ -100,6 +101,7 @@ int main(void) {
         assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
         assert(limited_result == NULL);
     }
+    pkg_target_destroy(target);
     remove_fixture(fixture);
     assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_OK); assert(pkg_scan(context, target, NULL, &result) == PKG_ERR_NOT_FOUND); assert(result == NULL); pkg_target_destroy(target);
     pkg_context_destroy(context); assert(strcmp(pkg_status_string(PKG_ERR_PARSE), "corrupt data") == 0); return 0;
