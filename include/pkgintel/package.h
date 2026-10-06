@@ -7,10 +7,8 @@ typedef enum pkg_consistency_state { PKG_CONSISTENCY_UNKNOWN=0, PKG_CONSISTENCY_
 pkg_string_view pkg_package_name(const pkg_package *package);
 pkg_string_view pkg_package_version(const pkg_package *package);
 pkg_string_view pkg_package_architecture(const pkg_package *package);
-pkg_string_view pkg_package_source(const pkg_package *package);
 pkg_installation_state pkg_package_get_state(const pkg_package *package);
 pkg_consistency_state pkg_package_get_consistency(const pkg_package *package);
-uint64_t pkg_package_declared_size_bytes(const pkg_package *package);
 uint64_t pkg_package_installed_size_bytes(const pkg_package *package);
 size_t pkg_package_artifact_count(const pkg_package *package);
 pkg_status pkg_package_artifact_at(const pkg_package *package, size_t index, const pkg_artifact **out_artifact);
