@@ -81,7 +81,7 @@ int main(void) {
         unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
         unsupported.struct_size = sizeof(uint32_t);
         assert(pkg_context_create(&unsupported, &context) == PKG_ERR_INVALID_ARGUMENT);
-        assert(context == NULL;
+        assert(context == NULL);
     }
     assert(pkg_context_create(NULL, &context) == PKG_OK); assert(context != NULL);
     make_fixture(fixture, sizeof(fixture));
