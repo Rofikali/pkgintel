@@ -1,0 +1,79 @@
+# # services:
+# #   pkgintel:
+# #     build:
+# #       context: .
+# #       dockerfile: Dockerfile
+# #     container_name: pkgintel-dev
+# #     stdin_open: true
+# #     tty: true
+# #     working_dir: /workspace/pkgintel
+
+# #     volumes:
+# #       - ./:/workspace/pkgintel
+
+# #     environment:
+# #       TZ: Asia/Kolkata
+
+# #     cap_add:
+# #       - SYS_PTRACE
+
+# #     security_opt:
+# #       - seccomp:unconfined
+
+
+# services:
+#   pkgintel:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#       # Add the args block here to pass the new IDs to your Dockerfile
+#       args:
+#         - USERNAME=developer
+#         - USER_UID=1001
+#         - USER_GID=1001
+#     container_name: pkgintel-dev
+#     stdin_open: true
+#     tty: true
+#     working_dir: /workspace/pkgintel
+
+#     volumes:
+#       - ./:/workspace/pkgintel
+
+#     environment:
+#       TZ: Asia/Kolkata
+
+#     cap_add:
+#       - SYS_PTRACE
+
+#     security_opt:
+#       - seccomp:unconfined
+
+
+
+services:
+  pkgintel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - USERNAME=developer
+        - USER_UID=1001
+        - USER_GID=1001
+    container_name: pkgintel-dev
+    stdin_open: true
+    tty: true
+    working_dir: /workspace/pkgintel
+
+    volumes:
+      - ./:/workspace/pkgintel
+
+    environment:
+      TZ: Asia/Kolkata
+      # 👇 ADD THIS LINE TO AUTOMATICALLY TRUST YOUR REPOSITORY
+      GIT_SAFE_DIRECTORIES: "/workspace/pkgintel"
+
+    cap_add:
+      - SYS_PTRACE
+
+    security_opt:
+      - seccomp:unconfined
