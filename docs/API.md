@@ -26,17 +26,15 @@ Permission failures and unavailable package metadata may become diagnostics in l
 
 ## Resource limits
 
-Limits are explicit inputs to scanning. Zero means use the context default.
-For the current dpkg backend, `max_package_files` is a **per-package** limit on
-**non-empty package-file records**, not on successfully resolved artifacts. Every
-non-empty record consumes one unit, including malformed records; empty records do
-not consume a unit.
+Limits are explicit inputs to scanning. For the current dpkg backend, `max_package_files` is a **per-package** limit on **non-empty package-file records**, not on successfully resolved artifacts. Every non-empty record consumes one unit, including malformed records; empty records do not consume a unit.
 
-`PKG_ERR_RESOURCE_LIMIT` means the scanner refused to consume a record beyond the
-configured budget. Thus exactly N non-empty records may complete with
-`max_package_files == N`; the scanner returns `PKG_ERR_RESOURCE_LIMIT` only when it
-encounters a further non-empty record. The returned snapshot remains valid and
-contains the observations accumulated before the limit was exceeded.
+`max_packages` is a **per-scan** limit on installed package records consumed.
+
+A configured maximum is not itself an error. `PKG_ERR_RESOURCE_LIMIT` means the scanner refused to consume the next record because doing so would exceed an implemented budget. The returned snapshot remains valid and contains observations accumulated before the refused record.
+
+The scan-option fields `max_files`, `max_directories`, `max_file_bytes`, `max_total_bytes`, and `max_duration_ms` are reserved for future aggregate resource controls. They are not enforced in v0.1; non-zero values are rejected with `PKG_ERR_UNSUPPORTED` so the API never silently presents an unenforced security control.
+
+Package-file record length is a separate resource dimension. The implementation must bound record materialization independently of `max_package_files`.
 
 ## ABI policy
 
