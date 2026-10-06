@@ -1,4 +1,6 @@
-#include "internal/pkg_internal.h"
+#include "internal/pkg_model.h"
+#include "internal/pkg_support.h"
+#include "internal/pkg_target.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/openat2.h>
