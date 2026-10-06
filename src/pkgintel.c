@@ -350,6 +350,14 @@ pkg_status pkg_snapshot_package_at(const pkg_snapshot *snapshot, size_t index, c
 }
 
 size_t pkg_snapshot_artifact_count(const pkg_snapshot *snapshot) { return snapshot == NULL ? 0U : snapshot->artifact_count; }
+
+pkg_status pkg_snapshot_diagnostic_at(const pkg_snapshot *snapshot, size_t index, const pkg_diagnostic **out_diagnostic) {
+    if (out_diagnostic == NULL) return PKG_ERR_INVALID_ARGUMENT;
+    *out_diagnostic = NULL;
+    if (snapshot == NULL || index >= snapshot->diagnostic_count) return PKG_ERR_NOT_FOUND;
+    *out_diagnostic = (const pkg_diagnostic *)&snapshot->diagnostics[index];
+    return PKG_OK;
+}
 pkg_status pkg_snapshot_artifact_at(const pkg_snapshot *snapshot, size_t index, const pkg_artifact **out_artifact) {
     if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT;
     *out_artifact = NULL;
