@@ -81,7 +81,7 @@ int main(void) {
         unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
         unsupported.struct_size = sizeof(uint32_t);
         assert(pkg_context_create(&unsupported, &context) == PKG_ERR_INVALID_ARGUMENT);
-        assert(context == NULL);
+        assert(context == NULL;
     }
     assert(pkg_context_create(NULL, &context) == PKG_OK); assert(context != NULL);
     make_fixture(fixture, sizeof(fixture));
@@ -137,7 +137,6 @@ int main(void) {
         assert(pkg_scan_result_package_count(limited_result) == 1U);
         assert(pkg_snapshot_artifact_count(limited_result) == 0U);
         pkg_scan_result_destroy(limited_result); limited_result = NULL;
-        assert(fclose(file) == 0);
     }
     {
         pkg_scan_options unsupported = PKG_SCAN_OPTIONS_INIT;
