@@ -1,4 +1,7 @@
-#include "internal/pkg_internal.h"
+#include "internal/pkg_model.h"
+#include "internal/pkg_backend.h"
+#include "internal/pkg_support.h"
+#include "internal/pkg_target.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,7 +28,6 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_opt
             if (supplied > sizeof(normalized)) supplied = sizeof(normalized);
             memcpy(&normalized, options, supplied);
             if ((normalized.flags & ~(PKG_SCAN_INCLUDE_ELF | PKG_SCAN_INCLUDE_CACHES | PKG_SCAN_INCLUDE_CAPABILITIES | PKG_SCAN_CORRELATE_FILES)) != 0U) { pkg_snapshot_destroy(result); return PKG_ERR_INVALID_ARGUMENT; }
-            /* These aggregate limits are reserved until a shared resource-budget layer enforces them. */
             if (normalized.max_files != 0U || normalized.max_directories != 0U ||
                 normalized.max_file_bytes != 0U || normalized.max_total_bytes != 0U ||
                 normalized.max_duration_ms != 0U) {
