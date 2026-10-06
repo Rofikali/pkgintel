@@ -31,7 +31,7 @@ static void make_fixture(char *root, size_t root_size) {
     written = snprintf(path, sizeof(path), "%s/usr/bin/adir", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/fifo", root); assert(mkfifo(path, 0600) == 0);
     written = snprintf(path, sizeof(path), "%s/restricted", root); assert(mkdir(path, 0700) == 0);
-    written = snprintf(path, sizeof(path), "%s/restricted/secret", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("secret", file) == 6); assert(fclose(file) == 0);
+    written = snprintf(path, sizeof(path), "%s/restricted/secret", root); file = fopen(path, "wb"); assert(file != NULL); assert(fwrite("secret", 1U, 6U, file) == 6U); assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/restricted", root); assert(chmod(path, 0000) == 0);
 }
 
