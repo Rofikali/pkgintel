@@ -373,11 +373,6 @@ pkg_string_view pkg_package_architecture(const pkg_package *package) {
     return record == NULL ? (pkg_string_view){ NULL, 0U } : (pkg_string_view){ record->architecture, record->architecture == NULL ? 0U : strlen(record->architecture) };
 }
 
-pkg_string_view pkg_package_source(const pkg_package *package) {
-    (void)package;
-    return (pkg_string_view){ NULL, 0U };
-}
-
 pkg_installation_state pkg_package_get_state(const pkg_package *package) {
     return package == NULL ? PKG_INSTALLATION_UNKNOWN : PKG_INSTALLATION_INSTALLED;
 }
@@ -388,10 +383,6 @@ pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
     if (record->missing_file_count != 0U) return PKG_CONSISTENCY_MISSING_ARTIFACT;
     if (record->invalid_path_count != 0U) return PKG_CONSISTENCY_UNVERIFIABLE;
     return PKG_CONSISTENCY_CONSISTENT;
-}
-
-uint64_t pkg_package_declared_size_bytes(const pkg_package *package) {
-    return package == NULL ? 0U : 0U;
 }
 
 uint64_t pkg_package_installed_size_bytes(const pkg_package *package) {
