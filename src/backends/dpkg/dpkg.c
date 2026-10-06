@@ -26,6 +26,10 @@ static int parse_u64_decimal(const char *value, uint64_t *out) {
     return 0;
 }
 
+static int status_is_installed(const char *status) {
+    return status != NULL && strcmp(status, "install ok installed") == 0;
+}
+
 static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
                           const char *name, const char *version, const char *architecture,
                           uint64_t installed_size) {
@@ -175,9 +179,11 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     if (file == NULL) { (void)close(fd); return PKG_ERR_IO; }
     while (getline(&line, &capacity, file) >= 0) {
         if (line[0] == '\n' || line[0] == '\r') {
-            int rc = append_package(result, options, name, version, architecture, installed_size);
-            if (rc == 1) { truncated = 1; break; }
-            if (rc != 0) { parse_error = 1; break; }
+            if (status_is_installed(status) && name != NULL && version != NULL && architecture != NULL) {
+                int rc = append_package(result, options, name, version, architecture, installed_size);
+                if (rc == 1) { truncated = 1; break; }
+                if (rc != 0) { parse_error = 1; break; }
+            }
             free(name); free(version); free(architecture); free(status);
             name = NULL; version = NULL; architecture = NULL; status = NULL; installed_size = 0U;
             continue;
@@ -192,7 +198,8 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
             else installed_size = kib * UINT64_C(1024);
         }
     }
-    if (truncated == 0 && parse_error == 0 && name != NULL && version != NULL && architecture != NULL) {
+    if (truncated == 0 && parse_error == 0 && status_is_installed(status) &&
+        name != NULL && version != NULL && architecture != NULL) {
         int rc = append_package(result, options, name, version, architecture, installed_size);
         if (rc == 1) truncated = 1;
         else if (rc != 0) parse_error = 1;
