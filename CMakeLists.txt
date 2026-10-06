@@ -9,7 +9,15 @@ option(PKGINTEL_BUILD_TESTS "Build pkgintel tests" ON)
 option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
 
 add_library(pkgintel SHARED
-    src/pkgintel.c
+    src/core/context.c
+    src/core/scan.c
+    src/snapshot/snapshot.c
+    src/package/package.c
+    src/artifact/artifact.c
+    src/diagnostic/diagnostic.c
+    src/target/target.c
+    src/support/string.c
+    src/support/status.c
     src/backends/dpkg/dpkg.c
 )
 set_target_properties(pkgintel PROPERTIES
@@ -42,7 +50,11 @@ endif()
 
 if(PKGINTEL_BUILD_TESTS)
     enable_testing()
-    add_executable(pkgintel_unit_tests tests/unit/test_core.c)
+    add_executable(pkgintel_unit_tests tests/unit/test_main.c
+        tests/unit/test_context.c
+        tests/unit/test_scan.c
+        tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel)
+    target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 endif()

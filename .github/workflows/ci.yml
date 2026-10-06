@@ -23,9 +23,9 @@ jobs:
           sudo apt-get install -y cmake ninja-build ${{ matrix.compiler }}
       - name: Enforce header placement
         run: |
-          if find src -type f -name '*.h' -print -quit | grep -q .; then
-            echo 'Header files must live under include/; src/ must contain implementation files only.'
-            find src -type f -name '*.h' -print
+          if find src -type f -name '*.h' ! -path 'src/internal/*.h' -print -quit | grep -q .; then
+            echo 'Private headers must live under src/internal/; public headers must live under include/.'
+            find src -type f -name '*.h' ! -path 'src/internal/*.h' -print
             exit 1
           fi
       - name: Configure

@@ -281,3 +281,9 @@ Consequences:
 - New resource controls require an ADR and boundary tests before public exposure.
 - A field that exists for forward ABI evolution may be reserved, but reserved fields must have explicit behavior and cannot silently create a false security guarantee.
 - Aggregate artifact and diagnostic budgets remain future work and are tracked separately from per-package correlation limits.
+
+## ADR-0034 — Module, Test, and Boundary Architecture
+
+**Status:** Accepted
+
+pkgintel uses explicit module boundaries for core, target, snapshot, package, artifact, diagnostic, support, and backend responsibilities. Public ABI remains under include/pkgintel/; private implementation headers live under src/internal/. Tests are required to mirror module, integration, security, and regression boundaries. Structural migration must preserve behavior before semantic changes are introduced.
