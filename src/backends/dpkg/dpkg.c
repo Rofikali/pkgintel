@@ -106,8 +106,8 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             (void)fclose(file);
             return 2;
         }
-        ++count; /* Every record, including malformed records, consumes budget. */
-        if (*entry == '\0') { malformed = 1; continue; }
+        if (*entry == '\0') continue;
+        ++count; /* Every non-empty record, including malformed paths, consumes budget. */
         if (entry[0] != '/') {
             ++invalid;
             malformed = 1;
