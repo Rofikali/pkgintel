@@ -26,7 +26,17 @@ Permission failures and unavailable package metadata may become diagnostics in l
 
 ## Resource limits
 
-Limits are explicit inputs to scanning. Zero means use the context default. Reaching a limit produces `PKG_ERR_RESOURCE_LIMIT` and must never be represented as a clean complete scan.
+Limits are explicit inputs to scanning. Zero means use the context default.
+For the current dpkg backend, `max_package_files` is a **per-package** limit on
+**non-empty package-file records**, not on successfully resolved artifacts. Every
+non-empty record consumes one unit, including malformed records; empty records do
+not consume a unit.
+
+`PKG_ERR_RESOURCE_LIMIT` means the scanner refused to consume a record beyond the
+configured budget. Thus exactly N non-empty records may complete with
+`max_package_files == N`; the scanner returns `PKG_ERR_RESOURCE_LIMIT` only when it
+encounters a further non-empty record. The returned snapshot remains valid and
+contains the observations accumulated before the limit was exceeded.
 
 ## ABI policy
 
