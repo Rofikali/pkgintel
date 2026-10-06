@@ -203,6 +203,29 @@ before that refused record is preserved.
 These per-package limits are not aggregate scan-wide DoS protection. Future global
 byte, time, descriptor, artifact, and other budgets must be defined independently.
 
+## ADR-0033 — Bounded metadata record materialization
+
+**Status:** Accepted
+
+Package-manager metadata is untrusted input even when it is read from a target
+filesystem. The scanner must not use an unbounded line reader that can grow a
+heap allocation according to attacker-controlled record length.
+
+For the v0.1 dpkg backend, metadata records from both
+`/var/lib/dpkg/status` and per-package `.list` files have a hard maximum
+record length of 64 KiB. The reader uses a fixed-size buffer and never allocates
+a record-sized heap buffer. A record exceeding the bound is a resource-limit
+event and preserves the snapshot accumulated before that record.
+
+This bound is independent of `max_package_files`: record count limits govern
+how many records may be consumed, while record-size limits govern the maximum
+materialization cost of one record. Future configurable byte budgets must retain
+the same invariant: configuration may reduce a limit, but no input record may
+cause unbounded allocation before the limit is enforced.
+
+Both metadata sources share the same bounded reader so the security invariant
+cannot diverge between package-file correlation and package-status parsing.
+
 # Open architectural decisions before v0.1 freeze
 
 These are deliberately open decisions, not accidental implementation choices:
