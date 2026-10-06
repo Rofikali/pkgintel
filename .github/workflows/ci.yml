@@ -21,6 +21,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build ${{ matrix.compiler }}
+      - name: Enforce header placement
+        run: |
+          if find src -type f -name '*.h' -print -quit | grep -q .; then
+            echo 'Header files must live under include/; src/ must contain implementation files only.'
+            find src -type f -name '*.h' -print
+            exit 1
+          fi
       - name: Configure
         env:
           CC: ${{ matrix.compiler }}
