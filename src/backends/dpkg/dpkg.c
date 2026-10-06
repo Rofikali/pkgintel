@@ -229,7 +229,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     {
         pkg_status correlation = correlate_package_files(target, result, options);
         if (correlation != PKG_OK && correlation != PKG_ERR_RESOURCE_LIMIT) return correlation;
+        if (result->package_count > 1U) qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
+        return correlation;
     }
-    if (result->package_count > 1U) qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
-    return PKG_OK;
 }
