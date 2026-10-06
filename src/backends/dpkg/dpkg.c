@@ -98,6 +98,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         int add_rc;
         trim_newline(line);
         entry = line;
+        if (*entry == '\0') continue;
         if (options != NULL && options->max_package_files != 0U && count >= options->max_package_files) {
             package->file_count = count;
             package->missing_file_count = missing;
