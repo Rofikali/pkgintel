@@ -92,6 +92,8 @@ For the current dpkg backend:
 
 The fields `max_files`, `max_directories`, `max_file_bytes`, `max_total_bytes`, and `max_duration_ms` are reserved for future aggregate resource controls. They are not enforced by the current v0.1 implementation and non-zero values are rejected with `PKG_ERR_UNSUPPORTED`; callers must not treat them as active security controls.
 
+The context-option fields `max_files`, `max_directories`, `max_depth`, `max_bytes`, and `max_elf_bytes` are also reserved in v0.1. Non-zero values are rejected with `PKG_ERR_UNSUPPORTED`; the context currently carries no fake defaults for controls that are not enforced.
+
 Package-file record length is a separate resource dimension and must be bounded before an input record is materialized. Record-count limits alone are not sufficient protection against oversized metadata records.
 
 Future aggregate budgets may cover bytes, time, descriptors, artifacts, diagnostics, and parser input. Each such budget requires an explicit unit, scope, enforcement point, exhaustion rule, documentation, and boundary tests.
