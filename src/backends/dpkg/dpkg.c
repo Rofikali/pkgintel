@@ -124,10 +124,28 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
         } else {
             pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
+            pkg_artifact_state artifact_state = PKG_ARTIFACT_PRESENT;
             if (S_ISREG(st.st_mode)) kind = PKG_ARTIFACT_REGULAR;
             else if (S_ISDIR(st.st_mode)) kind = PKG_ARTIFACT_DIRECTORY;
-            else if (S_ISLNK(st.st_mode)) kind = PKG_ARTIFACT_SYMLINK;
-            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, PKG_ARTIFACT_PRESENT, &st);
+            else if (S_ISLNK(st.st_mode)) {
+                int target_fd = pkg_target_open_path(target, entry, O_PATH);
+                kind = PKG_ARTIFACT_SYMLINK;
+                if (target_fd >= 0) {
+                    (void)close(target_fd);
+                } else if (errno == ENOENT) {
+                    artifact_state = PKG_ARTIFACT_BROKEN_LINK;
+                } else if (errno == EACCES || errno == EPERM) {
+                    artifact_state = PKG_ARTIFACT_PERMISSION_DENIED;
+                } else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) {
+                    ++invalid;
+                    artifact_state = PKG_ARTIFACT_UNVERIFIABLE;
+                } else {
+                    artifact_state = PKG_ARTIFACT_UNVERIFIABLE;
+                }
+            } else if (S_ISFIFO(st.st_mode) || S_ISSOCK(st.st_mode) || S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
+                kind = PKG_ARTIFACT_OTHER;
+            }
+            add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, artifact_state, &st);
         }
         if (add_rc != 0) { free(line); (void)fclose(file); return -1; }
     }
