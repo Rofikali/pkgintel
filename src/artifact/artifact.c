@@ -1,4 +1,5 @@
-#include "internal/pkg_internal.h"
+#include "internal/pkg_model.h"
+#include "internal/pkg_snapshot.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -28,15 +29,9 @@ int pkg_snapshot_add_artifact(pkg_snapshot *snapshot, const unsigned char *path,
 }
 
 pkg_path pkg_artifact_path(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a==NULL?(pkg_path){NULL,0U}:(pkg_path){a->path,a->path_size}; }
-
 pkg_artifact_kind pkg_artifact_get_kind(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a==NULL?PKG_ARTIFACT_UNKNOWN:a->kind; }
-
 pkg_artifact_state pkg_artifact_get_state(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a==NULL?PKG_ARTIFACT_STATE_UNKNOWN:a->state; }
-
 uint64_t pkg_artifact_logical_size_bytes(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a==NULL?0U:a->logical_size; }
-
 bool pkg_artifact_logical_size_available(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a!=NULL&&a->kind==PKG_ARTIFACT_REGULAR; }
-
 uint64_t pkg_artifact_allocated_size_bytes(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a==NULL?0U:a->allocated_size; }
-
 bool pkg_artifact_allocated_size_available(const pkg_artifact *artifact) { const pkg_artifact_record *a=(const pkg_artifact_record *)artifact; return a!=NULL&&a->allocated_size_valid; }
