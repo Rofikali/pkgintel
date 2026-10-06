@@ -7,6 +7,32 @@
 #include <string.h>
 #include <unistd.h>
 
+#define PKG_DPKG_MAX_RECORD_BYTES UINT64_C(65536)
+
+/*
+ * Read one metadata record without allowing the input to grow an attacker-sized
+ * heap buffer. The returned record excludes the line terminator and is always
+ * NUL-terminated. A return value of -2 means the record exceeded the hard byte
+ * bound; the caller must treat that as a resource-limit event.
+ */
+static int read_bounded_record(FILE *file, char *buffer, size_t buffer_size) {
+    size_t length = 0U;
+    int ch;
+    if (file == NULL || buffer == NULL || buffer_size < 2U) return -1;
+    while ((ch = fgetc(file)) != EOF) {
+        if (ch == '\\n') {
+            buffer[length] = '\\0';
+            return 1;
+        }
+        if (length + 1U >= buffer_size) return -2;
+        buffer[length++] = (char)ch;
+    }
+    if (ferror(file) != 0) return -1;
+    if (length == 0U) return 0;
+    buffer[length] = '\\0';
+    return 1;
+}
+
 static char *trim_newline(char *value) {
     size_t len;
     if (value == NULL) return NULL;
@@ -80,8 +106,8 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     char path[4096];
     int written, fd;
     FILE *file;
-    char *line = NULL;
-    size_t capacity = 0U;
+    char line[PKG_DPKG_MAX_RECORD_BYTES + 1U];
+    int read_rc;
     uint64_t count = 0U, missing = 0U, invalid = 0U;
     int malformed = 0;
     if (target == NULL || result == NULL || package == NULL) return -1;
@@ -92,7 +118,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     file = fdopen(fd, "rb");
     if (file == NULL) { (void)close(fd); return -1; }
 
-    while (getline(&line, &capacity, file) >= 0) {
+    while ((read_rc = read_bounded_record(file, line, sizeof(line))) > 0) {
         char *entry;
         struct stat st;
         int add_rc;
@@ -103,7 +129,6 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             package->file_count = count;
             package->missing_file_count = missing;
             package->invalid_path_count = invalid;
-            free(line);
             (void)fclose(file);
             return 2;
         }
@@ -112,7 +137,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             ++invalid;
             malformed = 1;
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
-            if (add_rc != 0) { free(line); (void)fclose(file); return -1; }
+            if (add_rc != 0) { (void)fclose(file); return -1; }
             continue;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
@@ -147,10 +172,19 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             }
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, artifact_state, &st);
         }
-        if (add_rc != 0) { free(line); (void)fclose(file); return -1; }
+        if (add_rc != 0) { (void)fclose(file); return -1; }
     }
-    if (ferror(file) != 0) { free(line); (void)fclose(file); return -1; }
-    free(line);
+    if (read_rc == -2) {
+        package->file_count = count;
+        package->missing_file_count = missing;
+        package->invalid_path_count = invalid;
+        (void)fclose(file);
+        return 2;
+    }
+    if (read_rc < 0) {
+        (void)fclose(file);
+        return -1;
+    }
     (void)fclose(file);
     package->file_count = count;
     package->missing_file_count = missing;
@@ -181,8 +215,8 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_options *options, pkg_snapshot *result) {
     int fd;
     FILE *file;
-    char *line = NULL;
-    size_t capacity = 0U;
+    char line[PKG_DPKG_MAX_RECORD_BYTES + 1U];
+    int read_rc;
     char *name = NULL, *version = NULL, *architecture = NULL, *status = NULL;
     uint64_t installed_size = 0U;
     int parse_error = 0, truncated = 0;
@@ -195,7 +229,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     }
     file = fdopen(fd, "rb");
     if (file == NULL) { (void)close(fd); return PKG_ERR_IO; }
-    while (getline(&line, &capacity, file) >= 0) {
+    while ((read_rc = read_bounded_record(file, line, sizeof(line))) > 0) {
         if (line[0] == '\n' || line[0] == '\r') {
             if (status_is_installed(status) && name != NULL && version != NULL && architecture != NULL) {
                 int rc = append_package(result, options, name, version, architecture, installed_size);
@@ -222,7 +256,9 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
         if (rc == 1) truncated = 1;
         else if (rc != 0) parse_error = 1;
     }
-    free(name); free(version); free(architecture); free(status); free(line);
+    if (read_rc == -2) truncated = 1;
+    else if (read_rc < 0) parse_error = 1;
+    free(name); free(version); free(architecture); free(status);
     if (fclose(file) != 0 && parse_error == 0) parse_error = 1;
     if (parse_error != 0) return PKG_ERR_PARSE;
     if (truncated != 0) return PKG_ERR_RESOURCE_LIMIT;
