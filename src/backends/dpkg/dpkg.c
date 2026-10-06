@@ -230,7 +230,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     file = fdopen(fd, "rb");
     if (file == NULL) { (void)close(fd); return PKG_ERR_IO; }
     while ((read_rc = read_bounded_record(file, line, sizeof(line))) > 0) {
-        if (line[0] == '\n' || line[0] == '\r') {
+        if (line[0] == '\0') {
             if (status_is_installed(status) && name != NULL && version != NULL && architecture != NULL) {
                 int rc = append_package(result, options, name, version, architecture, installed_size);
                 if (rc == 1) { truncated = 1; break; }
