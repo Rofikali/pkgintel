@@ -82,7 +82,7 @@ int main(void) {
     {
         char path[512];
         FILE *file;
-        char oversized[65538];
+        char oversized[65539];
         memset(oversized, 'x', sizeof(oversized));
         oversized[sizeof(oversized) - 2U] = '\\n';
         oversized[sizeof(oversized) - 1U] = '\\0';
@@ -96,7 +96,6 @@ int main(void) {
         assert(pkg_scan_result_package_file_count(limited_result, 0U) == 0U);
         assert(pkg_snapshot_artifact_count(limited_result) == 0U);
         pkg_scan_result_destroy(limited_result); limited_result = NULL;
-        assert(fopen(path, "wb") != NULL);
         file = fopen(path, "wb"); assert(file != NULL);
         assert(fputs("/usr/bin/present\\n", file) >= 0);
         assert(fclose(file) == 0);
