@@ -118,7 +118,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
             pkg_artifact_state artifact_state = PKG_ARTIFACT_UNVERIFIABLE;
             if (errno == ENOENT) { ++missing; artifact_state = PKG_ARTIFACT_MISSING; }
-            else if (errno == EACCES || errno == EPERM) { ++missing; artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
+            else if (errno == EACCES || errno == EPERM) { artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
             else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
