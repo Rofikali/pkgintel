@@ -1,4 +1,4 @@
-#include "internal/pkg_internal.h"
+#include "internal/pkg_model.h"
 #include <string.h>
 
 pkg_string_view pkg_package_name(const pkg_package *package) { const pkg_package_record *p = (const pkg_package_record *)package; return p == NULL || p->name == NULL ? (pkg_string_view){NULL,0U} : (pkg_string_view){p->name,strlen(p->name)}; }
