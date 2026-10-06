@@ -182,6 +182,27 @@ The library has no hidden global mutable scanner state. State belongs to explici
 
 Decisions affecting public API, security boundaries, persistence, backend abstractions, concurrency, or ABI are recorded before becoming deeply embedded.
 
+## ADR-0031 — Resource budget units and scope
+
+**Status:** Accepted
+
+Resource limits are security controls, so each limit has an explicit unit and scope.
+`max_packages` is a per-scan limit on installed package records. `max_package_files`
+is a per-package limit on non-empty package-file records. Every consumed non-empty
+record consumes one unit regardless of whether the path is valid, missing, or
+otherwise unverifiable; malformed records may therefore produce an
+`UNKNOWN`/`UNVERIFIABLE` artifact observation. Empty records consume no budget.
+
+A configured maximum is a maximum number of records the scanner may consume, not a
+requirement to report `PKG_ERR_RESOURCE_LIMIT` merely because the count equals the
+maximum. If the input ends after exactly N non-empty records, the scan may complete
+normally. `PKG_ERR_RESOURCE_LIMIT` is returned when the scanner encounters a further
+non-empty record that it would have to consume. The partial snapshot accumulated
+before that refused record is preserved.
+
+These per-package limits are not aggregate scan-wide DoS protection. Future global
+byte, time, descriptor, artifact, and other budgets must be defined independently.
+
 # Open architectural decisions before v0.1 freeze
 
 These are deliberately open decisions, not accidental implementation choices:
