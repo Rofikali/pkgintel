@@ -97,7 +97,19 @@ int main(void) {
         assert(pkg_snapshot_artifact_count(limited_result) == 0U);
         pkg_scan_result_destroy(limited_result); limited_result = NULL;
         file = fopen(path, "wb"); assert(file != NULL);
-        assert(fputs("/usr/bin/present\\n", file) >= 0);
+        assert(fputs("/usr/bin/present\n", file) >= 0);
+        assert(fclose(file) == 0);
+
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", fixture) > 0);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\n", file) >= 0);
+        assert(fwrite(oversized, 1U, sizeof(oversized) - 1U, file) == sizeof(oversized) - 1U);
+        assert(fclose(file) == 0);
+        assert(pkg_scan(context, target, NULL, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
+        assert(limited_result != NULL);
+        assert(pkg_scan_result_package_count(limited_result) == 1U);
+        assert(pkg_snapshot_artifact_count(limited_result) == 0U);
+        pkg_scan_result_destroy(limited_result); limited_result = NULL;
         assert(fclose(file) == 0);
     }
     {
