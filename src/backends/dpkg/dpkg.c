@@ -29,7 +29,7 @@ static int read_bounded_record(FILE *file, char *buffer, size_t buffer_size) {
     }
     if (ferror(file) != 0) return -1;
     if (length == 0U) return 0;
-    buffer[length] = '\\0';
+    buffer[length] = '\0';
     return 1;
 }
 
