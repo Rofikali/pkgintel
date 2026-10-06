@@ -227,3 +227,34 @@ These are deliberately open decisions, not accidental implementation choices:
 18. Multi-architecture package semantics.
 19. APT metadata authority and trust model.
 20. JSON schema compatibility policy.
+## ADR-0032 — Resource governance and enforceable scan budgets
+
+**Status:** Accepted
+
+Resource controls are security controls and must never be exposed as a promise that the implementation does not enforce. Every public scan budget therefore has an explicit unit, scope, default, enforcement point, exhaustion rule, and observable result semantics.
+
+The v0.1 dpkg backend has two implemented record budgets:
+
+- `max_packages`: per-scan count of installed package records consumed.
+- `max_package_files`: per-package count of non-empty package-file records consumed.
+
+The following scan-option fields are reserved for future aggregate filesystem/parse controls and are **not enforced by the current v0.1 implementation**: `max_files`, `max_directories`, `max_file_bytes`, `max_total_bytes`, and `max_duration_ms`. Until their enforcement exists, a caller must not rely on them as security controls; non-zero use must be rejected rather than silently ignored.
+
+Package-file record length is a separate resource dimension from record count. A package-file line must be subject to a bounded-record policy before materialization into the result model; `max_package_files` alone is insufficient protection against a single oversized metadata record.
+
+Resource accounting is layered:
+
+1. **Domain budgets** protect backend-specific work such as package and package-file records.
+2. **Aggregate budgets** protect scan-wide resources such as bytes, time, descriptors, artifacts, diagnostics, and parser input size when those subsystems are implemented.
+3. **Memory/allocation safety** remains mandatory even when a semantic budget exists; integer overflow, allocation failure, and impossible sizes are always hard failures.
+
+A resource limit is exceeded only when the scanner would consume beyond the configured maximum. Reaching the exact maximum is not itself an error. When a limit is exceeded after useful observations have been accumulated, the partial snapshot is preserved and the operation returns `PKG_ERR_RESOURCE_LIMIT`. If a resource is structurally unsupported rather than exhausted, the operation returns `PKG_ERR_UNSUPPORTED` and does not pretend that the requested control was applied.
+
+No backend may silently reinterpret a budget's unit or scope. Shared resource policy belongs at the scan boundary; backend-specific code consumes that policy through explicit accounting operations. This keeps resource governance separate from evidence interpretation and allows future dpkg/rpm/apk/filesystem/ELF backends to share the same security model.
+
+Consequences:
+
+- API documentation, threat models, tests, and implementation must agree on every advertised budget.
+- New resource controls require an ADR and boundary tests before public exposure.
+- A field that exists for forward ABI evolution may be reserved, but reserved fields must have explicit behavior and cannot silently create a false security guarantee.
+- Aggregate artifact and diagnostic budgets remain future work and are tracked separately from per-package correlation limits.
