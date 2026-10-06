@@ -20,8 +20,8 @@ static int read_bounded_record(FILE *file, char *buffer, size_t buffer_size) {
     int ch;
     if (file == NULL || buffer == NULL || buffer_size < 2U) return -1;
     while ((ch = fgetc(file)) != EOF) {
-        if (ch == '\\n') {
-            buffer[length] = '\\0';
+        if (ch == '\n') {
+            buffer[length] = '\0';
             return 1;
         }
         if (length + 1U >= buffer_size) return -2;
