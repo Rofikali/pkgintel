@@ -57,6 +57,32 @@ int main(void) {
     char fixture[256]; pkg_context *context = NULL; pkg_target *target = NULL;
     pkg_scan_result *result = NULL, *limited_result = NULL, *second_result = NULL;
     pkg_scan_options options = PKG_SCAN_OPTIONS_INIT; options.max_packages = 10U; options.max_package_files = 100U;
+    {
+        pkg_context_options unsupported = PKG_CONTEXT_OPTIONS_INIT;
+        unsupported.max_files = 1U;
+        assert(pkg_context_create(&unsupported, &context) == PKG_ERR_UNSUPPORTED);
+        assert(context == NULL);
+        unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
+        unsupported.max_directories = 1U;
+        assert(pkg_context_create(&unsupported, &context) == PKG_ERR_UNSUPPORTED);
+        assert(context == NULL);
+        unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
+        unsupported.max_depth = 1U;
+        assert(pkg_context_create(&unsupported, &context) == PKG_ERR_UNSUPPORTED);
+        assert(context == NULL);
+        unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
+        unsupported.max_bytes = 1U;
+        assert(pkg_context_create(&unsupported, &context) == PKG_ERR_UNSUPPORTED);
+        assert(context == NULL);
+        unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
+        unsupported.max_elf_bytes = 1U;
+        assert(pkg_context_create(&unsupported, &context) == PKG_ERR_UNSUPPORTED);
+        assert(context == NULL);
+        unsupported = (pkg_context_options)PKG_CONTEXT_OPTIONS_INIT;
+        unsupported.struct_size = sizeof(uint32_t);
+        assert(pkg_context_create(&unsupported, &context) == PKG_ERR_INVALID_ARGUMENT);
+        assert(context == NULL);
+    }
     assert(pkg_context_create(NULL, &context) == PKG_OK); assert(context != NULL);
     make_fixture(fixture, sizeof(fixture));
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK); assert(target != NULL);
