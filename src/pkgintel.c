@@ -38,17 +38,26 @@ const char *pkg_status_string(pkg_status status) {
 }
 
 pkg_status pkg_context_create(const pkg_context_options *options, pkg_context **out_context) {
+    pkg_context_options normalized = PKG_CONTEXT_OPTIONS_INIT;
+    size_t supplied;
     pkg_context *context;
     if (out_context == NULL) return PKG_ERR_INVALID_ARGUMENT;
     *out_context = NULL;
+    if (options != NULL) {
+        if (options->struct_size < sizeof(uint32_t) * 2U) return PKG_ERR_INVALID_ARGUMENT;
+        supplied = options->struct_size;
+        if (supplied > sizeof(normalized)) supplied = sizeof(normalized);
+        memcpy(&normalized, options, supplied);
+        if (normalized.flags != 0U) return PKG_ERR_INVALID_ARGUMENT;
+        if (normalized.max_files != 0U || normalized.max_directories != 0U ||
+            normalized.max_depth != 0U || normalized.max_bytes != 0U ||
+            normalized.max_elf_bytes != 0U) {
+            return PKG_ERR_UNSUPPORTED;
+        }
+    }
     context = calloc(1, sizeof(*context));
     if (context == NULL) return PKG_ERR_INTERNAL;
-    if (options != NULL) context->options = *options;
-    if (context->options.max_files == 0U) context->options.max_files = UINT64_C(1000000);
-    if (context->options.max_directories == 0U) context->options.max_directories = UINT64_C(100000);
-    if (context->options.max_depth == 0U) context->options.max_depth = UINT64_C(64);
-    if (context->options.max_bytes == 0U) context->options.max_bytes = UINT64_C(4) * UINT64_C(1024) * UINT64_C(1024) * UINT64_C(1024);
-    if (context->options.max_elf_bytes == 0U) context->options.max_elf_bytes = UINT64_C(256) * UINT64_C(1024) * UINT64_C(1024);
+    context->options = normalized;
     *out_context = context;
     return PKG_OK;
 }
