@@ -34,6 +34,8 @@ A configured maximum is not itself an error. `PKG_ERR_RESOURCE_LIMIT` means the 
 
 The scan-option fields `max_files`, `max_directories`, `max_file_bytes`, `max_total_bytes`, and `max_duration_ms` are reserved for future aggregate resource controls. They are not enforced in v0.1; non-zero values are rejected with `PKG_ERR_UNSUPPORTED` so the API never silently presents an unenforced security control.
 
+The context-option limits `max_files`, `max_directories`, `max_depth`, `max_bytes`, and `max_elf_bytes` are likewise reserved in v0.1. Non-zero values are rejected with `PKG_ERR_UNSUPPORTED` because these controls are not yet enforced.
+
 Package-file record length is a separate resource dimension. The implementation must bound record materialization independently of `max_package_files`.
 
 ## ABI policy
