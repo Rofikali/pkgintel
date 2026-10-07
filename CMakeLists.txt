@@ -26,17 +26,6 @@ set(PKGINTEL_SOURCES
 
 add_library(pkgintel SHARED ${PKGINTEL_SOURCES})
 
-#    src/core/context.c
-    src/core/scan.c
-    src/snapshot/snapshot.c
-    src/package/package.c
-    src/artifact/artifact.c
-    src/diagnostic/diagnostic.c
-    src/target/target.c
-    src/support/string.c
-    src/support/status.c
-    src/backends/dpkg/dpkg.c
-)
 set_target_properties(pkgintel PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 0
