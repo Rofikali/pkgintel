@@ -59,6 +59,8 @@ Resource limits are part of the security contract, not merely performance tuning
 - package count;
 - per-package non-empty package-file record count;
 - bounded dpkg status and package-file record materialization;
+- aggregate snapshot artifact ceiling of 1,000,000 records;
+- aggregate diagnostic ceiling of 100,000 records;
 - transactional artifact and diagnostic snapshot mutation.
 
 ### Reserved / not yet enforced
@@ -69,7 +71,6 @@ Resource limits are part of the security contract, not merely performance tuning
 - bytes read;
 - individual filesystem file-size limits;
 - ELF input size;
-- diagnostic/artifact aggregate budgets;
 - wall-clock scan time;
 - cache-entry limits;
 - general allocation/descriptors budgets.
