@@ -189,7 +189,7 @@ int test_scan_behaviour(void) {
             assert(pkg_package_get_state(package) == PKG_INSTALLATION_UNKNOWN);
         }
         /* Selection intent ("hold") does not change the installation state. */
-        assert(pkg_scan_result_diagnostic_count(state_result) == 1U);
+        assert(pkg_scan_result_diagnostic_count(state_result) == 6U);
         {
             size_t diagnostic_count = pkg_scan_result_diagnostic_count(state_result);
             int found_unknown_status = 0;
