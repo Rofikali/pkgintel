@@ -37,6 +37,17 @@ jobs:
         run: cmake --build build --parallel
       - name: Test
         run: ctest --test-dir build --output-on-failure
+      - name: Install
+        run: cmake --install build --prefix "$GITHUB_WORKSPACE/_install"
+      - name: Audit exported ABI
+        run: |
+          nm -D --defined-only build/libpkgintel.so | awk '$2 ~ /^[A-Z]$/ {print $3}' | sort -u > build/exported_symbols.txt
+          diff -u tests/abi/public_symbols.txt build/exported_symbols.txt
+      - name: Verify installed package consumer
+        run: |
+          cmake -S tests/install -B build-consumer -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/_install"
+          cmake --build build-consumer --parallel
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/_install/lib" ./build-consumer/pkgintel_consumer
 
   sanitized:
     runs-on: ubuntu-24.04
@@ -56,3 +67,5 @@ jobs:
         run: cmake --build build-sanitized --parallel
       - name: Test
         run: ctest --test-dir build-sanitized --output-on-failure
+      - name: Install sanitized build
+        run: cmake --install build-sanitized --prefix "$GITHUB_WORKSPACE/_install-sanitized"
