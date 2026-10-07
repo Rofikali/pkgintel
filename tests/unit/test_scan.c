@@ -160,6 +160,37 @@ int test_scan_behaviour(void) {
     remove_fixture(fixture);
 
     {
+        char state_fixture[256];
+        pkg_scan_result *state_result = NULL;
+        make_state_fixture(state_fixture, sizeof(state_fixture));
+        assert(pkg_target_create_rootfs(context, state_fixture, &target) == PKG_OK);
+        assert(pkg_scan(context, target, NULL, &state_result) == PKG_OK);
+        assert(state_result != NULL);
+        assert(pkg_scan_result_package_count(state_result) == 4U);
+        /* Ordering is name/architecture/version, independent of dpkg's discovery order. */
+        assert(strcmp(pkg_scan_result_package_name(state_result, 0U), "broken-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 1U), "installed-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 2U), "partial-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 3U), "removed-pkg") == 0);
+        {
+            const pkg_package *package = NULL;
+            assert(pkg_snapshot_package_at(state_result, 0U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_PARTIAL);
+            assert(pkg_snapshot_package_at(state_result, 1U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_INSTALLED);
+            assert(pkg_snapshot_package_at(state_result, 2U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_PARTIAL);
+            assert(pkg_snapshot_package_at(state_result, 3U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_REMOVED);
+        }
+        /* Selection intent ("hold") does not change the installation state. */
+        assert(pkg_scan_result_diagnostic_count(state_result) == 4U);
+        pkg_scan_result_destroy(state_result);
+        pkg_target_destroy(target);
+        remove_state_fixture(state_fixture);
+    }
+
+    {
         char multi_fixture[256];
         pkg_scan_result *multi_result = NULL;
         const pkg_package *package = NULL;
