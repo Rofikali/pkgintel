@@ -10,9 +10,14 @@
 #include <time.h>
 #include <unistd.h>
 
-static double seconds_since(const struct timespec *start, const struct timespec *end) {
+static double timespec_seconds_since(const struct timespec *start, const struct timespec *end) {
     return (double)(end->tv_sec - start->tv_sec) +
            (double)(end->tv_nsec - start->tv_nsec) / 1000000000.0;
+}
+
+static double timeval_seconds_since(const struct timeval *start, const struct timeval *end) {
+    return (double)(end->tv_sec - start->tv_sec) +
+           (double)(end->tv_usec - start->tv_usec) / 1000000.0;
 }
 
 static int write_fixture(const char *root, size_t packages, size_t files_per_package) {
@@ -131,9 +136,9 @@ int main(int argc, char **argv) {
     (void)getrusage(RUSAGE_SELF, &usage_end);
     (void)clock_gettime(CLOCK_MONOTONIC, &wall_end);
 
-    double wall = seconds_since(&wall_start, &wall_end);
-    double user = seconds_since(&usage_start.ru_utime, &usage_end.ru_utime);
-    double sys = seconds_since(&usage_start.ru_stime, &usage_end.ru_stime);
+    double wall = timespec_seconds_since(&wall_start, &wall_end);
+    double user = timeval_seconds_since(&usage_start.ru_utime, &usage_end.ru_utime);
+    double sys = timeval_seconds_since(&usage_start.ru_stime, &usage_end.ru_stime);
     long peak_rss_kib = usage_end.ru_maxrss;
 
     printf("packages=%zu files_per_package=%zu iterations=%zu\n", packages, files_per_package, iterations);
