@@ -136,7 +136,8 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
     add_library(pkgintel_benchmark_instrumented_objects OBJECT ${PKGINTEL_SOURCES})
     target_include_directories(pkgintel_benchmark_instrumented_objects
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark)
     target_compile_definitions(pkgintel_benchmark_instrumented_objects PRIVATE
         PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE
         PKGINTEL_BENCHMARK_ALLOC_STATS=1)
