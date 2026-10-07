@@ -42,6 +42,10 @@ Package metadata and filesystem metadata are untrusted input in the current slic
 
 Every offset, length, count, multiplication, addition, and allocation must be range-checked before use.
 
+### Dpkg record boundary
+
+The v0.1 dpkg parser uses a hard maximum of **65,536 bytes of record content before the LF delimiter**. A 65,536-byte record is accepted; the next byte of record content is rejected as `PKG_ERR_RESOURCE_LIMIT`. EOF without a final LF is accepted as a complete record. CRLF input is accepted, with the CR participating in the bounded record content and removed during normalization. This boundary applies before semantic field interpretation and therefore limits both valid and malformed records.
+
 Malformed input must produce a diagnostic or controlled error, never an out-of-bounds access, integer overflow, use-after-free, or process crash.
 
 ## Resource exhaustion
@@ -52,7 +56,7 @@ Resource limits are part of the security contract, not merely performance tuning
 
 - package count;
 - per-package non-empty package-file record count;
-- bounded dpkg status record materialization;
+- bounded dpkg status and package-file record materialization;
 - transactional artifact and diagnostic snapshot mutation.
 
 ### Reserved / not yet enforced
