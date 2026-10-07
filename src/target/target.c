@@ -31,7 +31,7 @@ int pkg_target_open_path(const pkg_target *target, const char *path, int flags) 
     relative = path + 1U;
     if (*relative == '\0') { errno = EINVAL; return -1; }
     how.flags = (unsigned long long)(flags | O_CLOEXEC);
-    how.resolve = RESOLVE_IN_ROOT | RESOLVE_NO_MAGICLINKS;
+    how.resolve = RESOLVE_IN_ROOT | RESOLVE_NO_MAGICLINKS | RESOLVE_NO_XDEV;
     return (int)syscall(SYS_openat2, target->root_fd, relative, &how, sizeof(how));
 }
 
@@ -54,7 +54,7 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
 pkg_status pkg_target_open_root(pkg_target *target) {
     if (target == NULL || target->root == NULL) return PKG_ERR_INVALID_ARGUMENT;
     if (target->root_fd >= 0) return PKG_OK;
-    target->root_fd = open(target->root, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    target->root_fd = open(target->root, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
     if (target->root_fd < 0) {
         if (errno == EACCES || errno == EPERM) return PKG_ERR_PERMISSION;
         if (errno == ENOENT) return PKG_ERR_NOT_FOUND;
