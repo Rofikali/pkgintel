@@ -54,6 +54,16 @@ For system-facing code:
 - hostile input fixture added;
 - fuzz target considered or added.
 
+For filesystem confinement claims that depend on Linux kernel namespace/VFS behavior, the verification level must match the claim:
+
+- ordinary CI fixtures prove deterministic application behavior without requiring privilege;
+- genuine mount-boundary tests must use a real mount or bind mount, not a simulated directory fixture;
+- genuine magic-link tests must use a real procfs-style magic link, not an ordinary symlink;
+- privileged verification has an explicit three-state result: **PASS**, **SKIP_UNAVAILABLE**, or **FAIL**;
+- **SKIP_UNAVAILABLE is not PASS** and cannot satisfy the release/security gate;
+- a skipped privileged environment is an infrastructure-qualification gap, while a failed genuine security test is a security defect;
+- the target-relative observation path and metadata/lstat path must both be verified when both implement the security boundary.
+
 ## Gate 4 — Performance
 
 Measure before optimizing. Record:
