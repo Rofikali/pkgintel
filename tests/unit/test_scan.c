@@ -100,6 +100,42 @@ int test_scan_behaviour(void) {
     }
     pkg_target_destroy(target);
     remove_fixture(fixture);
+
+    {
+        char multi_fixture[256];
+        pkg_scan_result *multi_result = NULL;
+        const pkg_package *package = NULL;
+        const pkg_artifact *artifact = NULL;
+        pkg_path path_view;
+
+        make_multi_package_fixture(multi_fixture, sizeof(multi_fixture));
+        assert(pkg_target_create_rootfs(context, multi_fixture, &target) == PKG_OK);
+        assert(pkg_scan(context, target, NULL, &multi_result) == PKG_OK);
+        assert(multi_result != NULL);
+        assert(pkg_scan_result_package_count(multi_result) == 2U);
+
+        /* Dpkg discovery order is zeta-pkg, alpha-pkg; public order is deterministic. */
+        assert(strcmp(pkg_scan_result_package_name(multi_result, 0U), "alpha-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(multi_result, 1U), "zeta-pkg") == 0);
+
+        assert(pkg_snapshot_package_at(multi_result, 0U, &package) == PKG_OK);
+        assert(pkg_package_artifact_count(package) == 1U);
+        assert(pkg_package_artifact_at(package, 0U, &artifact) == PKG_OK);
+        path_view = pkg_artifact_path(artifact);
+        assert(path_view.size == strlen("/alpha/artifact"));
+        assert(memcmp(path_view.data, "/alpha/artifact", path_view.size) == 0);
+
+        assert(pkg_snapshot_package_at(multi_result, 1U, &package) == PKG_OK);
+        assert(pkg_package_artifact_count(package) == 1U);
+        assert(pkg_package_artifact_at(package, 0U, &artifact) == PKG_OK);
+        path_view = pkg_artifact_path(artifact);
+        assert(path_view.size == strlen("/zeta/artifact"));
+        assert(memcmp(path_view.data, "/zeta/artifact", path_view.size) == 0);
+
+        pkg_scan_result_destroy(multi_result);
+        pkg_target_destroy(target);
+        remove_multi_package_fixture(multi_fixture);
+    }
     assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_OK); assert(pkg_scan(context, target, NULL, &result) == PKG_ERR_NOT_FOUND); assert(result == NULL); pkg_target_destroy(target);
     pkg_context_destroy(context); assert(strcmp(pkg_status_string(PKG_ERR_PARSE), "corrupt data") == 0); return 0;
 }
