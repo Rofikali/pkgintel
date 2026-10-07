@@ -15,6 +15,7 @@ The original proposal is strong, but several concepts need tightening before imp
 9. **JSON is an output contract, not the domain model.** When implemented, version the JSON schema independently from the C ABI.
 10. **Stable ABI comes after API review and ABI testing.** v0.1 can expose an explicitly versioned C API, but the project must not claim ABI stability until ABI checks and compatibility policy exist.
 11. **Unimplemented controls must not be advertised as enforced controls.** Reserved resource-limit fields are rejected when non-zero until the corresponding accounting exists.
+12. **Unimplemented scan features must fail closed.** ELF, cache, and capability feature flags are reserved API surface in v0.1 and are rejected with `PKG_ERR_UNSUPPORTED`; they must never be accepted and silently ignored.
 
 ## 2. Source, header, and interface boundaries
 

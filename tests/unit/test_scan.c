@@ -97,6 +97,22 @@ int test_scan_behaviour(void) {
         unsupported.max_duration_ms = 1U;
         assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
         assert(limited_result == NULL);
+        unsupported = (pkg_scan_options)PKG_SCAN_OPTIONS_INIT;
+        unsupported.flags = PKG_SCAN_INCLUDE_ELF;
+        assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
+        assert(limited_result == NULL);
+        unsupported = (pkg_scan_options)PKG_SCAN_OPTIONS_INIT;
+        unsupported.flags = PKG_SCAN_INCLUDE_CACHES;
+        assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
+        assert(limited_result == NULL);
+        unsupported = (pkg_scan_options)PKG_SCAN_OPTIONS_INIT;
+        unsupported.flags = PKG_SCAN_INCLUDE_CAPABILITIES;
+        assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
+        assert(limited_result == NULL);
+        unsupported = (pkg_scan_options)PKG_SCAN_OPTIONS_INIT;
+        unsupported.flags = PKG_SCAN_INCLUDE_ELF | PKG_SCAN_INCLUDE_CACHES | PKG_SCAN_INCLUDE_CAPABILITIES;
+        assert(pkg_scan(context, target, &unsupported, &limited_result) == PKG_ERR_UNSUPPORTED);
+        assert(limited_result == NULL);
     }
     pkg_target_destroy(target);
     remove_fixture(fixture);

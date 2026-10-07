@@ -68,7 +68,7 @@ Resource limits are part of the security contract, not merely performance tuning
 - cache-entry limits;
 - general allocation/descriptors budgets.
 
-These controls must not be presented as enforced until accounting and tests exist. Public option fields for unsupported limits are rejected with `PKG_ERR_UNSUPPORTED` rather than silently ignored.
+These controls must not be presented as enforced until accounting and tests exist. Public option fields for unsupported limits are rejected with `PKG_ERR_UNSUPPORTED` rather than silently ignored. Reserved scan feature flags for ELF, cache, and capability analysis are likewise rejected with `PKG_ERR_UNSUPPORTED` in v0.1; the engine never accepts a feature request and silently ignores it.
 
 A limit reached during scanning must be distinguishable from a clean complete scan.
 
