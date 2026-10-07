@@ -6,20 +6,45 @@
 
 int pkg_snapshot_add_diagnostic(pkg_snapshot *snapshot, pkg_status status, pkg_diagnostic_severity severity, pkg_evidence_source source, const char *code, const char *message) {
     pkg_diagnostic_record *grown;
+    char *owned_code;
+    char *owned_message;
     size_t n;
+
     if (snapshot == NULL || code == NULL || message == NULL) return -1;
+    owned_code = pkg_strdup_internal(code);
+    if (owned_code == NULL) return -1;
+    owned_message = pkg_strdup_internal(message);
+    if (owned_message == NULL) {
+        free(owned_code);
+        return -1;
+    }
+
+    if (snapshot->diagnostic_count == SIZE_MAX) {
+        free(owned_code);
+        free(owned_message);
+        return -1;
+    }
     n = snapshot->diagnostic_count + 1U;
-    if (n < snapshot->diagnostic_count || n > SIZE_MAX / sizeof(*grown)) return -1;
+    if (n > SIZE_MAX / sizeof(*grown)) {
+        free(owned_code);
+        free(owned_message);
+        return -1;
+    }
     grown = realloc(snapshot->diagnostics, n * sizeof(*grown));
-    if (grown == NULL) return -1;
+    if (grown == NULL) {
+        free(owned_code);
+        free(owned_message);
+        return -1;
+    }
+
     snapshot->diagnostics = grown;
-    memset(&grown[n - 1U], 0, sizeof(grown[n - 1U]));
-    grown[n - 1U].code = pkg_strdup_internal(code);
-    grown[n - 1U].message = pkg_strdup_internal(message);
-    if (grown[n - 1U].code == NULL || grown[n - 1U].message == NULL) { free(grown[n - 1U].code); free(grown[n - 1U].message); return -1; }
-    grown[n - 1U].status = status;
-    grown[n - 1U].severity = severity;
-    grown[n - 1U].evidence_source = source;
+    grown[n - 1U] = (pkg_diagnostic_record){
+        .code = owned_code,
+        .message = owned_message,
+        .status = status,
+        .severity = severity,
+        .evidence_source = source
+    };
     snapshot->diagnostic_count = n;
     return 0;
 }
