@@ -188,6 +188,21 @@ int test_scan_behaviour(void) {
         }
         /* Selection intent ("hold") does not change the installation state. */
         assert(pkg_scan_result_diagnostic_count(state_result) == 6U);
+        {
+            size_t diagnostic_count = pkg_scan_result_diagnostic_count(state_result);
+            int found_unknown_status = 0;
+            for (size_t i = 0U; i < diagnostic_count; ++i) {
+                const pkg_diagnostic *diagnostic = NULL;
+                pkg_string_view code;
+                assert(pkg_snapshot_diagnostic_at(state_result, i, &diagnostic) == PKG_OK);
+                code = pkg_diagnostic_code(diagnostic);
+                if (code.size == strlen("PKG_DPKG_STATUS_UNKNOWN") &&
+                    memcmp(code.data, "PKG_DPKG_STATUS_UNKNOWN", code.size) == 0) {
+                    found_unknown_status = 1;
+                }
+            }
+            assert(found_unknown_status == 1);
+        }
         pkg_scan_result_destroy(state_result);
         pkg_target_destroy(target);
         remove_state_fixture(state_fixture);
