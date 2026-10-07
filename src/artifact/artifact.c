@@ -33,6 +33,7 @@ int pkg_snapshot_add_artifact(pkg_snapshot *snapshot, const unsigned char *path,
 
     if (snapshot == NULL || path == NULL || path_size == 0U || path_size > SIZE_MAX - 1U) return -1;
     if (snapshot->max_artifacts != 0U && snapshot->artifact_count >= snapshot->max_artifacts) return -2;
+    if (snapshot->max_string_bytes != 0U && (path_size + 1U > snapshot->max_string_bytes || snapshot->string_bytes > snapshot->max_string_bytes - (path_size + 1U))) return -2;
     owned_path = malloc(path_size + 1U);
     if (owned_path == NULL) return -1;
     memcpy(owned_path, path, path_size);
@@ -56,6 +57,7 @@ int pkg_snapshot_add_artifact(pkg_snapshot *snapshot, const unsigned char *path,
         }
     }
     snapshot->artifact_count = index + 1U;
+    snapshot->string_bytes += path_size + 1U;
     return 0;
 }
 
