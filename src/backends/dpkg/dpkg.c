@@ -284,7 +284,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     int read_rc;
     char *name = NULL, *version = NULL, *architecture = NULL, *status = NULL;
     uint64_t installed_size = 0U;
-    int parse_error = 0, truncated = 0;
+    int parse_error = 0, allocation_error = 0, truncated = 0;
     if (context == NULL || target == NULL || result == NULL || target->root_fd < 0) return PKG_ERR_INVALID_ARGUMENT;
     fd = pkg_target_open_path(target, "/var/lib/dpkg/status", O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
@@ -301,45 +301,66 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
                 int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
                 if (rc == 1) { truncated = 1; break; }
                 if (rc == 2) { truncated = 1; break; }
-                if (rc != 0) { parse_error = 1; break; }
+                if (rc != 0) { allocation_error = 1; break; }
                 if (installation_state == PKG_INSTALLATION_UNKNOWN) {
                     int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                         "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized");
                     if (diagnostic_rc == -2) { truncated = 1; break; }
-                    if (diagnostic_rc != 0) { parse_error = 1; break; }
+                    if (diagnostic_rc != 0) { allocation_error = 1; break; }
                 }
             }
             free(name); free(version); free(architecture); free(status);
             name = NULL; version = NULL; architecture = NULL; status = NULL; installed_size = 0U;
             continue;
         }
-        if (strncmp(line, "Package: ", 9U) == 0) { free(name); name = pkg_strdup_internal(trim_newline(line + 9U)); }
-        else if (strncmp(line, "Version: ", 9U) == 0) { free(version); version = pkg_strdup_internal(trim_newline(line + 9U)); }
-        else if (strncmp(line, "Architecture: ", 14U) == 0) { free(architecture); architecture = pkg_strdup_internal(trim_newline(line + 14U)); }
-        else if (strncmp(line, "Status: ", 8U) == 0) { free(status); status = pkg_strdup_internal(trim_newline(line + 8U)); }
+        if (strncmp(line, "Package: ", 9U) == 0) {
+            char *value = pkg_strdup_internal(trim_newline(line + 9U));
+            if (value == NULL) { allocation_error = 1; break; }
+            free(name);
+            name = value;
+        }
+        else if (strncmp(line, "Version: ", 9U) == 0) {
+            char *value = pkg_strdup_internal(trim_newline(line + 9U));
+            if (value == NULL) { allocation_error = 1; break; }
+            free(version);
+            version = value;
+        }
+        else if (strncmp(line, "Architecture: ", 14U) == 0) {
+            char *value = pkg_strdup_internal(trim_newline(line + 14U));
+            if (value == NULL) { allocation_error = 1; break; }
+            free(architecture);
+            architecture = value;
+        }
+        else if (strncmp(line, "Status: ", 8U) == 0) {
+            char *value = pkg_strdup_internal(trim_newline(line + 8U));
+            if (value == NULL) { allocation_error = 1; break; }
+            free(status);
+            status = value;
+        }
         else if (strncmp(line, "Installed-Size: ", 16U) == 0) {
             uint64_t kib = 0U;
             if (parse_u64_decimal(trim_newline(line + 16U), &kib) != 0 || kib > UINT64_MAX / UINT64_C(1024)) parse_error = 1;
             else installed_size = kib * UINT64_C(1024);
         }
     }
-    if (truncated == 0 && parse_error == 0 &&
+    if (truncated == 0 && parse_error == 0 && allocation_error == 0 &&
         name != NULL && version != NULL && architecture != NULL) {
         pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
         int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
         if (rc == 1 || rc == 2) truncated = 1;
-        else if (rc != 0) parse_error = 1;
+        else if (rc != 0) allocation_error = 1;
         if (parse_error == 0 && installation_state == PKG_INSTALLATION_UNKNOWN) {
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized");
             if (diagnostic_rc == -2) truncated = 1;
-            else if (diagnostic_rc != 0) parse_error = 1;
+            else if (diagnostic_rc != 0) allocation_error = 1;
         }
     }
     if (read_rc == -2) truncated = 1;
     else if (read_rc < 0) parse_error = 1;
     free(name); free(version); free(architecture); free(status);
     if (fclose(file) != 0 && parse_error == 0) parse_error = 1;
+    if (allocation_error != 0) return PKG_ERR_INTERNAL;
     if (parse_error != 0) return PKG_ERR_PARSE;
     if (truncated != 0) return PKG_ERR_RESOURCE_LIMIT;
     {
