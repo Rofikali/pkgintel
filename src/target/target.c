@@ -43,7 +43,7 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
     relative = path + 1U;
     if (*relative == '\0') { errno = EINVAL; return -1; }
     how.flags = (unsigned long long)(O_PATH | O_NOFOLLOW | O_CLOEXEC);
-    how.resolve = RESOLVE_IN_ROOT | RESOLVE_NO_MAGICLINKS;
+    how.resolve = RESOLVE_IN_ROOT | RESOLVE_NO_MAGICLINKS | RESOLVE_NO_XDEV;
     fd = (int)syscall(SYS_openat2, target->root_fd, relative, &how, sizeof(how));
     if (fd < 0) return -1;
     if (fstat(fd, st) != 0) { int saved_errno = errno; (void)close(fd); errno = saved_errno; return -1; }
