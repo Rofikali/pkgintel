@@ -16,6 +16,7 @@ The original proposal is strong, but several concepts need tightening before imp
 10. **Stable ABI comes after API review and ABI testing.** v0.1 can expose an explicitly versioned C API, but the project must not claim ABI stability until ABI checks and compatibility policy exist.
 11. **Unimplemented controls must not be advertised as enforced controls.** Reserved resource-limit fields are rejected when non-zero until the corresponding accounting exists.
 12. **Unimplemented scan features must fail closed.** ELF, cache, and capability feature flags are reserved API surface in v0.1 and are rejected with `PKG_ERR_UNSUPPORTED`; they must never be accepted and silently ignored.
+13. **Optimization must be evidence-driven.** v0.1 does not use hand-written assembly. Assembly is permitted only after a measured end-to-end hotspot, compiler-output review, security review, and architecture-specific CI/fallback plan justify its maintenance cost. See `docs/ADR/ADR-0040-assembly-policy.md`.
 
 ## 2. Source, header, and interface boundaries
 
@@ -188,3 +189,11 @@ The first desired-action token (`install`, `hold`, `deinstall`, `purge`, or othe
 Installation state and filesystem consistency are separate dimensions. A partial package is not automatically declared inconsistent merely because dpkg reports a transitional state; consistency is based on the package-file evidence that was actually observed. An unknown state produces a diagnostic rather than being silently treated as installed.
 
 This mapping is deliberately smaller than the complete dpkg state machine. Any future public state expansion requires an API/ABI review and corresponding tests and documentation.
+
+## 11. Performance implementation policy
+
+The v0.1 performance policy is deliberately conservative. C17 plus normal compiler optimization is the baseline. Hand-written assembly is not justified by the current workload evidence and is therefore excluded from the production implementation.
+
+The project will optimize in this order: algorithm/data model → I/O/syscall behavior → allocation/ownership → compiler optimization/LTO → profiled portable C → compiler intrinsics → hand-written assembly only after an explicit evidence gate.
+
+Assembly, if ever introduced, must remain an internal implementation detail with a portable fallback where required. A microbenchmark win is insufficient; the change must demonstrate a meaningful end-to-end benefit and pass architecture-specific CI, sanitizer/security review, and maintenance-cost review. The complete decision framework is recorded in ADR-0040.
