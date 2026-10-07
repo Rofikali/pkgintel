@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 #define PKGINTEL_MAX_SNAPSHOT_ARTIFACTS ((size_t)1000000U)
 #define PKGINTEL_MAX_SNAPSHOT_DIAGNOSTICS ((size_t)100000U)
