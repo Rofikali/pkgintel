@@ -28,11 +28,9 @@ The implementation must enforce the following boundary conditions:
 - mount-point and bind-mount crossings are rejected for target-relative operations;
 - magic links are rejected;
 - the target root itself must be an actual directory, not a symlink;
-- `/proc` and `/sys` exposure;
-- special files;
-- `/proc` and `/sys` exposure;
-- special files;
-- filesystem races.
+- `/proc` and `/sys` exposure must not weaken the target boundary;
+- special files must not be opened merely for inspection;
+- filesystem races must be handled with descriptor-relative operations and appropriate post-open verification.
 
 ## Symlink and special-file policy
 
@@ -128,7 +126,6 @@ A release candidate requires:
 
 A future feature must not weaken these guarantees merely to expose an earlier public API.
 
-
 ## Dpkg status-state handling
 
 The `Status:` field is treated as untrusted structured input. Its three tokens are interpreted independently: desired action is not used as the installation-state classifier, the error flag can force a broken/reinstallation-required package into `PARTIAL`, and the actual state token determines installed/removed/transitional classification.
@@ -136,3 +133,7 @@ The `Status:` field is treated as untrusted structured input. Its three tokens a
 Unknown or malformed status combinations are represented as `PKG_INSTALLATION_UNKNOWN` and accompanied by a diagnostic. They are never silently promoted to `INSTALLED`. This is important because a parser that mistakes a desired action or an unfamiliar state for a healthy installation would turn malformed metadata into a false security conclusion.
 
 The current public state mapping is intentionally narrower than dpkg's complete state vocabulary. Extending it is a semantic/API change and requires tests, documentation, and ABI review together.
+
+## Performance-security interaction
+
+Performance optimizations must not weaken the security boundary. In particular, hand-written assembly is not part of v0.1. Any future architecture-specific optimization must pass the evidence gate in ADR-0040 and retain the same bounds, ownership, error, and containment guarantees as the portable implementation.
