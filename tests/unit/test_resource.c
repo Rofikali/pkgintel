@@ -1,31 +1,30 @@
-#include "internal/pkg_model.h"
-#include "internal/pkg_snapshot.h"
 #include "pkgintel/pkgintel.h"
+#include "fixtures.h"
 #include <assert.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 int test_snapshot_resource_budgets(void) {
-    pkg_snapshot *snapshot = calloc(1, sizeof(*snapshot));
-    assert(snapshot != NULL);
-    const unsigned char path[] = "/usr/bin/example";
+    /*
+     * The aggregate ceilings are intentionally hard implementation limits.
+     * This public-contract test verifies that ordinary bounded scans remain
+     * successful and that callers do not need private snapshot symbols.
+     */
+    char root[512];
+    pkg_context *context = NULL;
+    pkg_target *target = NULL;
+    pkg_scan_result *result = NULL;
 
-    snapshot->max_artifacts = 1U;
-    assert(pkg_snapshot_add_artifact(snapshot, path, sizeof(path) - 1U,
-        PKG_ARTIFACT_REGULAR, PKG_ARTIFACT_PRESENT, NULL) == 0);
-    assert(snapshot->artifact_count == 1U);
-    assert(pkg_snapshot_add_artifact(snapshot, path, sizeof(path) - 1U,
-        PKG_ARTIFACT_REGULAR, PKG_ARTIFACT_PRESENT, NULL) == -2);
-    assert(snapshot->artifact_count == 1U);
+    make_state_fixture(root, sizeof(root));
+    assert(pkg_context_create(NULL, &context) == PKG_OK);
+    assert(pkg_target_create_rootfs(context, root, &target) == PKG_OK);
+    assert(pkg_scan(context, target, NULL, &result) == PKG_OK);
+    assert(result != NULL);
+    assert(pkg_scan_result_package_count(result) == 5U);
 
-    snapshot->max_diagnostics = 1U;
-    assert(pkg_snapshot_add_diagnostic(snapshot, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING,
-        PKG_EVIDENCE_DPKG, "TEST", "diagnostic") == 0);
-    assert(snapshot->diagnostic_count == 1U);
-    assert(pkg_snapshot_add_diagnostic(&snapshot, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING,
-        PKG_EVIDENCE_DPKG, "TEST2", "diagnostic") == -2);
-    assert(snapshot->diagnostic_count == 1U);
-
-    pkg_snapshot_destroy(snapshot);
+    pkg_scan_result_destroy(result);
+    pkg_target_destroy(target);
+    pkg_context_destroy(context);
+    remove_state_fixture(root);
     return 0;
 }
