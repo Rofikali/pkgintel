@@ -56,13 +56,29 @@ static int parse_u64_decimal(const char *value, uint64_t *out) {
     return 0;
 }
 
-static int status_is_installed(const char *status) {
-    return status != NULL && strcmp(status, "install ok installed") == 0;
+static pkg_installation_state installation_state_from_dpkg_status(const char *status) {
+    char want[32], eflag[32], state[32], extra[2];
+    int fields;
+    if (status == NULL) return PKG_INSTALLATION_UNKNOWN;
+
+    fields = sscanf(status, "%31s %31s %31s %1s", want, eflag, state, extra);
+    if (fields != 3) return PKG_INSTALLATION_UNKNOWN;
+    (void)want;
+
+    if (strcmp(eflag, "reinstreq") == 0) return PKG_INSTALLATION_PARTIAL;
+    if (strcmp(state, "installed") == 0) return PKG_INSTALLATION_INSTALLED;
+    if (strcmp(state, "not-installed") == 0 || strcmp(state, "config-files") == 0) return PKG_INSTALLATION_REMOVED;
+    if (strcmp(state, "half-installed") == 0 ||
+        strcmp(state, "unpacked") == 0 ||
+        strcmp(state, "half-configured") == 0 ||
+        strcmp(state, "triggers-awaited") == 0 ||
+        strcmp(state, "triggers-pending") == 0) return PKG_INSTALLATION_PARTIAL;
+    return PKG_INSTALLATION_UNKNOWN;
 }
 
 static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
                           const char *name, const char *version, const char *architecture,
-                          uint64_t installed_size) {
+                          pkg_installation_state installation_state, uint64_t installed_size) {
     pkg_package_record *grown;
     size_t next_count;
     if (result == NULL || name == NULL || version == NULL || architecture == NULL) return -1;
@@ -75,6 +91,7 @@ static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
     grown[result->package_count].name = pkg_strdup_internal(name);
     grown[result->package_count].version = pkg_strdup_internal(version);
     grown[result->package_count].architecture = pkg_strdup_internal(architecture);
+    grown[result->package_count].installation_state = installation_state;
     grown[result->package_count].installed_size = installed_size;
     grown[result->package_count].owner_snapshot = result;
     grown[result->package_count].file_count = 0U;
@@ -235,10 +252,17 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     if (file == NULL) { (void)close(fd); return PKG_ERR_IO; }
     while ((read_rc = read_bounded_record(file, line, sizeof(line))) > 0) {
         if (line[0] == '\0') {
-            if (status_is_installed(status) && name != NULL && version != NULL && architecture != NULL) {
-                int rc = append_package(result, options, name, version, architecture, installed_size);
+            if (name != NULL && version != NULL && architecture != NULL) {
+                pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
+                int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
                 if (rc == 1) { truncated = 1; break; }
                 if (rc != 0) { parse_error = 1; break; }
+                if (installation_state == PKG_INSTALLATION_UNKNOWN &&
+                    pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                        "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized") != 0) {
+                    parse_error = 1;
+                    break;
+                }
             }
             free(name); free(version); free(architecture); free(status);
             name = NULL; version = NULL; architecture = NULL; status = NULL; installed_size = 0U;
@@ -254,11 +278,16 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
             else installed_size = kib * UINT64_C(1024);
         }
     }
-    if (truncated == 0 && parse_error == 0 && status_is_installed(status) &&
+    if (truncated == 0 && parse_error == 0 &&
         name != NULL && version != NULL && architecture != NULL) {
-        int rc = append_package(result, options, name, version, architecture, installed_size);
+        pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
+        int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
         if (rc == 1) truncated = 1;
         else if (rc != 0) parse_error = 1;
+        if (parse_error == 0 && installation_state == PKG_INSTALLATION_UNKNOWN) {
+            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized") != 0) parse_error = 1;
+        }
     }
     if (read_rc == -2) truncated = 1;
     else if (read_rc < 0) parse_error = 1;
