@@ -110,6 +110,38 @@ if(PKGINTEL_BUILD_TESTS)
     target_link_libraries(pkgintel_benchmark PRIVATE pkgintel)
     target_compile_options(pkgintel_benchmark PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 
+    # Performance-only allocation instrumentation. Production sources are compiled
+    # into a private static copy with allocator calls redirected to the benchmark
+    # probe. This does not alter the production shared library or ABI.
+    add_library(pkgintel_benchmark_instrumented_objects OBJECT ${PKGINTEL_SOURCES})
+    target_include_directories(pkgintel_benchmark_instrumented_objects
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(pkgintel_benchmark_instrumented_objects PRIVATE
+        PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
+    target_compile_options(pkgintel_benchmark_instrumented_objects PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+        -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+        -Dmalloc=pkg_bench_malloc
+        -Dcalloc=pkg_bench_calloc
+        -Drealloc=pkg_bench_realloc
+        -Dfree=pkg_bench_free)
+
+    add_library(pkgintel_benchmark_instrumented STATIC
+        $<TARGET_OBJECTS:pkgintel_benchmark_instrumented_objects>
+        tests/benchmark/alloc_stats.c)
+    target_include_directories(pkgintel_benchmark_instrumented
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark)
+    target_compile_options(pkgintel_benchmark_instrumented PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+    add_executable(pkgintel_benchmark_alloc tests/benchmark/benchmark_scan.c)
+    target_link_libraries(pkgintel_benchmark_alloc PRIVATE pkgintel_benchmark_instrumented)
+    target_include_directories(pkgintel_benchmark_alloc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark)
+    target_compile_definitions(pkgintel_benchmark_alloc PRIVATE PKGINTEL_BENCHMARK_ALLOC_STATS=1)
+    target_compile_options(pkgintel_benchmark_alloc PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
     add_executable(pkgintel_unit_tests tests/unit/test_main.c
         tests/unit/test_context.c
         tests/unit/test_scan.c
