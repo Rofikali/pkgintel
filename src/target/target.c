@@ -8,6 +8,9 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 static pkg_status target_create(pkg_context *context, pkg_target_type type, const char *root, pkg_target **out_target) {
     pkg_target *target;
