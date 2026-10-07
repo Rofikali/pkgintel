@@ -24,10 +24,10 @@ PKGINTEL_API pkg_status pkg_snapshot_diagnostic_at(const pkg_snapshot *snapshot,
 /* 0.x compatibility accessors. */
 PKGINTEL_API void pkg_scan_result_destroy(pkg_scan_result *result);
 PKGINTEL_API size_t pkg_scan_result_package_count(const pkg_scan_result *result);
-const char *pkg_scan_result_target_root(const pkg_scan_result *result);
-const char *pkg_scan_result_package_name(const pkg_scan_result *result, size_t index);
-const char *pkg_scan_result_package_version(const pkg_scan_result *result, size_t index);
-const char *pkg_scan_result_package_architecture(const pkg_scan_result *result, size_t index);
+PKGINTEL_API const char *pkg_scan_result_target_root(const pkg_scan_result *result);
+PKGINTEL_API const char *pkg_scan_result_package_name(const pkg_scan_result *result, size_t index);
+PKGINTEL_API const char *pkg_scan_result_package_version(const pkg_scan_result *result, size_t index);
+PKGINTEL_API const char *pkg_scan_result_package_architecture(const pkg_scan_result *result, size_t index);
 PKGINTEL_API uint64_t pkg_scan_result_package_installed_size(const pkg_scan_result *result, size_t index);
 PKGINTEL_API uint64_t pkg_scan_result_package_file_count(const pkg_scan_result *result, size_t index);
 PKGINTEL_API uint64_t pkg_scan_result_package_missing_file_count(const pkg_scan_result *result, size_t index);
