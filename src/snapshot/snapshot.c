@@ -1,5 +1,8 @@
 #include "internal/pkg_model.h"
 #include <stdlib.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 void pkg_snapshot_destroy(pkg_snapshot *result) {
     size_t i;
