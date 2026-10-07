@@ -1,6 +1,9 @@
 #include "internal/pkg_model.h"
 #include <stdint.h>
 #include <string.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 pkg_string_view pkg_package_name(const pkg_package *package) { const pkg_package_record *p = (const pkg_package_record *)package; return p == NULL || p->name == NULL ? (pkg_string_view){NULL,0U} : (pkg_string_view){p->name,strlen(p->name)}; }
 
