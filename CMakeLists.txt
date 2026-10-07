@@ -125,7 +125,8 @@ if(PKGINTEL_BUILD_TESTS)
         -Dmalloc=pkg_bench_malloc
         -Dcalloc=pkg_bench_calloc
         -Drealloc=pkg_bench_realloc
-        -Dfree=pkg_bench_free)
+        -Dfree=pkg_bench_free
+        -include${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark/alloc_stats.h)
 
     add_library(pkgintel_benchmark_instrumented STATIC
         $<TARGET_OBJECTS:pkgintel_benchmark_instrumented_objects>
