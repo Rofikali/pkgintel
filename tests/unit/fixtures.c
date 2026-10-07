@@ -21,11 +21,13 @@ void make_fixture(char *root, size_t root_size) {
     assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\nPackage: removed-pkg\nVersion: 9.9\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 999\n", file) >= 0); assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root); assert(written > 0 && (size_t)written < sizeof(path)); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", root); file = fopen(path, "wb"); assert(file != NULL);
-    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n/usr/bin/adir\n/usr/bin/fifo\n/usr/bin/present\n/restricted/secret\n../escape\n\n", file) >= 0); assert(fclose(file) == 0);
+    assert(fputs("/usr/bin/present\n/usr/bin/missing\n/usr/bin/link\n/usr/bin/broken\n/usr/bin/adir\n/usr/bin/fifo\n/usr/bin/present\n/restricted/secret\n../escape\n/usr/bin/outside-link\n\n", file) >= 0); assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/present", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("x", file) == 1); assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/link", root); assert(symlink("/usr/bin/present", path) == 0);
+    written = snprintf(path, sizeof(path), "%s/usr/bin/outside-link", root); assert(symlink("/tmp/pkgintel-outside-secret", path) == 0);
+    { FILE *outside = fopen("/tmp/pkgintel-outside-secret", "wb"); assert(outside != NULL); assert(fputs("outside", outside) >= 0); assert(fclose(outside) == 0); }
     written = snprintf(path, sizeof(path), "%s/usr/bin/broken", root); assert(symlink("/usr/bin/nope", path) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/adir", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/fifo", root); assert(mkfifo(path, 0600) == 0);
@@ -42,6 +44,8 @@ void remove_fixture(const char *root) {
     assert(snprintf(path, sizeof(path), "%s/usr/bin/fifo", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/adir", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/broken", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/usr/bin/outside-link", root) > 0); assert(unlink(path) == 0);
+    assert(unlink("/tmp/pkgintel-outside-secret") == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/link", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/present", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin", root) > 0); assert(rmdir(path) == 0);
