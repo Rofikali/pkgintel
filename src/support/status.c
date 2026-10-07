@@ -1,4 +1,7 @@
 #include "pkgintel/pkgintel.h"
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 const char *pkg_status_string(pkg_status status) {
     switch (status) {
