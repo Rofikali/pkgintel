@@ -3,6 +3,9 @@
 #include "internal/pkg_support.h"
 #include <stdlib.h>
 #include <string.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 static int grow_diagnostics(pkg_snapshot *snapshot, size_t required) {
     size_t capacity = snapshot->diagnostic_capacity == 0U ? 8U : snapshot->diagnostic_capacity;
