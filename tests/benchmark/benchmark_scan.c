@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -52,11 +53,13 @@ static int write_fixture(const char *root, size_t packages, size_t files_per_pac
 }
 
 static int make_tree(char *root, size_t root_size, size_t packages, size_t files_per_package) {
-    char command[1024];
+    char path[1024];
     int n = snprintf(root, root_size, "/tmp/pkgintel-perf-XXXXXX");
     if (n < 0 || (size_t)n >= root_size || mkdtemp(root) == NULL) return -1;
-    if (snprintf(command, sizeof(command), "mkdir -p '%s/var/lib/dpkg/info'", root) < 0) return -1;
-    if (system(command) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var/lib", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) < 0 || mkdir(path, 0700) != 0) return -1;
     return write_fixture(root, packages, files_per_package);
 }
 
