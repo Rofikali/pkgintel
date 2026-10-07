@@ -13,6 +13,19 @@
 
 #define PKG_DPKG_MAX_RECORD_BYTES UINT64_C(65536)
 
+static int add_artifact_checked(pkg_snapshot *result, const unsigned char *path, size_t path_size,
+                                  pkg_artifact_kind kind, pkg_artifact_state state, const struct stat *st) {
+    int rc = add_artifact_checked(result, path, path_size, kind, state, st);
+    return rc == -2 ? 2 : rc;
+}
+
+static int add_diagnostic_checked(pkg_snapshot *result, pkg_status status, pkg_diagnostic_severity severity,
+                                  pkg_evidence_source source, const char *code, const char *message) {
+    int rc = add_diagnostic_checked(result, status, severity, source, code, message);
+    return rc == -2 ? 2 : rc;
+}
+
+
 /*
  * Read one metadata record without allowing the input to grow an attacker-sized
  * heap buffer. The returned record excludes the line terminator and is always
@@ -158,6 +171,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             ++invalid;
             malformed = 1;
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
+            if (add_rc == 2) { (void)fclose(file); return 2; }
             if (add_rc != 0) { (void)fclose(file); return -1; }
             continue;
         }
