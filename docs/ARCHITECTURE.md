@@ -9,11 +9,12 @@ The original proposal is strong, but several concepts need tightening before imp
 3. **The target is the security boundary.** Every filesystem operation must resolve relative to the target. No subsystem may silently escape the target root.
 4. **dpkg and APT are adapters.** Generic domain structures must not contain dpkg/apt-specific types.
 5. **Discovery is evidence-producing, not truth-producing.** Results preserve provenance and confidence; permission failures and unsupported metadata are observations, not silent omissions.
-6. **The first vertical slice must be narrow.** Start with context → target → dpkg package enumeration → selected package-file correlation → diagnostics → CLI/JSON. ELF, capabilities, and APT follow only after that boundary is proven.
+6. **The first vertical slice must be narrow.** The current slice is context → target → dpkg package enumeration → selected package-file correlation → diagnostics → basic CLI. ELF, capabilities, APT, JSON, and other expansion work follow only after the existing boundary is proven.
 7. **Do not promise full filesystem correctness in v0.1.** Package-owned-file verification is bounded and policy-driven; a full / crawl is not the default.
 8. **Do not expose size ambiguously.** Use named semantics such as `logical_size`, `allocated_size`, and `package_installed_size`.
-9. **JSON is an output contract, not the domain model.** Version the JSON schema independently from the C ABI.
+9. **JSON is an output contract, not the domain model.** When implemented, version the JSON schema independently from the C ABI.
 10. **Stable ABI comes after API review and ABI testing.** v0.1 can expose an explicitly versioned C API, but the project must not claim ABI stability until ABI checks and compatibility policy exist.
+11. **Unimplemented controls must not be advertised as enforced controls.** Reserved resource-limit fields are rejected when non-zero until the corresponding accounting exists.
 
 ## 2. Source, header, and interface boundaries
 
@@ -55,18 +56,6 @@ There is deliberately **no compatibility umbrella** that re-exports all private 
 
 This directory is not a dumping ground for every declaration. When a private dependency is only between one or two tightly related modules, prefer a module-local private header. Split shared contracts when the dependency boundary is architecturally meaningful.
 
-### 2.4 Directory rules are architectural rules
-
-The repository should enforce these rules in CI:
-
-- Public headers live under `include/pkgintel/`.
-- Shared private headers live under `src/internal/`.
-- No other `.h` files are placed directly under `src/` or arbitrary source directories unless a future ADR explicitly defines a module-local private-header convention.
-- External-facing documentation refers to `include/pkgintel/` as the supported interface, not to internal headers.
-- CMake installation/export rules must install only the reviewed public headers.
-
-The purpose is not to enforce a folder style for its own sake. The directory structure communicates dependency direction and prevents accidental coupling to private implementation details.
-
 ## 3. Layers
 
 ```
@@ -80,10 +69,10 @@ Evidence / diagnostics
         |
 Backend interfaces
    |        |        |
- dpkg     APT   filesystem/ELF
+ dpkg   filesystem   future adapters
 ```
 
-The core library owns domain behavior. The CLI owns argument parsing, presentation, exit-code policy, and serialization selection.
+The core library owns domain behavior. The CLI owns argument parsing, presentation, exit-code policy, and serialization selection. Serialization beyond the current basic CLI is a later contract.
 
 ## 4. Target model
 
@@ -100,9 +89,8 @@ validate options
   -> enumerate package metadata
   -> correlate selected package files
   -> collect evidence/diagnostics
-  -> optional artifact/ELF/capability phases
   -> finalize immutable result
-  -> serialize
+  -> serialize through the selected presentation layer
 ```
 
 Each phase must have explicit resource accounting and failure semantics.
@@ -141,19 +129,38 @@ docs/                  contracts and design decisions
 
 ## 8. First vertical slice
 
-The first implementation should be:
+The current first vertical slice is:
 
 ```
 pkg_context
 pkg_target
 pkg_status
 pkg_diagnostic
-pkg_scan_result
+pkg_snapshot / pkg_scan_result
 DPKG backend
 selected package-file correlation
 basic CLI
-JSON v0.1 schema
-unit + integration tests
+unit tests
+installable CMake package
+ABI export allowlist
 ```
 
-Do not add Rust, SQLite, remote scanning, vulnerability data, SBOM generation, or commercial functionality to this slice.
+ELF, capabilities, APT/cache analysis, JSON serialization, Rust FFI, vulnerability data, SBOM generation, and commercial functionality remain later slices.
+
+## 9. Public API deferral rule
+
+Future functionality must not enter the public ABI merely because an internal stub or prototype exists.
+
+In particular, cache and capability result types/accessors were removed from the v0.1 public boundary because their semantics and implementation contracts are not yet complete. They will return through a separate design gate covering:
+
+1. domain semantics;
+2. ownership and lifetime;
+3. provenance/evidence model;
+4. resource accounting;
+5. hostile-input behavior;
+6. public API review;
+7. ABI allowlist update;
+8. integration and security tests;
+9. documentation.
+
+This prevents an unfinished design from becoming a compatibility commitment.
