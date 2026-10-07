@@ -43,6 +43,41 @@ jobs:
         run: |
           nm -D --defined-only build/libpkgintel.so | awk '$2 ~ /^[A-Z]$/ {print $3}' | sort -u > build/exported_symbols.txt
           diff -u tests/abi/public_symbols.txt build/exported_symbols.txt
+      - name: Audit private symbols
+        run: |
+          if nm -D --defined-only build/libpkgintel.so |
+            awk '$2 ~ /^[A-Z]$/ {print $3}' |
+            grep -E '^pkg_(dpkg_scan|snapshot_add_|strdup_internal|target_(open_path|lstat_path|open_root))      - name: Verify installed package consumer
+        run: |
+          cmake -S tests/install -B build-consumer -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/_install"
+          cmake --build build-consumer --parallel
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/_install/lib" ./build-consumer/pkgintel_consumer
+
+  sanitized:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang
+      - name: Configure
+        env:
+          CC: clang
+          CFLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer -fno-common
+          LDFLAGS: -fsanitize=address,undefined
+        run: cmake -S . -B build-sanitized -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPKGINTEL_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build-sanitized --parallel
+      - name: Test
+        run: ctest --test-dir build-sanitized --output-on-failure
+      - name: Install sanitized build
+        run: cmake --install build-sanitized --prefix "$GITHUB_WORKSPACE/_install-sanitized"
+
+          then
+            echo 'ERROR: private implementation symbol leaked into exported ABI'
+            exit 1
+          fi
       - name: Verify installed package consumer
         run: |
           cmake -S tests/install -B build-consumer -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/_install"
