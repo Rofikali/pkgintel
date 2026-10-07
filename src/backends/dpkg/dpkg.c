@@ -190,7 +190,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
             if (add_rc == 2) { (void)fclose(file); return 2; }
             if (add_rc == -2) { (void)fclose(file); return 2; }
-        if (add_rc != 0) { (void)fclose(file); return -1; }
+            if (add_rc != 0) { (void)fclose(file); return -3; }
             continue;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
@@ -225,7 +225,8 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             }
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), kind, artifact_state, &st);
         }
-        if (add_rc != 0) { (void)fclose(file); return -1; }
+        if (add_rc == -2) { (void)fclose(file); return 2; }
+        if (add_rc != 0) { (void)fclose(file); return -3; }
     }
     if (read_rc == -2) {
         package->file_count = count;
@@ -246,7 +247,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
             "PKG_DPKG_FILELIST_MALFORMED", "package file list contains malformed entries");
         if (diagnostic_rc == -2) return 2;
-        if (diagnostic_rc != 0) return -1;
+        if (diagnostic_rc != 0) return -3;
     }
     return 0;
 }
@@ -261,6 +262,7 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
         result->packages[i].artifact_start = before;
         result->packages[i].artifact_count = result->artifact_count - before;
         if (rc == 2) { limited = 1; continue; }
+        if (rc == -3) return PKG_ERR_INTERNAL;
         if (rc < 0) {
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
