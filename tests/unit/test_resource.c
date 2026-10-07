@@ -8,10 +8,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-extern void *__real_malloc(size_t size);
-extern void *__real_calloc(size_t count, size_t size);
-extern void *__real_realloc(void *ptr, size_t size);
-
 typedef enum test_alloc_kind {
     TEST_ALLOC_MALLOC = 0,
     TEST_ALLOC_CALLOC,
@@ -24,22 +20,22 @@ static size_t test_realloc_calls;
 static test_alloc_kind test_fail_kind = TEST_ALLOC_MALLOC;
 static size_t test_fail_at;
 
-void *__wrap_malloc(size_t size) {
+void *pkg_test_malloc(size_t size) {
     ++test_malloc_calls;
     if (test_fail_at != 0U && test_fail_kind == TEST_ALLOC_MALLOC && test_malloc_calls == test_fail_at) return NULL;
-    return __real_malloc(size);
+    return malloc(size);
 }
 
-void *__wrap_calloc(size_t count, size_t size) {
+void *pkg_test_calloc(size_t count, size_t size) {
     ++test_calloc_calls;
     if (test_fail_at != 0U && test_fail_kind == TEST_ALLOC_CALLOC && test_calloc_calls == test_fail_at) return NULL;
-    return __real_calloc(count, size);
+    return calloc(count, size);
 }
 
-void *__wrap_realloc(void *ptr, size_t size) {
+void *pkg_test_realloc(void *ptr, size_t size) {
     ++test_realloc_calls;
     if (test_fail_at != 0U && test_fail_kind == TEST_ALLOC_REALLOC && test_realloc_calls == test_fail_at) return NULL;
-    return __real_realloc(ptr, size);
+    return realloc(ptr, size);
 }
 
 static void reset_allocator_observation(void) {
@@ -79,7 +75,7 @@ int test_snapshot_resource_budgets(void) {
     assert(pkg_context_create(NULL, &context) == PKG_OK);
     assert(pkg_target_create_rootfs(context, root, &target) == PKG_OK);
 
-    /* Establish deterministic allocation counts for the public scan path. */
+    /* Establish deterministic allocation counts for the production allocation path, compiled into the test-only static library. */
     reset_allocator_observation();
     assert(pkg_scan(context, target, NULL, &result) == PKG_OK);
     assert(result != NULL);
@@ -94,9 +90,10 @@ int test_snapshot_resource_budgets(void) {
     result = NULL;
 
     /*
-     * Fail every observed allocation site, one at a time. The production ABI
-     * is unchanged: failure injection exists only in this test executable via
-     * the linker --wrap facility.
+     * Fail every observed library-owned allocation site, one at a time.
+     * Production code is compiled unchanged except for test-only allocator
+     * symbol substitution in the static test library; the shipped ABI is not
+     * modified and the production shared library is not used by this test.
      */
     const size_t baseline_counts[] = { malloc_calls, calloc_calls, realloc_calls };
     for (test_alloc_kind kind = TEST_ALLOC_MALLOC; kind <= TEST_ALLOC_REALLOC; ++kind) {
