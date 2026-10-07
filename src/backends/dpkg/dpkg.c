@@ -2,6 +2,7 @@
 #include "internal/pkg_support.h"
 #include "internal/pkg_target.h"
 #include "internal/pkg_snapshot.h"
+#include "internal/pkg_backend.h"
 
 #include <errno.h>
 #include <fcntl.h>
