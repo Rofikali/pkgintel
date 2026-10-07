@@ -28,8 +28,16 @@ int pkg_snapshot_add_diagnostic(pkg_snapshot *snapshot, pkg_status status, pkg_d
     char *owned_code;
     char *owned_message;
     size_t index;
+    size_t code_bytes;
+    size_t message_bytes;
+    size_t total_bytes;
     if (snapshot == NULL || code == NULL || message == NULL) return -1;
     if (snapshot->max_diagnostics != 0U && snapshot->diagnostic_count >= snapshot->max_diagnostics) return -2;
+    code_bytes = strlen(code) + 1U;
+    message_bytes = strlen(message) + 1U;
+    if (code_bytes > SIZE_MAX - message_bytes) return -1;
+    total_bytes = code_bytes + message_bytes;
+    if (snapshot->max_string_bytes != 0U && (total_bytes > snapshot->max_string_bytes || snapshot->string_bytes > snapshot->max_string_bytes - total_bytes)) return -2;
     owned_code = pkg_strdup_internal(code);
     if (owned_code == NULL) return -1;
     owned_message = pkg_strdup_internal(message);
@@ -53,6 +61,7 @@ int pkg_snapshot_add_diagnostic(pkg_snapshot *snapshot, pkg_status status, pkg_d
         .status = status, .severity = severity, .evidence_source = source
     };
     snapshot->diagnostic_count = index + 1U;
+    snapshot->string_bytes += total_bytes;
     return 0;
 }
 
