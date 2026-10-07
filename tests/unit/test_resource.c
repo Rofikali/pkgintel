@@ -98,8 +98,9 @@ int test_snapshot_resource_budgets(void) {
      * is unchanged: failure injection exists only in this test executable via
      * the linker --wrap facility.
      */
+    const size_t baseline_counts[] = { malloc_calls, calloc_calls, realloc_calls };
     for (test_alloc_kind kind = TEST_ALLOC_MALLOC; kind <= TEST_ALLOC_REALLOC; ++kind) {
-        const size_t calls = allocation_count(kind);
+        const size_t calls = baseline_counts[kind];
         for (size_t fail_at = 1U; fail_at <= calls; ++fail_at)
             assert_scan_survives_allocator_failure(context, target, kind, fail_at);
     }
