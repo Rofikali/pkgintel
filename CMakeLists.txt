@@ -110,6 +110,26 @@ if(PKGINTEL_BUILD_TESTS)
     target_link_libraries(pkgintel_benchmark PRIVATE pkgintel)
     target_compile_options(pkgintel_benchmark PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 
+set_source_files_properties(src/core/context.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_CONTEXT)
+
+set_source_files_properties(src/core/scan.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SCAN)
+
+set_source_files_properties(src/snapshot/snapshot.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SNAPSHOT)
+
+set_source_files_properties(src/package/package.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_PACKAGE)
+
+set_source_files_properties(src/artifact/artifact.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_ARTIFACT)
+
+set_source_files_properties(src/diagnostic/diagnostic.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_DIAGNOSTIC)
+
+set_source_files_properties(src/target/target.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_TARGET)
+
+set_source_files_properties(src/support/string.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SUPPORT)
+
+set_source_files_properties(src/support/status.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SUPPORT)
+
+set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_DPKG)
+
     # Performance-only allocation instrumentation. Production sources are compiled
     # into a private static copy with allocator calls redirected to the benchmark
     # probe. This does not alter the production shared library or ABI.
@@ -122,10 +142,6 @@ if(PKGINTEL_BUILD_TESTS)
     target_compile_options(pkgintel_benchmark_instrumented_objects PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow
         -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
-        -Dmalloc=pkg_bench_malloc
-        -Dcalloc=pkg_bench_calloc
-        -Drealloc=pkg_bench_realloc
-        -Dfree=pkg_bench_free
         -include${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark/alloc_stats.h)
 
     add_library(pkgintel_benchmark_instrumented STATIC
