@@ -106,6 +106,10 @@ if(PKGINTEL_BUILD_TESTS)
         -Drealloc=pkg_test_realloc
         -include${CMAKE_CURRENT_SOURCE_DIR}/tests/unit/test_allocator.h)
 
+    add_executable(pkgintel_benchmark tests/benchmark/benchmark_scan.c)
+    target_link_libraries(pkgintel_benchmark PRIVATE pkgintel)
+    target_compile_options(pkgintel_benchmark PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
     add_executable(pkgintel_unit_tests tests/unit/test_main.c
         tests/unit/test_context.c
         tests/unit/test_scan.c
