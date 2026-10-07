@@ -21,13 +21,15 @@
 
 A plain string concatenation of target root + untrusted path is not sufficient for security-sensitive operations.
 
-The implementation must also consider:
+The implementation must enforce the following boundary conditions:
 
-- symlink substitution;
-- `..` components;
-- mount crossings;
-- bind mounts;
-- magic links;
+- symlink substitution must not escape the target;
+- `..` components must remain confined to the target root;
+- mount-point and bind-mount crossings are rejected for target-relative operations;
+- magic links are rejected;
+- the target root itself must be an actual directory, not a symlink;
+- `/proc` and `/sys` exposure;
+- special files;
 - `/proc` and `/sys` exposure;
 - special files;
 - filesystem races.
