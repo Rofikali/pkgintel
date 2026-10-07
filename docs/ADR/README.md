@@ -287,3 +287,22 @@ Consequences:
 **Status:** Accepted
 
 pkgintel uses explicit module boundaries for core, target, snapshot, package, artifact, diagnostic, support, and backend responsibilities. Public ABI remains under include/pkgintel/; private implementation headers live under src/internal/. Tests are required to mirror module, integration, security, and regression boundaries. Structural migration must preserve behavior before semantic changes are introduced.
+
+
+## ADR-0039 — Aggregate snapshot resource ceilings
+
+**Status:** Accepted
+
+The v0.1 snapshot enforces hard aggregate ceilings of 1,000,000 artifacts and 100,000 diagnostics. Exhaustion preserves the committed partial snapshot and returns `PKG_ERR_RESOURCE_LIMIT`. These record ceilings complement, but do not replace, variable-size memory/allocation safety.
+
+## ADR-0040 — Evidence-based assembly policy
+
+**Status:** Accepted
+
+Hand-written assembly is deferred from v0.1. Architecture-specific assembly is admitted only after representative profiling identifies a material CPU hotspot and optimized C/compiler vectorization/SIMD alternatives are evaluated. Any accepted implementation requires equivalent semantics, fallback behavior, security review, differential testing, and measurable operational value.
+
+## ADR-0041 — Snapshot allocation strategy
+
+**Status:** Accepted
+
+v0.1 retains explicit `malloc`/`calloc`/`realloc` ownership. An arena/slab allocator is not introduced without representative allocation and memory measurements proving that allocator overhead, fragmentation, or peak snapshot memory is material. Any future allocator must preserve checked arithmetic, bounded capacity, transactional mutation, ownership/lifetime invariants, sanitizer coverage, and public error semantics.
