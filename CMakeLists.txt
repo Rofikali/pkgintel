@@ -11,8 +11,22 @@ option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-add_library(pkgintel SHARED
+set(PKGINTEL_SOURCES
     src/core/context.c
+    src/core/scan.c
+    src/snapshot/snapshot.c
+    src/package/package.c
+    src/artifact/artifact.c
+    src/diagnostic/diagnostic.c
+    src/target/target.c
+    src/support/string.c
+    src/support/status.c
+    src/backends/dpkg/dpkg.c
+)
+
+add_library(pkgintel SHARED ${PKGINTEL_SOURCES})
+
+#    src/core/context.c
     src/core/scan.c
     src/snapshot/snapshot.c
     src/package/package.c
@@ -87,13 +101,28 @@ endif()
 
 if(PKGINTEL_BUILD_TESTS)
     enable_testing()
+    # Build a test-only static copy of production sources so allocator fault
+    # injection reaches library-owned allocation sites. Executable-level
+    # --wrap cannot reliably intercept calls made by a separately linked SO.
+    add_library(pkgintel_test STATIC ${PKGINTEL_SOURCES})
+    target_include_directories(pkgintel_test
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(pkgintel_test PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
+    target_compile_options(pkgintel_test PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+        -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+        -Dmalloc=pkg_test_malloc
+        -Dcalloc=pkg_test_calloc
+        -Drealloc=pkg_test_realloc
+        -include${CMAKE_CURRENT_SOURCE_DIR}/tests/unit/test_allocator.h)
+
     add_executable(pkgintel_unit_tests tests/unit/test_main.c
         tests/unit/test_context.c
         tests/unit/test_scan.c
         tests/unit/test_resource.c
         tests/unit/fixtures.c)
-    target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel)
-    target_link_options(pkgintel_unit_tests PRIVATE -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc)
+    target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
     target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 endif()
