@@ -1,6 +1,7 @@
 #ifndef PKGINTEL_BENCH_ALLOC_STATS_H
 #define PKGINTEL_BENCH_ALLOC_STATS_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct pkg_bench_alloc_stats {
@@ -16,6 +17,11 @@ typedef struct pkg_bench_alloc_stats {
     uint64_t peak_live_bytes;
     uint64_t final_live_bytes;
 } pkg_bench_alloc_stats;
+
+void *pkg_bench_malloc(size_t size);
+void *pkg_bench_calloc(size_t count, size_t size);
+void *pkg_bench_realloc(void *ptr, size_t size);
+void pkg_bench_free(void *ptr);
 
 void pkg_bench_alloc_stats_reset(void);
 void pkg_bench_alloc_stats_get(pkg_bench_alloc_stats *out);
