@@ -2,6 +2,9 @@
 #include "internal/pkg_snapshot.h"
 #include <stdlib.h>
 #include <string.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 static int grow_artifacts(pkg_snapshot *snapshot, size_t required) {
     size_t capacity;
