@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 #define PKG_DPKG_MAX_RECORD_BYTES UINT64_C(65536)
 
