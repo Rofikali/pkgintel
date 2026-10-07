@@ -159,6 +159,29 @@ int main(int argc, char **argv) {
            wall > 0.0 ? (double)total_artifacts / wall : 0.0);
 #ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
     pkg_bench_alloc_stats_get(&alloc_stats);
+    {
+        static const char *const class_names[] = {
+            "unknown", "context", "scan", "snapshot", "package",
+            "artifact", "diagnostic", "target", "dpkg", "support"
+        };
+        size_t class_index;
+        for (class_index = 0U; class_index < PKG_BENCH_ALLOC_CLASS_COUNT; ++class_index) {
+            const pkg_bench_alloc_class_stats *class_stats = &alloc_stats.by_class[class_index];
+            if (class_stats->malloc_calls == 0U && class_stats->calloc_calls == 0U &&
+                class_stats->realloc_calls == 0U && class_stats->free_calls == 0U) {
+                continue;
+            }
+            printf("alloc_class=%s malloc_calls=%" PRIu64 " calloc_calls=%" PRIu64
+                   " realloc_calls=%" PRIu64 " free_calls=%" PRIu64
+                   " malloc_bytes=%" PRIu64 " calloc_bytes=%" PRIu64
+                   " realloc_bytes=%" PRIu64 "\n",
+                   class_names[class_index],
+                   class_stats->malloc_calls, class_stats->calloc_calls,
+                   class_stats->realloc_calls, class_stats->free_calls,
+                   class_stats->malloc_bytes_requested, class_stats->calloc_bytes_requested,
+                   class_stats->realloc_bytes_requested);
+        }
+    }
     printf("alloc_malloc_calls=%" PRIu64 " alloc_calloc_calls=%" PRIu64 " alloc_realloc_calls=%" PRIu64 " alloc_free_calls=%" PRIu64 "\n",
            alloc_stats.malloc_calls, alloc_stats.calloc_calls, alloc_stats.realloc_calls, alloc_stats.free_calls);
     printf("alloc_malloc_bytes=%" PRIu64 " alloc_calloc_bytes=%" PRIu64 " alloc_realloc_bytes=%" PRIu64 "\n",
