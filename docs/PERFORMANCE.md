@@ -48,6 +48,45 @@ Linux `perf stat` can provide additional CPU-level evidence such as task-clock, 
 
 Do not compare raw numbers from unrelated machines as if they were equivalent. CPU frequency/boost behavior can make results vary; reproducible benchmark environments are therefore required for meaningful comparisons.
 
+## Allocation instrumentation
+
+A separate benchmark target provides allocation evidence without changing the
+production shared library:
+
+```sh
+cmake --build build --target pkgintel_benchmark_alloc
+./build/pkgintel_benchmark_alloc 100 100 5
+```
+
+The instrumented target compiles the production sources into a private static
+copy and redirects their `malloc`, `calloc`, `realloc`, and `free` calls to a
+benchmark-only probe. It reports:
+
+- allocation call counts;
+- requested bytes by allocation family;
+- realloc requested bytes;
+- realloc growth/shrink bytes;
+- peak live allocator bytes;
+- final live allocator bytes.
+
+The live-byte measurement uses glibc `malloc_usable_size()` for diagnostic
+accounting. This is benchmark evidence only; it is not part of the product
+ABI and must not be used to infer portable allocator semantics.
+
+Run the allocation benchmark over the same workload shapes used by the normal
+baseline:
+
+```sh
+./build/pkgintel_benchmark_alloc 1000 100 5
+./build/pkgintel_benchmark_alloc 100 1000 5
+./build/pkgintel_benchmark_alloc 5000 20 5
+```
+
+The allocation probe deliberately does not classify every allocation by source
+object yet. That is a later profiling refinement if aggregate evidence shows
+allocation behavior is material. Do not use this instrumentation alone to
+justify an arena/slab allocator.
+
 ## Allocation decision gate
 
 This benchmark does **not** claim that an arena/slab allocator is justified.
