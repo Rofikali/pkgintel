@@ -46,6 +46,48 @@ int test_scan_behaviour(void) {
     {
         char path[512];
         FILE *file;
+        char *record;
+        const size_t boundaries[] = {65535U, 65536U, 65537U};
+        for (size_t i = 0U; i < sizeof(boundaries) / sizeof(boundaries[0]); ++i) {
+            size_t length = boundaries[i];
+            record = malloc(length + 2U);
+            assert(record != NULL);
+            record[0] = '/';
+            memset(record + 1U, 'x', length - 1U);
+            record[length] = '\\n';
+            record[length + 1U] = '\\0';
+            assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", fixture) > 0);
+            file = fopen(path, "wb"); assert(file != NULL);
+            assert(fwrite(record, 1U, length + 1U, file) == length + 1U);
+            assert(fclose(file) == 0);
+            free(record);
+            assert(pkg_scan(context, target, NULL, &limited_result) ==
+                   (length <= 65536U ? PKG_OK : PKG_ERR_RESOURCE_LIMIT));
+            assert(limited_result != NULL);
+            assert(pkg_scan_result_package_count(limited_result) == 1U);
+            assert(pkg_scan_result_package_file_count(limited_result, 0U) ==
+                   (length <= 65536U ? 1U : 0U));
+            pkg_scan_result_destroy(limited_result);
+            limited_result = NULL;
+        }
+        /* A record without a final LF is still a complete EOF-terminated record. */
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", fixture) > 0);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("/usr/bin/present", file) >= 0);
+        assert(fclose(file) == 0);
+        assert(pkg_scan(context, target, NULL, &limited_result) == PKG_OK);
+        assert(limited_result != NULL);
+        assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U);
+        pkg_scan_result_destroy(limited_result); limited_result = NULL;
+
+        /* Restore the normal fixture before the following resource tests. */
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("/usr/bin/present\\n", file) >= 0);
+        assert(fclose(file) == 0);
+    }
+    {
+        char path[512];
+        FILE *file;
         char oversized[65539];
         memset(oversized, 'x', sizeof(oversized));
         oversized[sizeof(oversized) - 2U] = '\n';
