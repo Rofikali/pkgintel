@@ -26,8 +26,7 @@ void make_fixture(char *root, size_t root_size) {
     written = snprintf(path, sizeof(path), "%s/usr/bin", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/present", root); file = fopen(path, "wb"); assert(file != NULL); assert(fputs("x", file) == 1); assert(fclose(file) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/link", root); assert(symlink("/usr/bin/present", path) == 0);
-    written = snprintf(path, sizeof(path), "%s/usr/bin/outside-link", root); assert(symlink("/tmp/pkgintel-outside-secret", path) == 0);
-    { FILE *outside = fopen("/tmp/pkgintel-outside-secret", "wb"); assert(outside != NULL); assert(fputs("outside", outside) >= 0); assert(fclose(outside) == 0); }
+    written = snprintf(path, sizeof(path), "%s/usr/bin/outside-link", root); { char outside[512]; FILE *outside_file; assert(snprintf(outside, sizeof(outside), "%s-outside", root) > 0); outside_file = fopen(outside, "wb"); assert(outside_file != NULL); assert(fputs("outside", outside_file) >= 0); assert(fclose(outside_file) == 0); assert(symlink(outside, path) == 0); }
     written = snprintf(path, sizeof(path), "%s/usr/bin/broken", root); assert(symlink("/usr/bin/nope", path) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/adir", root); assert(mkdir(path, 0700) == 0);
     written = snprintf(path, sizeof(path), "%s/usr/bin/fifo", root); assert(mkfifo(path, 0600) == 0);
@@ -45,7 +44,7 @@ void remove_fixture(const char *root) {
     assert(snprintf(path, sizeof(path), "%s/usr/bin/adir", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/broken", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/outside-link", root) > 0); assert(unlink(path) == 0);
-    assert(unlink("/tmp/pkgintel-outside-secret") == 0);
+    { char outside[512]; assert(snprintf(outside, sizeof(outside), "%s-outside", root) > 0); assert(unlink(outside) == 0); }
     assert(snprintf(path, sizeof(path), "%s/usr/bin/link", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin/present", root) > 0); assert(unlink(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/usr/bin", root) > 0); assert(rmdir(path) == 0);
