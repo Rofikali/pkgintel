@@ -54,8 +54,8 @@ int test_scan_behaviour(void) {
             assert(record != NULL);
             record[0] = '/';
             memset(record + 1U, 'x', length - 1U);
-            record[length] = '\\n';
-            record[length + 1U] = '\\0';
+            record[length] = '\n';
+            record[length + 1U] = '\0';
             assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/fixture-pkg.list", fixture) > 0);
             file = fopen(path, "wb"); assert(file != NULL);
             assert(fwrite(record, 1U, length + 1U, file) == length + 1U);
@@ -82,7 +82,7 @@ int test_scan_behaviour(void) {
 
         /* Restore the normal fixture before the following resource tests. */
         file = fopen(path, "wb"); assert(file != NULL);
-        assert(fputs("/usr/bin/present\\n", file) >= 0);
+        assert(fputs("/usr/bin/present\n", file) >= 0);
         assert(fclose(file) == 0);
     }
     {
