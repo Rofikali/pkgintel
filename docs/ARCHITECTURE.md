@@ -96,6 +96,8 @@ validate options
 
 Each phase must have explicit resource accounting and failure semantics.
 
+The dpkg parser has a fixed 65,536-byte record-content ceiling. The boundary is part of the parser contract: records up to and including 65,536 bytes before LF are accepted, a longer record returns a resource-limit result, and an EOF-terminated final record is valid. This prevents parser buffering from becoming an unbounded input-growth path.
+
 ## 6. Concurrency
 
 v0.1 does not expose a parallel scanning API. Independent contexts may be used concurrently. Internal parallelism is allowed only after correctness and resource-limit accounting are established.
