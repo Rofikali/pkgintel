@@ -1,6 +1,9 @@
 #include "internal/pkg_model.h"
 #include <stdlib.h>
 #include <string.h>
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_probe_macros.h"
+#endif
 
 pkg_status pkg_context_create(const pkg_context_options *options, pkg_context **out_context) {
     pkg_context_options normalized = PKG_CONTEXT_OPTIONS_INIT;
