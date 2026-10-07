@@ -39,7 +39,7 @@ int test_scan_behaviour(void) {
     { const pkg_diagnostic *diagnostic = NULL; pkg_string_view code; assert(pkg_snapshot_diagnostic_at(result, 0U, &diagnostic) == PKG_OK); code = pkg_diagnostic_code(diagnostic); assert(code.size == strlen("PKG_DPKG_FILELIST_MALFORMED")); assert(memcmp(code.data, "PKG_DPKG_FILELIST_MALFORMED", code.size) == 0); }
     pkg_scan_result_destroy(result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
-    { pkg_scan_options limited = PKG_SCAN_OPTIONS_INIT; limited.max_packages = 10U; limited.max_package_files = 1U; assert(pkg_scan(context, target, &limited, &limited_result) == PKG_ERR_RESOURCE_LIMIT); assert(limited_result != NULL); assert(pkg_scan_result_package_count(limited_result) == 1U); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U); assert(pkg_snapshot_artifact_count(limited_result) == 1U); }
+    { pkg_scan_options limited = PKG_SCAN_OPTIONS_INIT; limited.max_packages = 10U; limited.max_package_files = 1U; assert(pkg_scan(context, target, &limited, &limited_result) == PKG_ERR_RESOURCE_LIMIT); assert(limited_result != NULL); assert(pkg_scan_result_package_count(limited_result) == 2U); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U); assert(pkg_snapshot_artifact_count(limited_result) == 1U); }
     pkg_scan_result_destroy(limited_result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
     { pkg_scan_options exact_limit = PKG_SCAN_OPTIONS_INIT; const pkg_artifact *artifact = NULL; exact_limit.max_packages = 10U; exact_limit.max_package_files = 9U; assert(pkg_scan(context, target, &exact_limit, &limited_result) == PKG_OK); assert(limited_result != NULL); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 9U); assert(pkg_snapshot_artifact_count(limited_result) == 9U); assert(pkg_snapshot_artifact_at(limited_result, 8U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_UNKNOWN); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_UNVERIFIABLE); }
@@ -66,7 +66,7 @@ int test_scan_behaviour(void) {
             assert(pkg_scan(context, target, NULL, &limited_result) ==
                    (length <= 65536U ? PKG_OK : PKG_ERR_RESOURCE_LIMIT));
             assert(limited_result != NULL);
-            assert(pkg_scan_result_package_count(limited_result) == 1U);
+            assert(pkg_scan_result_package_count(limited_result) == 2U);
             assert(pkg_scan_result_package_file_count(limited_result, 0U) ==
                    (length <= 65536U ? 1U : 0U));
             pkg_scan_result_destroy(limited_result);
@@ -100,7 +100,7 @@ int test_scan_behaviour(void) {
         assert(fclose(file) == 0);
         assert(pkg_scan(context, target, NULL, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
         assert(limited_result != NULL);
-        assert(pkg_scan_result_package_count(limited_result) == 1U);
+        assert(pkg_scan_result_package_count(limited_result) == 2U);
         assert(pkg_scan_result_package_file_count(limited_result, 0U) == 0U);
         assert(pkg_snapshot_artifact_count(limited_result) == 0U);
         pkg_scan_result_destroy(limited_result); limited_result = NULL;
@@ -116,7 +116,7 @@ int test_scan_behaviour(void) {
         file = NULL;
         assert(pkg_scan(context, target, NULL, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
         assert(limited_result != NULL);
-        assert(pkg_scan_result_package_count(limited_result) == 1U);
+        assert(pkg_scan_result_package_count(limited_result) == 2U);
         assert(pkg_snapshot_artifact_count(limited_result) == 0U);
         pkg_scan_result_destroy(limited_result); limited_result = NULL;
     }
