@@ -1,6 +1,6 @@
 # Security Model
 
-`pkgintel` is a read-only system inspection engine. Its attack surface is the target environment itself: package databases, filenames, filesystem metadata, caches, and binary formats must all be treated as potentially hostile input.
+`pkgintel` is a read-only system inspection engine. Its attack surface is the target environment itself: package databases, filenames, filesystem metadata, and binary formats must all be treated as potentially hostile input.
 
 ## Security invariants
 
@@ -9,7 +9,7 @@
 3. **Target containment:** a rootfs target is a security boundary. Target-relative operations must not escape that boundary.
 4. **Least privilege:** root is not a normal requirement. Permission denial is evidence, not a reason to request unnecessary privilege.
 5. **Fail closed on security decisions:** ambiguous or unverifiable security-sensitive observations must not be reported as verified facts.
-6. **Bounded work:** every untrusted input path is subject to file, directory, depth, byte, parser-size, package-count, and time limits.
+6. **Bounded work:** implemented untrusted-input paths are subject to explicit file/record, parser-size, package-count, and allocation limits. Aggregate filesystem/depth/time controls remain planned.
 7. **No unbounded allocation:** counts and lengths are validated before multiplication, addition, allocation, or indexing.
 8. **No unsafe path races:** when an operation depends on object identity, use descriptor-relative access and post-open verification rather than `stat(path)` followed by `open(path)`.
 9. **No trust in encoding:** Linux paths are arbitrary bytes. UTF-8 conversion is an output concern and must be lossless or explicitly escaped.
@@ -17,7 +17,7 @@
 
 ## Target boundary
 
-`pkg_target` owns a root directory descriptor after validation. Future filesystem implementations should prefer `openat2()` with an explicit resolution policy where available, with a carefully designed fallback on older kernels.
+`pkg_target` owns a root directory descriptor after validation. The Linux implementation uses `openat2()` with an explicit resolution policy where supported by the current platform.
 
 A plain string concatenation of target root + untrusted path is not sufficient for security-sensitive operations.
 
@@ -38,23 +38,37 @@ Symlinks are observed but not recursively followed by default. FIFOs, sockets, d
 
 ## Parser security
 
-Package metadata, APT metadata, and ELF structures are untrusted input. Every offset, length, count, multiplication, addition, and allocation must be range-checked before use.
+Package metadata and filesystem metadata are untrusted input in the current slice. Future APT and ELF parsers will inherit the same boundary.
+
+Every offset, length, count, multiplication, addition, and allocation must be range-checked before use.
 
 Malformed input must produce a diagnostic or controlled error, never an out-of-bounds access, integer overflow, use-after-free, or process crash.
 
 ## Resource exhaustion
 
-Limits are part of the security contract, not merely performance tuning. The engine must bound:
+Resource limits are part of the security contract, not merely performance tuning.
+
+### Implemented in the current v0.1 slice
 
 - package count;
-- package-file count;
-- filesystem files/directories;
+- per-package non-empty package-file record count;
+- bounded dpkg status record materialization;
+- transactional artifact and diagnostic snapshot mutation.
+
+### Reserved / not yet enforced
+
+- aggregate filesystem file count;
+- aggregate directory count;
 - recursion depth;
 - bytes read;
-- individual metadata/file size;
+- individual filesystem file-size limits;
 - ELF input size;
-- cache entries;
-- wall-clock scan time.
+- diagnostic/artifact aggregate budgets;
+- wall-clock scan time;
+- cache-entry limits;
+- general allocation/descriptors budgets.
+
+These controls must not be presented as enforced until accounting and tests exist. Public option fields for unsupported limits are rejected with `PKG_ERR_UNSUPPORTED` rather than silently ignored.
 
 A limit reached during scanning must be distinguishable from a clean complete scan.
 
@@ -89,7 +103,7 @@ Before production-grade release, isolated fuzz targets are required for:
 - path normalization/resolution;
 - JSON serialization.
 
-Fuzzing must run with sanitizers and resource limits.
+Fuzzing must run with sanitizers and resource limits. Only the first two parser targets correspond to currently implemented parser code.
 
 ## Security quality gates
 
@@ -102,5 +116,7 @@ A release candidate requires:
 - no shell/executable execution path in discovery;
 - no known target-boundary escape;
 - documented privilege requirements;
-- documented resource limits;
+- documented **implemented** resource limits;
 - review of every parser handling untrusted bytes.
+
+A future feature must not weaken these guarantees merely to expose an earlier public API.
