@@ -9,6 +9,7 @@ int pkg_snapshot_add_artifact(pkg_snapshot *snapshot, const unsigned char *path,
     size_t n;
 
     if (snapshot == NULL || path == NULL || path_size == 0U || path_size > SIZE_MAX - 1U) return -1;
+    if (snapshot->max_artifacts != 0U && snapshot->artifact_count >= snapshot->max_artifacts) return -2;
     owned_path = malloc(path_size + 1U);
     if (owned_path == NULL) return -1;
     memcpy(owned_path, path, path_size);
