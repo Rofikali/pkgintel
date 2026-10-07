@@ -172,7 +172,8 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             malformed = 1;
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, PKG_ARTIFACT_UNVERIFIABLE, NULL);
             if (add_rc == 2) { (void)fclose(file); return 2; }
-            if (add_rc != 0) { (void)fclose(file); return -1; }
+            if (add_rc == -2) { (void)fclose(file); return 2; }
+        if (add_rc != 0) { (void)fclose(file); return -1; }
             continue;
         }
         if (pkg_target_lstat_path(target, entry, &st) != 0) {
@@ -224,8 +225,12 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     package->file_count = count;
     package->missing_file_count = missing;
     package->invalid_path_count = invalid;
-    if (malformed && pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-        "PKG_DPKG_FILELIST_MALFORMED", "package file list contains malformed entries") != 0) return -1;
+    if (malformed) {
+        int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+            "PKG_DPKG_FILELIST_MALFORMED", "package file list contains malformed entries");
+        if (diagnostic_rc == -2) return 2;
+        if (diagnostic_rc != 0) return -1;
+    }
     return 0;
 }
 
@@ -239,10 +244,18 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
         result->packages[i].artifact_start = before;
         result->packages[i].artifact_count = result->artifact_count - before;
         if (rc == 2) { limited = 1; continue; }
-        if (rc < 0 && pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-            "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read") != 0) return PKG_ERR_INTERNAL;
-        if (rc == 1 && pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-            "PKG_DPKG_FILELIST_MISSING", "package file list is missing") != 0) return PKG_ERR_INTERNAL;
+        if (rc < 0) {
+            int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
+            if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
+            if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+        }
+        if (rc == 1) {
+            int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_FILELIST_MISSING", "package file list is missing");
+            if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
+            if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+        }
     }
     return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
 }
@@ -271,11 +284,11 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
                 int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
                 if (rc == 1) { truncated = 1; break; }
                 if (rc != 0) { parse_error = 1; break; }
-                if (installation_state == PKG_INSTALLATION_UNKNOWN &&
-                    pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-                        "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized") != 0) {
-                    parse_error = 1;
-                    break;
+                if (installation_state == PKG_INSTALLATION_UNKNOWN) {
+                    int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                        "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized");
+                    if (diagnostic_rc == -2) { truncated = 1; break; }
+                    if (diagnostic_rc != 0) { parse_error = 1; break; }
                 }
             }
             free(name); free(version); free(architecture); free(status);
@@ -299,8 +312,10 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
         if (rc == 1) truncated = 1;
         else if (rc != 0) parse_error = 1;
         if (parse_error == 0 && installation_state == PKG_INSTALLATION_UNKNOWN) {
-            if (pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
-                "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized") != 0) parse_error = 1;
+            int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_STATUS_UNKNOWN", "package status is missing or unrecognized");
+            if (diagnostic_rc == -2) truncated = 1;
+            else if (diagnostic_rc != 0) parse_error = 1;
         }
     }
     if (read_rc == -2) truncated = 1;
