@@ -27,6 +27,17 @@ For v0.1:
 6. Treat allocation failure as an internal failure and resource exhaustion as a distinct controlled result where a configured/hard resource ceiling is reached.
 7. Keep private mutation functions outside the public ABI.
 8. Test the public scan contract rather than making external tests depend on private allocation internals.
+9. For deterministic allocator-failure testing, compile a test-only static copy of the production sources with allocation symbols redirected to a test allocator. Do not rely on executable-level linker `--wrap` to intercept allocations made by a separately linked shared library.
+
+## Allocation-failure test architecture
+
+The allocator-failure test intentionally uses a test-only static library built from the same production source list. Its `malloc`, `calloc`, and `realloc` calls are compile-time redirected to test allocator functions defined only by the test executable. This makes failure injection reach actual library-owned allocation sites while leaving the shipped shared-library ABI and production build unchanged.
+
+The earlier executable-level linker-`--wrap` approach was rejected because the unit test links against the shared library; wrapping symbols in the executable does not provide a reliable guarantee that allocations originating inside that already-linked shared object will pass through the test wrappers.
+
+The gate therefore requires both:
+- deterministic failure at each observed library allocation call; and
+- a successful baseline scan proving the same test path exercises the intended allocation sites.
 
 ## Why not an arena yet?
 
