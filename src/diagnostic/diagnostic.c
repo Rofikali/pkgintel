@@ -1,4 +1,5 @@
-#include "internal/pkg_internal.h"
+#include "internal/pkg_model.h"
+#include "internal/pkg_support.h"
 #include <stdlib.h>
 #include <string.h>
 
