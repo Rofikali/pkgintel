@@ -44,14 +44,6 @@ size_t pkg_snapshot_artifact_count(const pkg_snapshot *snapshot) { return snapsh
 
 pkg_status pkg_snapshot_artifact_at(const pkg_snapshot *snapshot, size_t index, const pkg_artifact **out_artifact) { if (out_artifact == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_artifact = NULL; if (snapshot == NULL || index >= snapshot->artifact_count) return PKG_ERR_NOT_FOUND; *out_artifact = (const pkg_artifact *)&snapshot->artifacts[index]; return PKG_OK; }
 
-size_t pkg_snapshot_cache_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
-
-pkg_status pkg_snapshot_cache_at(const pkg_snapshot *snapshot, size_t index, const pkg_cache **out_cache) { (void)snapshot; (void)index; if (out_cache == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_cache = NULL; return PKG_ERR_NOT_FOUND; }
-
-size_t pkg_snapshot_capability_count(const pkg_snapshot *snapshot) { (void)snapshot; return 0U; }
-
-pkg_status pkg_snapshot_capability_at(const pkg_snapshot *snapshot, size_t index, const pkg_capability **out_capability) { (void)snapshot; (void)index; if (out_capability == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_capability = NULL; return PKG_ERR_NOT_FOUND; }
-
 size_t pkg_snapshot_diagnostic_count(const pkg_snapshot *snapshot) { return snapshot == NULL ? 0U : snapshot->diagnostic_count; }
 
 pkg_status pkg_snapshot_diagnostic_at(const pkg_snapshot *snapshot, size_t index, const pkg_diagnostic **out_diagnostic) { if (out_diagnostic == NULL) return PKG_ERR_INVALID_ARGUMENT; *out_diagnostic = NULL; if (snapshot == NULL || index >= snapshot->diagnostic_count) return PKG_ERR_NOT_FOUND; *out_diagnostic = (const pkg_diagnostic *)&snapshot->diagnostics[index]; return PKG_OK; }
