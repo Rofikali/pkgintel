@@ -59,3 +59,8 @@ void pkg_bench_alloc_stats_get(pkg_bench_alloc_stats *out);
 #define PKG_BENCH_ALLOC_NAME_JOIN2(a, b) a##b
 #define PKG_BENCH_ALLOC_NAME_JOIN(a, b) PKG_BENCH_ALLOC_NAME_JOIN2(a, b)
 #define PKG_BENCH_ALLOC_CLASS_STATS stats.by_class[PKGINTEL_BENCH_ALLOC_CLASS]
+
+#define malloc(size) pkg_bench_malloc_class((size), PKGINTEL_BENCH_ALLOC_CLASS)
+#define calloc(count, size) pkg_bench_calloc_class((count), (size), PKGINTEL_BENCH_ALLOC_CLASS)
+#define realloc(ptr, size) pkg_bench_realloc_class((ptr), (size), PKGINTEL_BENCH_ALLOC_CLASS)
+#define free(ptr) pkg_bench_free_class((ptr), PKGINTEL_BENCH_ALLOC_CLASS)
