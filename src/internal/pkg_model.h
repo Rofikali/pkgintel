@@ -50,6 +50,8 @@ struct pkg_snapshot {
     size_t artifact_count;
     pkg_diagnostic_record *diagnostics;
     size_t diagnostic_count;
+    size_t max_artifacts;
+    size_t max_diagnostics;
 };
 
 #endif
