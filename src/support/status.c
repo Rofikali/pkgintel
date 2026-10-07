@@ -1,4 +1,4 @@
-#include "pkgintel/status.h"
+#include "pkgintel/pkgintel.h"
 
 const char *pkg_status_string(pkg_status status) {
     switch (status) {
