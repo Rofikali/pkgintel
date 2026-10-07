@@ -53,6 +53,8 @@ struct pkg_snapshot {
     pkg_diagnostic_record *diagnostics;
     size_t diagnostic_count;
     size_t diagnostic_capacity;
+    size_t string_bytes;
+    size_t max_string_bytes;
     size_t max_artifacts;
     size_t max_diagnostics;
 };
