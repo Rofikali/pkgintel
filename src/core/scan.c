@@ -4,6 +4,10 @@
 #include "internal/pkg_target.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+
+#define PKGINTEL_MAX_SNAPSHOT_ARTIFACTS ((size_t)1000000U)
+#define PKGINTEL_MAX_SNAPSHOT_DIAGNOSTICS ((size_t)100000U)
 
 pkg_status pkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_options *options, pkg_snapshot **out_result) {
     pkg_snapshot *result;
@@ -36,6 +40,8 @@ pkg_status pkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_opt
 
     result = calloc(1, sizeof(*result));
     if (result == NULL) return PKG_ERR_INTERNAL;
+    result->max_artifacts = PKGINTEL_MAX_SNAPSHOT_ARTIFACTS;
+    result->max_diagnostics = PKGINTEL_MAX_SNAPSHOT_DIAGNOSTICS;
     result->target_root = pkg_strdup_internal(target->root);
     if (result->target_root == NULL) { free(result); return PKG_ERR_INTERNAL; }
     status = pkg_target_open_root(target);
