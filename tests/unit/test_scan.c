@@ -23,6 +23,17 @@ int test_scan_behaviour(void) {
 
     assert(pkg_context_create(NULL, &context) == PKG_OK); assert(context != NULL);
     make_fixture(fixture, sizeof(fixture));
+    {
+        char root_link[512];
+        assert(snprintf(root_link, sizeof(root_link), "%s-root-link", fixture) > 0);
+        assert(symlink(fixture, root_link) == 0);
+        assert(pkg_target_create_rootfs(context, root_link, &target) == PKG_OK);
+        assert(target != NULL);
+        assert(pkg_scan(context, target, NULL, &limited_result) != PKG_OK);
+        assert(limited_result == NULL);
+        pkg_target_destroy(target); target = NULL;
+        assert(unlink(root_link) == 0);
+    }
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK); assert(target != NULL);
     assert(pkg_scan(context, target, &options, &result) == PKG_OK); assert(result != NULL);
     assert(strcmp(pkg_scan_result_target_root(result), fixture) == 0); assert(pkg_scan_result_package_count(result) == 2U);
