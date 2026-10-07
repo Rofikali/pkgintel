@@ -1,5 +1,8 @@
 #define _GNU_SOURCE
 #include "pkgintel/pkgintel.h"
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_stats.h"
+#endif
 #include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -94,6 +97,9 @@ int main(int argc, char **argv) {
     struct rusage usage_start, usage_end;
     uint64_t total_artifacts = 0U;
     uint64_t total_packages = 0U;
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+    pkg_bench_alloc_stats alloc_stats;
+#endif
 
     if (argc > 1 && (packages = (size_t)strtoull(argv[1], NULL, 10)) == 0U) return 2;
     if (argc > 2 && (files_per_package = (size_t)strtoull(argv[2], NULL, 10)) == 0U) return 2;
@@ -109,6 +115,10 @@ int main(int argc, char **argv) {
         pkg_context_destroy(context);
         return 1;
     }
+
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+    pkg_bench_alloc_stats_reset();
+#endif
 
     if (clock_gettime(CLOCK_MONOTONIC, &wall_start) != 0 ||
         getrusage(RUSAGE_SELF, &usage_start) != 0) {
@@ -147,6 +157,17 @@ int main(int argc, char **argv) {
            wall, user, sys, peak_rss_kib);
     printf("artifacts_per_second=%.3f\n",
            wall > 0.0 ? (double)total_artifacts / wall : 0.0);
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+    pkg_bench_alloc_stats_get(&alloc_stats);
+    printf("alloc_malloc_calls=%" PRIu64 " alloc_calloc_calls=%" PRIu64 " alloc_realloc_calls=%" PRIu64 " alloc_free_calls=%" PRIu64 "\n",
+           alloc_stats.malloc_calls, alloc_stats.calloc_calls, alloc_stats.realloc_calls, alloc_stats.free_calls);
+    printf("alloc_malloc_bytes=%" PRIu64 " alloc_calloc_bytes=%" PRIu64 " alloc_realloc_bytes=%" PRIu64 "\n",
+           alloc_stats.malloc_bytes_requested, alloc_stats.calloc_bytes_requested, alloc_stats.realloc_bytes_requested);
+    printf("alloc_realloc_growth_bytes=%" PRIu64 " alloc_realloc_shrink_bytes=%" PRIu64 "\n",
+           alloc_stats.realloc_bytes_grown, alloc_stats.realloc_bytes_shrunk);
+    printf("alloc_peak_live_bytes=%" PRIu64 " alloc_final_live_bytes=%" PRIu64 "\n",
+           alloc_stats.peak_live_bytes, alloc_stats.final_live_bytes);
+#endif
 
     pkg_target_destroy(target);
     pkg_context_destroy(context);
