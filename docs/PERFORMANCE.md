@@ -82,6 +82,13 @@ baseline:
 ./build/pkgintel_benchmark_alloc 5000 20 5
 ```
 
+The allocation probe now also classifies allocation callsites by production module:
+context, scan, snapshot, package, artifact, diagnostic, target, dpkg, and support.
+This is deliberately a callsite-level attribution, not an ownership graph: an
+allocation or free is attributed to the source module that issued that call.
+Use this evidence to identify which module's allocation activity changes with
+workload shape before considering finer-grained object-class instrumentation.
+
 The allocation probe deliberately does not classify every allocation by source
 object yet. That is a later profiling refinement if aggregate evidence shows
 allocation behavior is material. Do not use this instrumentation alone to
