@@ -11,6 +11,7 @@ int pkg_snapshot_add_diagnostic(pkg_snapshot *snapshot, pkg_status status, pkg_d
     size_t n;
 
     if (snapshot == NULL || code == NULL || message == NULL) return -1;
+    if (snapshot->max_diagnostics != 0U && snapshot->diagnostic_count >= snapshot->max_diagnostics) return -2;
     owned_code = pkg_strdup_internal(code);
     if (owned_code == NULL) return -1;
     owned_message = pkg_strdup_internal(message);
