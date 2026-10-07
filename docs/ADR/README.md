@@ -293,7 +293,7 @@ pkgintel uses explicit module boundaries for core, target, snapshot, package, ar
 
 **Status:** Accepted
 
-The v0.1 snapshot enforces hard aggregate ceilings of 1,000,000 artifacts and 100,000 diagnostics. Exhaustion preserves the committed partial snapshot and returns `PKG_ERR_RESOURCE_LIMIT`. These record ceilings complement, but do not replace, variable-size memory/allocation safety.
+The v0.1 snapshot enforces hard aggregate ceilings of 1,000,000 artifacts, 100,000 diagnostics, and 64 MiB of owned package/artifact/diagnostic string storage. Exhaustion preserves the committed partial snapshot and returns `PKG_ERR_RESOURCE_LIMIT`. These ceilings complement, but do not replace, allocator failure and checked arithmetic.
 
 ## ADR-0040 — Evidence-based assembly policy
 
