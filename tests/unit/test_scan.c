@@ -25,15 +25,17 @@ int test_scan_behaviour(void) {
     make_fixture(fixture, sizeof(fixture));
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK); assert(target != NULL);
     assert(pkg_scan(context, target, &options, &result) == PKG_OK); assert(result != NULL);
-    assert(strcmp(pkg_scan_result_target_root(result), fixture) == 0); assert(pkg_scan_result_package_count(result) == 1U);
+    assert(strcmp(pkg_scan_result_target_root(result), fixture) == 0); assert(pkg_scan_result_package_count(result) == 2U);
     assert(pkg_scan(context, target, &options, &second_result) == PKG_OK); assert(pkg_scan_result_package_count(second_result) == pkg_scan_result_package_count(result));
     assert(strcmp(pkg_scan_result_package_name(second_result, 0U), pkg_scan_result_package_name(result, 0U)) == 0); assert(pkg_snapshot_artifact_count(second_result) == pkg_snapshot_artifact_count(result));
     pkg_scan_result_destroy(second_result); second_result = NULL;
     assert(strcmp(pkg_scan_result_package_name(result, 0U), "fixture-pkg") == 0); assert(strcmp(pkg_scan_result_package_version(result, 0U), "1.2.3") == 0); assert(strcmp(pkg_scan_result_package_architecture(result, 0U), "amd64") == 0);
     assert(pkg_scan_result_package_installed_size(result, 0U) == 10240U); assert(pkg_scan_result_package_file_count(result, 0U) == 9U); assert(pkg_scan_result_package_missing_file_count(result, 0U) == 1U); assert(pkg_scan_result_package_invalid_path_count(result, 0U) == 1U); assert(pkg_snapshot_artifact_count(result) == 9U);
+    assert(strcmp(pkg_scan_result_package_name(result, 1U), "removed-pkg") == 0);
+    { const pkg_package *removed = NULL; assert(pkg_snapshot_package_at(result, 1U, &removed) == PKG_OK); assert(pkg_package_get_state(removed) == PKG_INSTALLATION_REMOVED); assert(pkg_package_artifact_count(removed) == 0U); }
     { const pkg_artifact *artifact = NULL; assert(pkg_snapshot_artifact_at(result, 1U, &artifact) == PKG_OK); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_MISSING); assert(pkg_snapshot_artifact_at(result, 2U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_SYMLINK); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_PRESENT); assert(pkg_snapshot_artifact_at(result, 3U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_SYMLINK); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_BROKEN_LINK); assert(pkg_snapshot_artifact_at(result, 4U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_DIRECTORY); assert(pkg_snapshot_artifact_at(result, 5U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_OTHER); assert(pkg_snapshot_artifact_at(result, 6U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_REGULAR); assert(pkg_snapshot_artifact_at(result, 7U, &artifact) == PKG_OK); if (geteuid() != 0) assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_PERMISSION_DENIED); assert(pkg_snapshot_artifact_at(result, 8U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_UNKNOWN); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_UNVERIFIABLE); }
     { const pkg_package *package = NULL; const pkg_artifact *artifact = NULL; pkg_path path_view; assert(pkg_snapshot_package_at(result, 0U, &package) == PKG_OK); assert(pkg_package_artifact_count(package) == 9U); assert(pkg_package_artifact_at(package, 0U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_REGULAR); path_view = pkg_artifact_path(artifact); assert(path_view.size == strlen("/usr/bin/present")); assert(pkg_package_artifact_at(package, 3U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_SYMLINK); }
-    assert(pkg_scan_result_diagnostic_count(result) == 1U);
+    assert(pkg_scan_result_diagnostic_count(result) == 2U);
     { const pkg_diagnostic *diagnostic = NULL; pkg_string_view code; assert(pkg_snapshot_diagnostic_at(result, 0U, &diagnostic) == PKG_OK); code = pkg_diagnostic_code(diagnostic); assert(code.size == strlen("PKG_DPKG_FILELIST_MALFORMED")); assert(memcmp(code.data, "PKG_DPKG_FILELIST_MALFORMED", code.size) == 0); }
     pkg_scan_result_destroy(result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
@@ -187,7 +189,7 @@ int test_scan_behaviour(void) {
             assert(pkg_package_get_state(package) == PKG_INSTALLATION_UNKNOWN);
         }
         /* Selection intent ("hold") does not change the installation state. */
-        assert(pkg_scan_result_diagnostic_count(state_result) == 6U);
+        assert(pkg_scan_result_diagnostic_count(state_result) == 1U);
         {
             size_t diagnostic_count = pkg_scan_result_diagnostic_count(state_result);
             int found_unknown_status = 0;
