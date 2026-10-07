@@ -9,7 +9,7 @@ The original proposal is strong, but several concepts need tightening before imp
 3. **The target is the security boundary.** Every filesystem operation must resolve relative to the target. No subsystem may silently escape the target root.
 4. **dpkg and APT are adapters.** Generic domain structures must not contain dpkg/apt-specific types.
 5. **Discovery is evidence-producing, not truth-producing.** Results preserve provenance and confidence; permission failures and unsupported metadata are observations, not silent omissions.
-6. **The first vertical slice must be narrow.** The current slice is context → target → dpkg package enumeration → selected package-file correlation → diagnostics → basic CLI. ELF, capabilities, APT, JSON, and other expansion work follow only after the existing boundary is proven.
+6. **The first vertical slice must be narrow.** The current slice is context → target → dpkg package enumeration → explicit installation-state classification → selected package-file correlation → diagnostics → basic CLI. ELF, capabilities, APT, JSON, and other expansion work follow only after the existing boundary is proven.
 7. **Do not promise full filesystem correctness in v0.1.** Package-owned-file verification is bounded and policy-driven; a full / crawl is not the default.
 8. **Do not expose size ambiguously.** Use named semantics such as `logical_size`, `allocated_size`, and `package_installed_size`.
 9. **JSON is an output contract, not the domain model.** When implemented, version the JSON schema independently from the C ABI.
@@ -167,3 +167,24 @@ In particular, cache and capability result types/accessors were removed from the
 9. documentation.
 
 This prevents an unfinished design from becoming a compatibility commitment.
+
+
+## 10. Dpkg installation-state semantics
+
+The dpkg `Status:` field is a three-part contract: desired action, error flag, and actual package state. The engine does not confuse desired action with current installation state.
+
+The v0.1 mapping is:
+
+| dpkg actual state / condition | pkgintel state |
+|---|---|
+| `installed` with no `reinstreq` error flag | `PKG_INSTALLATION_INSTALLED` |
+| `not-installed` or `config-files` | `PKG_INSTALLATION_REMOVED` |
+| `half-installed`, `unpacked`, `half-configured`, `triggers-awaited`, `triggers-pending` | `PKG_INSTALLATION_PARTIAL` |
+| `reinstreq` error flag | `PKG_INSTALLATION_PARTIAL` |
+| malformed, unknown, or unsupported state token | `PKG_INSTALLATION_UNKNOWN` |
+
+The first desired-action token (`install`, `hold`, `deinstall`, `purge`, or other valid dpkg values) does not determine `pkg_installation_state`. For example, `hold ok installed` remains `PKG_INSTALLATION_INSTALLED`.
+
+Installation state and filesystem consistency are separate dimensions. A partial package is not automatically declared inconsistent merely because dpkg reports a transitional state; consistency is based on the package-file evidence that was actually observed. An unknown state produces a diagnostic rather than being silently treated as installed.
+
+This mapping is deliberately smaller than the complete dpkg state machine. Any future public state expansion requires an API/ABI review and corresponding tests and documentation.
