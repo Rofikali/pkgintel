@@ -34,4 +34,6 @@ The public cache/capability headers and snapshot accessors are deliberately not 
 
 > Build the smallest implementation that validates the largest architectural assumptions.
 
+Performance follows the same rule: **measure first, optimize second**. C17 and compiler optimization are the v0.1 baseline. Hand-written assembly is deliberately excluded unless a later evidence gate proves a material end-to-end benefit that justifies its security, portability, CI, and maintenance cost. See `docs/ADR/ADR-0040-assembly-policy.md`.
+
 See `docs/ARCHITECTURE.md`, `docs/API.md`, and `docs/SECURITY.md` for the engineering contract.
