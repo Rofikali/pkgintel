@@ -46,10 +46,13 @@ struct pkg_snapshot {
     char *target_root;
     pkg_package_record *packages;
     size_t package_count;
+    size_t package_capacity;
     pkg_artifact_record *artifacts;
     size_t artifact_count;
+    size_t artifact_capacity;
     pkg_diagnostic_record *diagnostics;
     size_t diagnostic_count;
+    size_t diagnostic_capacity;
     size_t max_artifacts;
     size_t max_diagnostics;
 };
