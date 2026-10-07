@@ -83,9 +83,19 @@ static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
     size_t next_count;
     size_t capacity;
     size_t new_capacity;
+    size_t name_bytes;
+    size_t version_bytes;
+    size_t architecture_bytes;
+    size_t string_bytes;
     if (result == NULL || name == NULL || version == NULL || architecture == NULL) return -1;
     if (options != NULL && options->max_packages != 0U && result->package_count >= (size_t)options->max_packages) return 1;
     if (result->package_count == SIZE_MAX) return -1;
+    name_bytes = strlen(name) + 1U;
+    version_bytes = strlen(version) + 1U;
+    architecture_bytes = strlen(architecture) + 1U;
+    if (name_bytes > SIZE_MAX - version_bytes || name_bytes + version_bytes > SIZE_MAX - architecture_bytes) return -1;
+    string_bytes = name_bytes + version_bytes + architecture_bytes;
+    if (result->max_string_bytes != 0U && (string_bytes > result->max_string_bytes || result->string_bytes > result->max_string_bytes - string_bytes)) return 2;
     next_count = result->package_count + 1U;
     if (next_count <= result->package_capacity) {
         grown = result->packages;
@@ -128,6 +138,7 @@ static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
         return -1;
     }
     result->package_count = next_count;
+    result->string_bytes += string_bytes;
     return 0;
 }
 
@@ -289,6 +300,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
                 pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
                 int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
                 if (rc == 1) { truncated = 1; break; }
+                if (rc == 2) { truncated = 1; break; }
                 if (rc != 0) { parse_error = 1; break; }
                 if (installation_state == PKG_INSTALLATION_UNKNOWN) {
                     int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
@@ -315,7 +327,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
         name != NULL && version != NULL && architecture != NULL) {
         pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
         int rc = append_package(result, options, name, version, architecture, installation_state, installed_size);
-        if (rc == 1) truncated = 1;
+        if (rc == 1 || rc == 2) truncated = 1;
         else if (rc != 0) parse_error = 1;
         if (parse_error == 0 && installation_state == PKG_INSTALLATION_UNKNOWN) {
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
