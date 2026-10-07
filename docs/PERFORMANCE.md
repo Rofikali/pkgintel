@@ -44,9 +44,9 @@ The benchmark reports:
 - observed package/artifact counts;
 - artifacts per second.
 
-Linux `perf stat` can provide additional CPU-level evidence such as task-clock, cycles, instructions, branches, cache behavior, and page faults. The Linux kernel documentation describes `perf stat` as a tool for collecting hardware/software performance events. citeturn0search5turn0search9
+Linux `perf stat` can provide additional CPU-level evidence such as task-clock, cycles, instructions, branches, cache behavior, and page faults. The Linux kernel documentation describes `perf stat` as a tool for collecting hardware/software performance events.
 
-Do not compare raw numbers from unrelated machines as if they were equivalent. CPU frequency/boost behavior can make results vary; reproducible benchmark environments are therefore required for meaningful comparisons. citeturn0search6
+Do not compare raw numbers from unrelated machines as if they were equivalent. CPU frequency/boost behavior can make results vary; reproducible benchmark environments are therefore required for meaningful comparisons.
 
 ## Allocation decision gate
 
