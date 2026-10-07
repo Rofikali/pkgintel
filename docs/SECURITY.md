@@ -124,3 +124,12 @@ A release candidate requires:
 - review of every parser handling untrusted bytes.
 
 A future feature must not weaken these guarantees merely to expose an earlier public API.
+
+
+## Dpkg status-state handling
+
+The `Status:` field is treated as untrusted structured input. Its three tokens are interpreted independently: desired action is not used as the installation-state classifier, the error flag can force a broken/reinstallation-required package into `PARTIAL`, and the actual state token determines installed/removed/transitional classification.
+
+Unknown or malformed status combinations are represented as `PKG_INSTALLATION_UNKNOWN` and accompanied by a diagnostic. They are never silently promoted to `INSTALLED`. This is important because a parser that mistakes a desired action or an unfamiliar state for a healthy installation would turn malformed metadata into a false security conclusion.
+
+The current public state mapping is intentionally narrower than dpkg's complete state vocabulary. Extending it is a semantic/API change and requires tests, documentation, and ABI review together.
