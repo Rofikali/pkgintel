@@ -43,11 +43,17 @@ Internal source files may include public headers and private internal headers as
 
 `src/internal/` contains private headers that multiple implementation modules need to share. These headers are source-level contracts between internal modules, not public API.
 
-For example, `src/internal/pkg_internal.h` currently contains private record structures and internal functions needed across core, target, snapshot, package, diagnostic, and backend implementation.
+Current private contracts are intentionally split by responsibility:
 
-Private headers are intentionally not installed or advertised as part of the public SDK.
+- `pkg_model.h` — internal object/record layout shared by implementation modules.
+- `pkg_support.h` — low-level shared support declarations.
+- `pkg_target.h` — target-internal filesystem operations.
+- `pkg_snapshot.h` — snapshot mutation operations.
+- `pkg_backend.h` — backend entry points.
 
-This directory is not a dumping ground for every declaration. When a private dependency is only between one or two tightly related modules, prefer a module-local private header. Split the broad internal contract only when the dependency boundary becomes architecturally meaningful.
+There is deliberately **no compatibility umbrella** that re-exports all private contracts. New implementation code must include only the private contracts it actually needs.
+
+This directory is not a dumping ground for every declaration. When a private dependency is only between one or two tightly related modules, prefer a module-local private header. Split shared contracts when the dependency boundary is architecturally meaningful.
 
 ### 2.4 Directory rules are architectural rules
 
@@ -63,7 +69,7 @@ The purpose is not to enforce a folder style for its own sake. The directory str
 
 ## 3. Layers
 
-```text
+```
 CLI / presentation
         |
 Application orchestration
@@ -87,7 +93,7 @@ The target owns no package truth. Backends discover facts about it.
 
 ## 5. Scan phases
 
-```text
+```
 validate options
   -> inspect target/platform
   -> detect package backend
@@ -107,7 +113,7 @@ v0.1 does not expose a parallel scanning API. Independent contexts may be used c
 
 ## 7. Repository layout
 
-```text
+```
 include/pkgintel/     public C headers
 src/                  implementation
 src/internal/         shared private implementation contracts
@@ -137,7 +143,7 @@ docs/                  contracts and design decisions
 
 The first implementation should be:
 
-```text
+```
 pkg_context
 pkg_target
 pkg_status
