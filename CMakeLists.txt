@@ -90,8 +90,9 @@ if(PKGINTEL_BUILD_TESTS)
     add_executable(pkgintel_unit_tests tests/unit/test_main.c
         tests/unit/test_context.c
         tests/unit/test_scan.c
+        tests/unit/test_resource.c
         tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel)
-    target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
+    target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit ${CMAKE_CURRENT_SOURCE_DIR}/src)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 endif()
