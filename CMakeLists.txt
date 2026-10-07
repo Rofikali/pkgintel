@@ -93,6 +93,7 @@ if(PKGINTEL_BUILD_TESTS)
         tests/unit/test_resource.c
         tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel)
+    target_link_options(pkgintel_unit_tests PRIVATE -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc)
     target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 endif()
