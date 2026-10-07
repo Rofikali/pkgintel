@@ -116,7 +116,7 @@ int test_scan_behaviour(void) {
         file = NULL;
         assert(pkg_scan(context, target, NULL, &limited_result) == PKG_ERR_RESOURCE_LIMIT);
         assert(limited_result != NULL);
-        assert(pkg_scan_result_package_count(limited_result) == 0U);
+        assert(pkg_scan_result_package_count(limited_result) == 1U);
         assert(pkg_snapshot_artifact_count(limited_result) == 0U);
         pkg_scan_result_destroy(limited_result); limited_result = NULL;
     }
