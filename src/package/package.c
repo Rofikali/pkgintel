@@ -15,15 +15,9 @@ pkg_installation_state pkg_package_get_state(const pkg_package *package) {
 
 pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
     const pkg_package_record *p = (const pkg_package_record *)package;
-    size_t i;
-    if (p == NULL || p->owner_snapshot == NULL) return PKG_CONSISTENCY_UNKNOWN;
-    for (i = 0U; i < p->artifact_count; ++i) {
-        const pkg_artifact_record *artifact = &p->owner_snapshot->artifacts[p->artifact_start + i];
-        if (artifact->state == PKG_ARTIFACT_MISSING) return PKG_CONSISTENCY_MISSING_ARTIFACT;
-        if (artifact->state == PKG_ARTIFACT_BROKEN_LINK) return PKG_CONSISTENCY_BROKEN_LINK;
-        if (artifact->state == PKG_ARTIFACT_PERMISSION_DENIED) return PKG_CONSISTENCY_PERMISSION_DENIED;
-        if (artifact->state == PKG_ARTIFACT_UNVERIFIABLE) return PKG_CONSISTENCY_UNVERIFIABLE;
-    }
+    if (p == NULL) return PKG_CONSISTENCY_UNKNOWN;
+    if (p->missing_file_count != 0U) return PKG_CONSISTENCY_MISSING_ARTIFACT;
+    if (p->invalid_path_count != 0U) return PKG_CONSISTENCY_UNVERIFIABLE;
     return PKG_CONSISTENCY_CONSISTENT;
 }
 
