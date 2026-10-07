@@ -13,19 +13,6 @@
 
 #define PKG_DPKG_MAX_RECORD_BYTES UINT64_C(65536)
 
-static int add_artifact_checked(pkg_snapshot *result, const unsigned char *path, size_t path_size,
-                                  pkg_artifact_kind kind, pkg_artifact_state state, const struct stat *st) {
-    int rc = pkg_snapshot_add_artifact(result, path, path_size, kind, state, st);
-    return rc == -2 ? 2 : rc;
-}
-
-static int add_diagnostic_checked(pkg_snapshot *result, pkg_status status, pkg_diagnostic_severity severity,
-                                  pkg_evidence_source source, const char *code, const char *message) {
-    int rc = pkg_snapshot_add_diagnostic(result, status, severity, source, code, message);
-    return rc == -2 ? 2 : rc;
-}
-
-
 /*
  * Read one metadata record without allowing the input to grow an attacker-sized
  * heap buffer. The returned record excludes the line terminator and is always
@@ -94,13 +81,32 @@ static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
                           pkg_installation_state installation_state, uint64_t installed_size) {
     pkg_package_record *grown;
     size_t next_count;
+    size_t capacity;
+    size_t new_capacity;
     if (result == NULL || name == NULL || version == NULL || architecture == NULL) return -1;
     if (options != NULL && options->max_packages != 0U && result->package_count >= (size_t)options->max_packages) return 1;
-    if (result->package_count > SIZE_MAX / sizeof(*grown) - 1U) return -1;
+    if (result->package_count == SIZE_MAX) return -1;
     next_count = result->package_count + 1U;
-    grown = realloc(result->packages, next_count * sizeof(*grown));
-    if (grown == NULL) return -1;
-    result->packages = grown;
+    if (next_count <= result->package_capacity) {
+        grown = result->packages;
+    } else {
+        capacity = result->package_capacity == 0U ? 8U : result->package_capacity;
+        new_capacity = capacity;
+        while (new_capacity < next_count) {
+            if (new_capacity > SIZE_MAX / 2U) {
+                new_capacity = next_count;
+                break;
+            }
+            new_capacity *= 2U;
+        }
+        if (options != NULL && options->max_packages != 0U && new_capacity > (size_t)options->max_packages)
+            new_capacity = (size_t)options->max_packages;
+        if (new_capacity < next_count || new_capacity > SIZE_MAX / sizeof(*grown)) return -1;
+        grown = realloc(result->packages, new_capacity * sizeof(*grown));
+        if (grown == NULL) return -1;
+        result->packages = grown;
+        result->package_capacity = new_capacity;
+    }
     grown[result->package_count].name = pkg_strdup_internal(name);
     grown[result->package_count].version = pkg_strdup_internal(version);
     grown[result->package_count].architecture = pkg_strdup_internal(architecture);
