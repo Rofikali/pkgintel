@@ -77,7 +77,7 @@ The core library owns domain behavior. The CLI owns argument parsing, presentati
 
 ## 4. Target model
 
-`pkg_target` represents a root filesystem and its access policy. Local scanning is a target whose root is /; a rootfs target is an explicitly supplied directory. All path handling must use target-relative operations where practical.
+`pkg_target` represents a root filesystem and its access policy. Local scanning is a target whose root is /; a rootfs target is an explicitly supplied directory. All path handling must use target-relative operations where practical. On Linux, the target root is opened as a real directory with `O_NOFOLLOW`, and target-relative `openat2()` resolution uses `RESOLVE_IN_ROOT | RESOLVE_NO_MAGICLINKS | RESOLVE_NO_XDEV` so lexical traversal, magic links, and mount/bind-mount crossings cannot silently change the target boundary.
 
 The target owns no package truth. Backends discover facts about it.
 
