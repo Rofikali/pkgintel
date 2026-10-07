@@ -126,7 +126,8 @@ void make_state_fixture(char *root, size_t root_size) {
         "Package: installed-pkg\nVersion: 1.0\nArchitecture: amd64\nStatus: hold ok installed\nInstalled-Size: 1\n\n"
         "Package: partial-pkg\nVersion: 2.0\nArchitecture: amd64\nStatus: install ok unpacked\nInstalled-Size: 2\n\n"
         "Package: removed-pkg\nVersion: 3.0\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 3\n\n"
-        "Package: broken-pkg\nVersion: 4.0\nArchitecture: amd64\nStatus: install reinstreq installed\nInstalled-Size: 4\n",
+        "Package: broken-pkg\nVersion: 4.0\nArchitecture: amd64\nStatus: install reinstreq installed\nInstalled-Size: 4\n\n"
+        "Package: unknown-pkg\nVersion: 5.0\nArchitecture: amd64\nStatus: install ok future-state\nInstalled-Size: 5\n",
         file) >= 0);
     assert(fclose(file) == 0);
 }
