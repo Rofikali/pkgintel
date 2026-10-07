@@ -1,5 +1,6 @@
 #ifndef PKGINTEL_SCAN_H
 #define PKGINTEL_SCAN_H
+#include "export.h"
 #include <stdint.h>
 #include "target.h"
 #include "snapshot.h"
@@ -13,5 +14,5 @@ typedef struct pkg_scan_options {
 #define PKG_SCAN_INCLUDE_CAPABILITIES (1u<<2)
 #define PKG_SCAN_CORRELATE_FILES      (1u<<3)
 #define PKG_SCAN_OPTIONS_INIT { (uint32_t)sizeof(pkg_scan_options),0u,0u,0u,0u,0u,0u,0u,0u }
-pkg_status pkg_scan(pkg_context *context,pkg_target *target,const pkg_scan_options *options,pkg_snapshot **out_snapshot);
+PKGINTEL_API pkg_status pkg_scan(pkg_context *context,pkg_target *target,const pkg_scan_options *options,pkg_snapshot **out_snapshot);
 #endif
