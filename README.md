@@ -37,3 +37,15 @@ The public cache/capability headers and snapshot accessors are deliberately not 
 Performance follows the same rule: **measure first, optimize second**. C17 and compiler optimization are the v0.1 baseline. Hand-written assembly is deliberately excluded unless a later evidence gate proves a material end-to-end benefit that justifies its security, portability, CI, and maintenance cost. See `docs/ADR/ADR-0040-assembly-policy.md`.
 
 See `docs/ARCHITECTURE.md`, `docs/API.md`, and `docs/SECURITY.md` for the engineering contract.
+
+## Engineering design discipline
+
+pkgintel is developed using an evidence-backed Principal/Staff Engineer discipline. Architecture is documented at both high and low levels, and algorithms/data structures are reviewed with mathematical bounds, complexity, security implications, tests, and benchmarks. Design principles such as separation of concerns, cohesion/coupling, DRY, SOLID, reuse, encapsulation, and design patterns are applied as decision tools rather than as rules to satisfy for their own sake.
+
+- `docs/ENGINEERING_PRINCIPLES.md` — engineering principles and decision method
+- `docs/HLD.md` — high-level architecture and boundaries
+- `docs/LLD.md` — low-level contracts, ownership, invariants, and failure semantics
+- `docs/ALGORITHMS.md` — algorithms/data structures and selection policy
+- `docs/MATHEMATICS.md` — complexity, overflow, and resource-bound reasoning
+- `docs/ARCHITECTURE.md` — current architecture contract
+- `docs/ENGINEERING_GATES.md` — verification and release gates
