@@ -8,6 +8,9 @@ set(CMAKE_C_EXTENSIONS OFF)
 option(PKGINTEL_BUILD_TESTS "Build pkgintel tests" ON)
 option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 add_library(pkgintel SHARED
     src/core/context.c
     src/core/scan.c
@@ -23,15 +26,15 @@ add_library(pkgintel SHARED
 set_target_properties(pkgintel PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 0
+    C_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
 )
 
-# v0.1 ABI symbols are intentionally default-visible while the public export
-# set is being stabilized. Before v1.0, replace this with an explicit linker
-# version script so only reviewed ABI symbols are exported.
-
+# Public ABI is opt-in through PKGINTEL_API. This prevents private
+# implementation symbols from becoming accidental ABI.
 target_include_directories(pkgintel
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-           $<INSTALL_INTERFACE:include>
+           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
@@ -42,10 +45,44 @@ target_compile_options(pkgintel PRIVATE
 
 target_compile_definitions(pkgintel PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
 
+install(TARGETS pkgintel
+    EXPORT pkgintelTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(DIRECTORY include/pkgintel/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pkgintel
+)
+install(EXPORT pkgintelTargets
+    FILE pkgintelTargets.cmake
+    NAMESPACE pkgintel::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pkgintel
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgintelConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pkgintel
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pkgintel
+)
+
 if(PKGINTEL_BUILD_CLI)
     add_executable(pkgintel_cli src/cli/main.c)
     target_link_libraries(pkgintel_cli PRIVATE pkgintel)
     set_target_properties(pkgintel_cli PROPERTIES OUTPUT_NAME pkgintel)
+    install(TARGETS pkgintel_cli
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
 
 if(PKGINTEL_BUILD_TESTS)
