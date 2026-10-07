@@ -9,8 +9,6 @@
 #include "snapshot.h"
 #include "package.h"
 #include "artifact.h"
-#include "cache.h"
-#include "capability.h"
 #include "diagnostic.h"
 #ifdef __cplusplus
 extern "C" {
