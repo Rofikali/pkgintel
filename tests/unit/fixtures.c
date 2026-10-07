@@ -51,3 +51,53 @@ void remove_fixture(const char *root) {
     assert(snprintf(path, sizeof(path), "%s/var/lib", root) > 0); assert(rmdir(path) == 0);
     assert(snprintf(path, sizeof(path), "%s/var", root) > 0); assert(rmdir(path) == 0); assert(rmdir(root) == 0);
 }
+
+
+void make_multi_package_fixture(char *root, size_t root_size) {
+    char path[512];
+    FILE *file;
+    int written;
+    written = snprintf(root, root_size, "/tmp/pkgintel-multi-test-XXXXXX");
+    assert(written > 0 && (size_t)written < root_size);
+    assert(mkdtemp(root) != NULL);
+
+    written = snprintf(path, sizeof(path), "%s/var", root);
+    assert(written > 0 && (size_t)written < sizeof(path)); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/var/lib", root);
+    assert(written > 0 && (size_t)written < sizeof(path)); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg", root);
+    assert(written > 0 && (size_t)written < sizeof(path)); assert(mkdir(path, 0700) == 0);
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root);
+    assert(written > 0 && (size_t)written < sizeof(path)); assert(mkdir(path, 0700) == 0);
+
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", root);
+    assert(written > 0 && (size_t)written < sizeof(path));
+    file = fopen(path, "wb"); assert(file != NULL);
+    assert(fputs(
+        "Package: zeta-pkg\nVersion: 1.0\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 1\n\n"
+        "Package: alpha-pkg\nVersion: 2.0\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 2\n",
+        file) >= 0);
+    assert(fclose(file) == 0);
+
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/zeta-pkg.list", root);
+    assert(written > 0 && (size_t)written < sizeof(path));
+    file = fopen(path, "wb"); assert(file != NULL);
+    assert(fputs("/zeta/artifact\n", file) >= 0); assert(fclose(file) == 0);
+
+    written = snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/alpha-pkg.list", root);
+    assert(written > 0 && (size_t)written < sizeof(path));
+    file = fopen(path, "wb"); assert(file != NULL);
+    assert(fputs("/alpha/artifact\n", file) >= 0); assert(fclose(file) == 0);
+}
+
+void remove_multi_package_fixture(const char *root) {
+    char path[512];
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/zeta-pkg.list", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/alpha-pkg.list", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", root) > 0); assert(unlink(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var/lib", root) > 0); assert(rmdir(path) == 0);
+    assert(snprintf(path, sizeof(path), "%s/var", root) > 0); assert(rmdir(path) == 0);
+    assert(rmdir(root) == 0);
+}
