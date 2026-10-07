@@ -9,7 +9,7 @@ The project discovers, normalizes, correlates, and explains package metadata and
 The current v0.1 vertical slice is intentionally narrower than the long-term product vision:
 
 - Linux / Debian-compatible targets
-- dpkg package database enumeration
+- dpkg package database enumeration with explicit installed/partial/removed state
 - selected package-owned-file correlation
 - controlled filesystem observation
 - package/artifact/diagnostic result model
