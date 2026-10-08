@@ -10,7 +10,7 @@ The release decision is bound to an exact source SHA and its applicable evidence
 
 ## 1. Branch responsibility
 
-The current three-branch topology is:
+The historical P0 topology was:
 
 ```
 main
@@ -24,9 +24,9 @@ codex/p0-module-architecture
 
 ### main
 
-Historical/base integration line.
+Canonical integration and development line.
 
-Do not use it as the implementation starting point for current P0 work when the required work already exists on an ancestor/release branch.
+New implementation work should branch from current `main`. Historical P0 branches are provenance references only.
 
 ### codex/p0-foundation
 
@@ -385,3 +385,8 @@ Not:
 > Merge whatever happens to be green today.
 
 The goal is not maximum ceremony. The goal is traceable, reproducible, economically justified, security-honest integration with no duplicated engineering work.
+
+
+## Final P0 state
+
+The P0 release process is closed. Canonical `main` is `8f425bfd7e40fc047c80fa91f8a5cc54208ec313`. PR #1 was the production integration; PR #2 and PR #3 were documentation-only post-merge reconciliation. Future implementation branches should start from current `main`, not the historical P0 branches.
