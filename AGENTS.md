@@ -104,6 +104,7 @@ Do not start with a pattern, data structure, optimization, abstraction, or imple
 - `docs/API_CONTRACT.md` — public API/ABI contract.
 - `docs/ADR/README.md` — architectural decision history.
 - `docs/RELEASE_EVIDENCE.md` — canonical release-gate evidence ledger, including exact source SHA, branch provenance, runtime environment, verification commands/results, evidence class, and remaining gaps.
+- `docs/PR_MERGE_RELEASE_POLICY.md` — canonical pull-request, review, merge, exact-SHA approval, post-merge, and release-decision policy.
 
 Before substantial work, read `SKILLS.md` plus the canonical documents relevant to the change.
 
