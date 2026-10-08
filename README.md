@@ -23,7 +23,7 @@ The following are **planned, not implemented v0.1 functionality**:
 - ELF inspection
 - capability inference
 - APT metadata/cache analysis
-- JSON serialization
+- versioned JSON serialization through `pkgintel scan --json` (P1)
 - full filesystem crawling
 - vulnerability/SBOM/commercial features
 - Rust FFI
