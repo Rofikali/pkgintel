@@ -44,7 +44,7 @@ static int write_base64_value(FILE *output, const unsigned char *data, size_t si
     if (data == NULL && size != 0U) return -1;
     if (write_literal(output, "{\"encoding\":\"base64\",\"data\":\"") != 0) return -1;
 
-    while (i + 3U <= size) {
+    while (size - i >= 3U) {
         uint32_t value = ((uint32_t)data[i] << 16U) |
                          ((uint32_t)data[i + 1U] << 8U) |
                          (uint32_t)data[i + 2U];
