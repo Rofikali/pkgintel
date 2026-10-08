@@ -181,4 +181,5 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow
         -Wstrict-prototypes -Wmissing-prototypes -Wformat=2)
     add_test(NAME pkgintel.security.mounts COMMAND pkgintel_security_mounts)
+    set_tests_properties(pkgintel.security.mounts PROPERTIES SKIP_RETURN_CODE 77)
 endif()
