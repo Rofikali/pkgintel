@@ -251,15 +251,36 @@ These dimensions are decision-specific, not mandatory ceremony for every code ch
 | P9.3 Clang Release | **PASS** |
 | P9.3 Clang ASan/UBSan | **PASS** |
 | Genuine privileged filesystem security runtime | **PASS** |
-| Final API/ABI review | PENDING |
-| Final release/security verification | PENDING |
-| P0 sign-off | PENDING |
+| Final API/ABI review | **PASS** |
+| Final release/security verification | **PASS** |
+| P0 sign-off | **CLOSED / MERGED** |
 
 ## Current evidence checkpoint — 2026-10-08
 
-The current remote release checkpoint is `dfe46210056a7b2e3cc5d7e31bf88b1bdb120271`. The P9.3 Clang ASan/UBSan gate passed at `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867`; the ten commits after production source checkpoint `946a7fc91c689dfbe408f254b81f20145ce9fa24` are documentation/provenance updates only. Therefore the completed implementation, compiler, sanitizer, security-runtime, and performance evidence remains applicable. Final API/ABI review is now PASS, and the final release/security provenance reconciliation is now PASS; P0 sign-off and final PR merge decision remain the final human/agent release decision.
+The pre-merge release evidence was reconciled at reviewed head `1a99cbe2e8bfeea427775a38877f70c34766c234`. PR #1 was subsequently merged into `main` as `ec44a111cf215337d16e3c8800574248e109a3f1`.
 
-The current release-candidate source checkpoint is `946a7fc91c689dfbe408f254b81f20145ce9fa24`. The intervening production-relevant change after the previously recorded compiler evidence was documentation-only: dedicated security-verification runtime documentation. No production implementation, public ABI/API, tests, build configuration, or benchmark implementation changed.
+The merge commit has two parents: the original `main` base `003ac31c9f6b12e71a13d8958002a5263717ffe8` and the reviewed cumulative P0 head `1a99cbe2e8bfeea427775a38877f70c34766c234`. Comparing the reviewed head to the merge commit shows one merge commit and no additional file delta.
+
+Post-merge GitHub Actions `ci` ran on push to `main` at `ec44a111cf215337d16e3c8800574248e109a3f1` and completed successfully. This validates the merged repository state through the repository CI workflow; it does not replace the dedicated privileged Linux filesystem evidence.
+
+### P0 integration provenance
+
+```
+main base
+003ac31c...
+    |
+    | PR #1
+    v
+codex/p0-module-architecture
+1a99cbe2...
+    |
+    v
+main
+ ec44a111...
+```
+
+Foundation `9a3ddd9...` is an ancestor of `1a99cbe2...`; no separate foundation merge is required.
+
 
 ### P9.3 GCC Debug — PASS
 
@@ -374,8 +395,20 @@ This matches the repository CI `sanitized` job contract exactly for compiler, sa
 
 ### Final release/security reconciliation — PASS
 
-Reviewed remote PR #1 at head `dfe46210056a7b2e3cc5d7e31bf88b1bdb120271` against base `main` (`003ac31c9f6b12e71a13d8958002a5263717ffe8`). Comparison from production source checkpoint `946a7fc91c689dfbe408f254b81f20145ce9fa24` to the current head contains only `AGENTS.md`, `docs/BRANCH_PROVENANCE.md`, `docs/ENGINEERING_STATUS.md`, `docs/PR_MERGE_RELEASE_POLICY.md`, and `docs/RELEASE_EVIDENCE.md`. No `src/`, `include/`, `tests/`, `CMakeLists.txt`, workflow, benchmark implementation, or security-runtime implementation changed in that interval.
+The final pre-merge release/security review was performed against the exact reviewed P0 head `1a99cbe2e8bfeea427775a38877f70c34766c234`. Production-relevant source had no change after the established implementation checkpoint; subsequent pre-merge changes were documentation/provenance only.
 
-GitHub Actions CI for the exact current head completed successfully. This CI result is supplemental; it does not replace the previously captured real privileged Linux filesystem evidence. No mandatory gate requires rerun solely because these documentation/provenance commits advanced the SHA.
+PR #1 then merged into `main` at `ec44a111cf215337d16e3c8800574248e109a3f1`. Post-merge CI completed successfully at that exact merge SHA.
 
 **Final release/security applicability: PASS.**
+
+### Post-merge integration closure — PASS
+
+- PR #1: merged.
+- Reviewed head: `1a99cbe2e8bfeea427775a38877f70c34766c234`.
+- Merge commit: `ec44a111cf215337d16e3c8800574248e109a3f1`.
+- Post-merge CI: success.
+- No additional production implementation was introduced by the merge commit.
+- Branch topology and integration rationale are recorded.
+- Remaining action: routine deletion of obsolete branch references after final provenance cleanup.
+
+**P0 release integration: CLOSED.**
