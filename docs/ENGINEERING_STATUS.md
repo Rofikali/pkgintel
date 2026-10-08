@@ -107,15 +107,16 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 - Unit CTest suite: PASS
 - ASAN + UBSAN build: PASS
 - ASAN + UBSAN unit suite: PASS
+- P9.3 Clang ASan/UBSan release configuration: PASS
 - Dpkg invalid-package-name regression: PASS
 
 ### Not yet satisfied
 
 - Fuzzing safety execution gate: PASS (both Clang/libFuzzer targets completed bounded ASan/UBSan runs without sanitizer findings)
 - Fuzzing coverage/effectiveness gate: PASS — both Clang/libFuzzer targets now report real SanitizerCoverage counters, `cov:`/`ft:` growth, corpus growth/reduction, and bounded sanitizer-clean execution
-- Current performance evidence: pending current reproducible benchmark run
-- Full compiler/configuration matrix: pending audit against the release gate
-- Final P0 sign-off: pending all applicable gates
+- Current performance evidence: PASS and provenance-reconciled
+- Full compiler/configuration matrix: PASS
+- Final P0 sign-off: pending final review and release gates
 
 The earlier unprivileged runtime qualification remains historical evidence that the normal developer container cannot exercise the genuine mount test. The dedicated security runtime now supplies the required capable environment, and strict verification has passed there.
 
