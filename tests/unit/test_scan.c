@@ -18,6 +18,7 @@ int test_scan_behaviour(void) {
     pkg_target *target = NULL;
     pkg_scan_result *result = NULL, *limited_result = NULL, *second_result = NULL, *uncorrelated_result = NULL;
     pkg_scan_options options = PKG_SCAN_OPTIONS_INIT;
+    options.flags = PKG_SCAN_CORRELATE_FILES;
     options.max_packages = 10U;
     options.max_package_files = 100U;
 
@@ -48,6 +49,40 @@ int test_scan_behaviour(void) {
         pkg_scan_result_destroy(uncorrelated_result);
         uncorrelated_result = NULL;
     }
+    {
+        char path[512];
+        FILE *file;
+        pkg_scan_options correlated = PKG_SCAN_OPTIONS_INIT;
+        correlated.flags = PKG_SCAN_CORRELATE_FILES;
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", fixture) > 0);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("Package: bad/name\\nVersion: 1.0\\nArchitecture: amd64\\nStatus: install ok installed\\nInstalled-Size: 1\\n", file) >= 0);
+        assert(fclose(file) == 0);
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad", fixture) > 0); assert(mkdir(path, 0700) == 0);
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad/name.list", fixture) > 0);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("/should/not/be-read\\n", file) >= 0); assert(fclose(file) == 0);
+        assert(pkg_scan(context, target, &correlated, &uncorrelated_result) == PKG_OK);
+        assert(uncorrelated_result != NULL);
+        assert(pkg_scan_result_package_count(uncorrelated_result) == 1U);
+        assert(pkg_snapshot_artifact_count(uncorrelated_result) == 0U);
+        assert(pkg_scan_result_diagnostic_count(uncorrelated_result) == 1U);
+        {
+            const pkg_diagnostic *diagnostic = NULL;
+            pkg_string_view code;
+            assert(pkg_snapshot_diagnostic_at(uncorrelated_result, 0U, &diagnostic) == PKG_OK);
+            code = pkg_diagnostic_code(diagnostic);
+            assert(code.size == strlen("PKG_DPKG_PACKAGE_NAME_INVALID"));
+            assert(memcmp(code.data, "PKG_DPKG_PACKAGE_NAME_INVALID", code.size) == 0);
+        }
+        pkg_scan_result_destroy(uncorrelated_result); uncorrelated_result = NULL;
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad/name.list", fixture) > 0); assert(unlink(path) == 0);
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad", fixture) > 0); assert(rmdir(path) == 0);
+        assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", fixture) > 0);
+        file = fopen(path, "wb"); assert(file != NULL);
+        assert(fputs("Package: fixture-pkg\\nVersion: 1.2.3\\nArchitecture: amd64\\nStatus: install ok installed\\nInstalled-Size: 10\\n\\nPackage: removed-pkg\\nVersion: 9.9\\nArchitecture: amd64\\nStatus: deinstall ok config-files\\nInstalled-Size: 999\\n", file) >= 0);
+        assert(fclose(file) == 0);
+    }
     assert(pkg_scan(context, target, &options, &result) == PKG_OK); assert(result != NULL);
     assert(strcmp(pkg_scan_result_target_root(result), fixture) == 0); assert(pkg_scan_result_package_count(result) == 2U);
     assert(pkg_scan(context, target, &options, &second_result) == PKG_OK); assert(pkg_scan_result_package_count(second_result) == pkg_scan_result_package_count(result));
@@ -63,10 +98,10 @@ int test_scan_behaviour(void) {
     { const pkg_diagnostic *diagnostic = NULL; pkg_string_view code; assert(pkg_snapshot_diagnostic_at(result, 0U, &diagnostic) == PKG_OK); code = pkg_diagnostic_code(diagnostic); assert(code.size == strlen("PKG_DPKG_FILELIST_MALFORMED")); assert(memcmp(code.data, "PKG_DPKG_FILELIST_MALFORMED", code.size) == 0); }
     pkg_scan_result_destroy(result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
-    { pkg_scan_options limited = PKG_SCAN_OPTIONS_INIT; limited.max_packages = 10U; limited.max_package_files = 1U; assert(pkg_scan(context, target, &limited, &limited_result) == PKG_ERR_RESOURCE_LIMIT); assert(limited_result != NULL); assert(pkg_scan_result_package_count(limited_result) == 2U); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U); assert(pkg_snapshot_artifact_count(limited_result) == 1U); }
+    { pkg_scan_options limited = PKG_SCAN_OPTIONS_INIT; limited.flags = PKG_SCAN_CORRELATE_FILES; limited.max_packages = 10U; limited.max_package_files = 1U; assert(pkg_scan(context, target, &limited, &limited_result) == PKG_ERR_RESOURCE_LIMIT); assert(limited_result != NULL); assert(pkg_scan_result_package_count(limited_result) == 2U); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 1U); assert(pkg_snapshot_artifact_count(limited_result) == 1U); }
     pkg_scan_result_destroy(limited_result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
-    { pkg_scan_options exact_limit = PKG_SCAN_OPTIONS_INIT; const pkg_artifact *artifact = NULL; exact_limit.max_packages = 10U; exact_limit.max_package_files = 10U; assert(pkg_scan(context, target, &exact_limit, &limited_result) == PKG_OK); assert(limited_result != NULL); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 10U); assert(pkg_snapshot_artifact_count(limited_result) == 10U); assert(pkg_snapshot_artifact_at(limited_result, 8U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_UNKNOWN); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_UNVERIFIABLE); }
+    { pkg_scan_options exact_limit = PKG_SCAN_OPTIONS_INIT; exact_limit.flags = PKG_SCAN_CORRELATE_FILES; const pkg_artifact *artifact = NULL; exact_limit.max_packages = 10U; exact_limit.max_package_files = 10U; assert(pkg_scan(context, target, &exact_limit, &limited_result) == PKG_OK); assert(limited_result != NULL); assert(pkg_scan_result_package_file_count(limited_result, 0U) == 10U); assert(pkg_snapshot_artifact_count(limited_result) == 10U); assert(pkg_snapshot_artifact_at(limited_result, 8U, &artifact) == PKG_OK); assert(pkg_artifact_get_kind(artifact) == PKG_ARTIFACT_UNKNOWN); assert(pkg_artifact_get_state(artifact) == PKG_ARTIFACT_UNVERIFIABLE); }
     pkg_scan_result_destroy(limited_result); pkg_target_destroy(target);
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK);
     {

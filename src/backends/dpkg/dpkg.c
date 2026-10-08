@@ -155,6 +155,21 @@ static int package_record_compare(const void *left, const void *right) {
     return strcmp(a->version, b->version);
 }
 
+static int is_valid_dpkg_package_name(const char *name) {
+    size_t i;
+    unsigned char first;
+    if (name == NULL) return 0;
+    if (name[0] == '\0' || name[1] == '\0') return 0;
+    first = (unsigned char)name[0];
+    if (!((first >= 'a' && first <= 'z') || (first >= '0' && first <= '9'))) return 0;
+    for (i = 1U; name[i] != '\0'; ++i) {
+        unsigned char ch = (unsigned char)name[i];
+        if (!((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') ||
+              ch == '+' || ch == '-' || ch == '.')) return 0;
+    }
+    return 1;
+}
+
 static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_package_record *package,
                              const pkg_scan_options *options) {
     char path[4096];
@@ -165,6 +180,8 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
     uint64_t count = 0U, missing = 0U, invalid = 0U;
     int malformed = 0;
     if (target == NULL || result == NULL || package == NULL) return -1;
+    /* Package names originate in target metadata and are therefore untrusted. */
+    if (!is_valid_dpkg_package_name(package->name)) return 3;
     written = snprintf(path, sizeof(path), "/var/lib/dpkg/info/%s.list", package->name);
     if (written < 0 || (size_t)written >= sizeof(path)) return -1;
     fd = pkg_target_open_path(target, path, O_RDONLY | O_CLOEXEC);
@@ -265,6 +282,13 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
         result->packages[i].artifact_count = result->artifact_count - before;
         if (rc == 2) return PKG_ERR_RESOURCE_LIMIT;
         if (rc == -3) return PKG_ERR_INTERNAL;
+        if (rc == 3) {
+            int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_PACKAGE_NAME_INVALID", "package name is invalid for filesystem correlation");
+            if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
+            if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+            continue;
+        }
         if (rc < 0) {
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
