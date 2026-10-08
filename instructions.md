@@ -11,12 +11,13 @@ Before substantial work, read:
 3. `docs/ENGINEERING_STATUS.md`
 4. `docs/ENGINEERING_WORKFLOW.md`
 5. `docs/BRANCH_PROVENANCE.md`
-6. `docs/ENGINEERING_PRINCIPLES.md`
-7. `docs/ENGINEERING_GATES.md`
-8. `docs/ARCHITECTURE.md`
-9. `docs/API_CONTRACT.md`
-10. `docs/SECURITY.md`
-11. relevant ADRs and tests
+6. `SKILLS.md`
+7. `docs/ENGINEERING_PRINCIPLES.md`
+8. `docs/ENGINEERING_GATES.md`
+9. `docs/ARCHITECTURE.md`
+10. `docs/API_CONTRACT.md`
+11. `docs/SECURITY.md`
+12. relevant ADRs and tests
 
 ## Local Docker workflow
 
