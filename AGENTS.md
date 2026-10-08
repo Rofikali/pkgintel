@@ -103,6 +103,7 @@ Do not start with a pattern, data structure, optimization, abstraction, or imple
 - `docs/SECURITY.md` — security model and evidence requirements.
 - `docs/API_CONTRACT.md` — public API/ABI contract.
 - `docs/ADR/README.md` — architectural decision history.
+- `docs/RELEASE_EVIDENCE.md` — canonical release-gate evidence ledger, including exact source SHA, branch provenance, runtime environment, verification commands/results, evidence class, and remaining gaps.
 
 Before substantial work, read `SKILLS.md` plus the canonical documents relevant to the change.
 
@@ -235,3 +236,56 @@ For a security change, also read the relevant ADRs and tests.
 ## Rule for future agents
 
 If a future agent cannot determine what exists, why it exists, which branch introduced it, what evidence supports it, what remains blocked, and what must not be repeated, the repository documentation is incomplete.
+
+
+## Release evidence and anti-repetition protocol
+
+Release work is governed by evidence provenance, not by memory or by the existence of a green local command.
+
+Before running a potentially expensive or security-sensitive verification:
+
+1. establish the exact current branch and SHA;
+2. locate the latest prior evidence SHA for the same property;
+3. compare production-relevant files between that evidence SHA and current HEAD;
+4. rerun only when the changed surface, environment, toolchain, or evidence requirement makes the prior result non-applicable;
+5. record the decision in `docs/RELEASE_EVIDENCE.md`.
+
+A verification result must record, as applicable:
+
+- branch and exact source SHA;
+- parent/ancestor relationship when evidence is inherited;
+- production-relevant file delta since the evidence baseline;
+- host/container/OS/kernel/toolchain;
+- compiler and build flags;
+- exact command or CI-equivalent command;
+- test/build/install/ABI/security result;
+- skipped/unavailable checks and why;
+- evidence class;
+- security limitations and attacker/trust-boundary assumptions;
+- performance workload/statistics when performance is involved;
+- business/operational/cost consequences when material;
+- the next gate and explicit owner/action.
+
+Do not rerun a gate merely to create a newer timestamp when the source and required environment are unchanged. Do not reuse evidence silently when production code, ABI, compiler/toolchain, configuration, security boundary, or runtime assumptions changed.
+
+For multi-branch work, branch ancestry is part of the implementation contract. The current cumulative P0 line is the release line unless the repository explicitly changes it. If another branch contains a requested feature, consume or reconcile that existing work rather than implementing a second copy.
+
+The authoritative developer runtime for OS/platform evidence is:
+
+```
+Windows 11 host
+  -> Docker Desktop
+  -> Ubuntu 24.04
+  -> pkgintel verification environment
+```
+
+The assistant must not claim to have executed commands inside that environment. When real kernel/VFS/namespace/capability evidence is required, provide exact commands; the developer's returned output is the evidence.
+
+### Role-specific review depth
+
+- **Staff/Principal Software Engineering:** architecture, ownership/lifetime, API/ABI, complexity, portability, reliability, release engineering, maintainability, and reversibility.
+- **Principal Security Engineering:** attacker capability, trust boundaries, filesystem/VFS behavior, privilege/capability assumptions, fail-closed semantics, resource exhaustion, memory/integer safety, evidence strength, and security-claim truthfulness.
+- **CA/Finance:** material CAPEX/OPEX, unit economics, operational cost, vendor dependency, maintenance burden, risk-adjusted cost, ROI, cash-flow and opportunity cost.
+- **MBA/Management/Product:** priority, scope, dependencies, delivery risk, operational ownership, support burden, stakeholder value, roadmap sequencing, and reversible decision-making.
+
+Apply only the dimensions material to the decision. The point is complete engineering judgment, not ceremony.
