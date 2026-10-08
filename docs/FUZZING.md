@@ -30,7 +30,7 @@ Each target:
 - destroys returned snapshots;
 - treats unexpected internal errors as harness failures.
 
-The production sources are compiled into a private static fuzz core with AddressSanitizer and UndefinedBehaviorSanitizer. The fuzz executables use Clang libFuzzer.
+The production sources and harness translation units are compiled with Clang SanitizerCoverage via `-fsanitize=fuzzer-no-link` plus AddressSanitizer and UndefinedBehaviorSanitizer. The final fuzz executable link adds `-fsanitize=fuzzer,address,undefined`, which supplies the libFuzzer driver. This compile/link split is intentional: coverage instrumentation belongs in the code under test, while the fuzzer `main()` is added only at the final link.
 
 ## Build
 
@@ -77,10 +77,12 @@ A fuzz gate requires:
 1. both targets build successfully with Clang;
 2. both targets execute successfully under ASan/UBSan + libFuzzer;
 3. no sanitizer finding is reported;
-4. the exact command, environment, duration, and result are recorded;
-5. the seed corpus remains reproducible.
+4. the fuzzer reports real coverage/features (for example `cov:` / `ft:`) rather than the `no interesting inputs` instrumentation warning;
+5. a bounded run demonstrates corpus growth or an explicit coverage analysis explains why the existing corpus is already minimal;
+6. the exact command, environment, duration, and result are recorded;
+7. the seed corpus remains reproducible.
 
-A future CI/release job must run the targets with an explicit bounded time budget. Do not claim fuzzing coverage merely because a target exists.
+A future CI/release job must run the targets with an explicit bounded time budget. Do not claim fuzzing coverage merely because a target exists or because ASan/UBSan are clean. Sanitizer safety and coverage-guided effectiveness are separate release properties.
 
 ## Design decision
 
