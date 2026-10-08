@@ -103,7 +103,7 @@ local HEAD:
 946a7fc91c689dfbe408f254b81f20145ce9fa24
 
 origin/codex/p0-module-architecture:
-ea6a4ea120cd43e52940b6dd6aa791c2643d5661
+b1cee011df91833aa91f6db8aefce873de055c60
 ```
 
 The repository remote now contains the documentation reconciliation commits `27898b9464a480177970af634bf5c28570224527` and `ea6a4ea120cd43e52940b6dd6aa791c2643d5661`. The local verification checkout must be fast-forwarded before it is used as release evidence again.
