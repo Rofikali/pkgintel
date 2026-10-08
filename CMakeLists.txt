@@ -144,6 +144,7 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
     target_compile_options(pkgintel_benchmark_instrumented_objects PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow
         -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+        -I${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark
         -include${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark/alloc_stats.h)
 
     add_library(pkgintel_benchmark_instrumented STATIC
