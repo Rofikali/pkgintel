@@ -371,8 +371,11 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     {
         /* Keep package ordering deterministic before generating package-owned artifact ranges. */
         if (result->package_count > 1U) qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
-        pkg_status correlation = correlate_package_files(target, result, options);
-        if (correlation != PKG_OK && correlation != PKG_ERR_RESOURCE_LIMIT) return correlation;
-        return correlation;
+        if (options == NULL || (options->flags & PKG_SCAN_CORRELATE_FILES) != 0U) {
+            pkg_status correlation = correlate_package_files(target, result, options);
+            if (correlation != PKG_OK && correlation != PKG_ERR_RESOURCE_LIMIT) return correlation;
+            return correlation;
+        }
+        return PKG_OK;
     }
 }
