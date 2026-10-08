@@ -164,6 +164,7 @@ Observed environment:
 
 Interpretation: this is an environment-capability/evidence gap, not evidence that the target-containment implementation passed or failed its intended mount-boundary invariant. The next action is to execute the same test in a dedicated capable Ubuntu 24.04 verification container, preferably Docker `--privileged` first, then optionally minimize capabilities after the security gate passes. Do not weaken or simulate the mount test.
 
+
 ## Evidence classification
 
 Use these categories for every P0 claim:
