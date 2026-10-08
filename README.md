@@ -49,3 +49,4 @@ pkgintel is developed using an evidence-backed Principal/Staff Engineer discipli
 - `docs/MATHEMATICS.md` — complexity, overflow, and resource-bound reasoning
 - `docs/ARCHITECTURE.md` — current architecture contract
 - `docs/ENGINEERING_GATES.md` — verification and release gates
+- `docs/ENGINEERING_STATUS.md` — current implementation, evidence, branch lineage, and P0 handoff status
