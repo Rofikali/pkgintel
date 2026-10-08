@@ -31,7 +31,7 @@ main
   v
 codex/p0-foundation
   |
-  | +265 commits
+  | +283 commits
   v
 codex/p0-module-architecture
 ```
@@ -52,7 +52,7 @@ codex/p0-foundation
   9a3ddd9f3dc0faa12eeec3bda30800df045f2518
 
 codex/p0-module-architecture
-  605a8efe7bb923b434655ed18f3f798e306cf7dc
+  dfe46210056a7b2e3cc5d7e31bf88b1bdb120271
 ```
 
 The current P0 release-candidate pull request is:
@@ -93,15 +93,17 @@ Current P0 release work continues here unless the repository explicitly changes 
 
 An earlier checkpoint observed a local/remote mismatch. That mismatch was subsequently reconciled by fast-forwarding the Codespace checkout to the current remote release-candidate head.
 
-Current observed release-candidate state:
+Current observed remote release-candidate state:
 
 ```
 branch:
 codex/p0-module-architecture
 
-local/remote HEAD:
-605a8efe7bb923b434655ed18f3f798e306cf7dc
+remote HEAD:
+dfe46210056a7b2e3cc5d7e31bf88b1bdb120271
 ```
+
+The latest ten commits after production source checkpoint `946a7fc91c689dfbe408f254b81f20145ce9fa24` are documentation/provenance updates only. The synchronized developer checkout used for the earlier sanitizer evidence was `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867`; the current remote head is later but has no production-relevant source delta.
 
 The repository remote and the synchronized verification checkout are at the current release checkpoint. The latest commits are documentation/evidence updates only; no production-relevant source, public API/ABI, tests, or build configuration changed.
 
