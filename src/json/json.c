@@ -260,10 +260,6 @@ static int write_package(FILE *output, const pkg_package *package) {
         write_u64(output, pkg_package_installed_size_bytes(package)) != 0 ||
         write_literal(output, ",\n      \"file_count\":") != 0 ||
         write_u64(output, (uint64_t)pkg_package_artifact_count(package)) != 0 ||
-        write_literal(output, ",\n      \"missing_file_count\":") != 0 ||
-        write_u64(output, 0U) != 0 ||
-        write_literal(output, ",\n      \"invalid_path_count\":") != 0 ||
-        write_u64(output, 0U) != 0 ||
         write_literal(output, ",\n      \"artifacts\": [") != 0) return -1;
 
     artifact_count = pkg_package_artifact_count(package);
