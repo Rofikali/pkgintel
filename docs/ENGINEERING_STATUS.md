@@ -236,6 +236,73 @@ Before modifying code:
 > If a future engineer cannot determine what is implemented, what is merely planned, what has actually been verified, and what remains blocked by reading the repository documentation, the engineering documentation is incomplete.
 
 
+
+## Current release-gate checkpoint — 2026-10-08
+
+This section supersedes older "pending" statements in historical checkpoint sections below where they conflict with the current evidence ledger.
+
+### Provenance
+
+- Current branch: `codex/p0-module-architecture`
+- Current source SHA: `15c4ee667ab74cc849eb021789ecec5ed5e10492`
+- Local and origin branch heads are synchronized.
+- P9.2 performance evidence baseline: `5c36a768a58b5b85fbb8f41acbe6ebcffddc54e1`.
+- Diff from P9.2 baseline to current HEAD is documentation/agent-governance only; no production implementation, test, build configuration, ABI, or benchmark implementation changed.
+
+### P9.2 — Performance reproducibility
+
+**PASS — provenance reconciled.**
+
+The repeated performance evidence remains valid for the current source because the production-relevant source surface did not change after the measurement commit. Do not rerun solely to obtain a newer timestamp.
+
+### P9.3 — Compiler/configuration matrix
+
+| Gate | Current result | Evidence |
+|---|---|---|
+| GCC Debug | **PASS** | Fresh build `build-p9-gcc-debug`; configure/build/CTest/install/exported-ABI/private-symbol/installed-consumer checks all passed |
+| GCC Release | PENDING | Required |
+| Clang Debug | PENDING | Required |
+| Clang Release | PENDING | Required |
+| Clang ASan/UBSan | PENDING | Required |
+| Privileged Linux filesystem security | PENDING/RE-QUALIFY | Must be executed in the dedicated capable verification runtime; unprivileged CTest skip is not a pass |
+
+### GCC Debug evidence
+
+Environment:
+
+- Ubuntu 24.04.5 LTS userland.
+- Docker Desktop/WSL2-backed kernel: `5.15.167.4-microsoft-standard-WSL2`.
+- GCC 13.3.0.
+- CMake 3.28.3.
+- Ninja 1.11.1.
+- x86_64.
+
+Configuration:
+
+- fresh build directory: `build-p9-gcc-debug`;
+- `CMAKE_BUILD_TYPE=Debug`;
+- `PKGINTEL_BUILD_TESTS=ON`;
+- `PKGINTEL_BUILD_CLI=ON`;
+- `CFLAGS=-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fno-common`.
+
+Observed result:
+
+- build: PASS;
+- `pkgintel.unit.core`: PASS;
+- `pkgintel.security.mounts`: SKIPPED because the ordinary development container lacks the required privilege;
+- install: PASS;
+- exported ABI audit: PASS;
+- private-symbol audit: PASS;
+- installed consumer build/run: PASS.
+
+The GCC Debug gate therefore passes for its required compiler/build/install/API evidence. The skipped privileged filesystem test remains a separate security-runtime gate and is **not** promoted to PASS.
+
+### Release decision discipline
+
+Current release status is **NOT READY TO MERGE** because required P9.3 configurations and the final applicable security/API/release review are still open.
+
+Do not modify production code merely to make a skipped security test green. First qualify the required runtime. Do not repeat completed work on another branch; reconcile branch ancestry and evidence before creating new implementation.
+
 ## Current Principal/Staff Engineer review checkpoint
 
 The current review has completed source-level inspection of the implemented P0 vertical slice. The principal findings are:
