@@ -192,17 +192,17 @@ The current review has completed source-level inspection of the implemented P0 v
 
 ### Current blockers
 
-1. **Consistency semantics are incomplete.**
-   A package with no requested correlation can currently be indistinguishable from a package whose correlation completed without bad evidence. The public consistency result must not report CONSISTENT without complete evidence.
+1. **Consistency semantics were corrected.**
+   Package consistency now requires complete file correlation and is derived from artifact evidence. NOT_REQUESTED and INCOMPLETE correlation return UNKNOWN rather than silently claiming CONSISTENT.
 
-2. **Broken-link and permission-denied evidence must participate in consistency.**
-   Current counter-only derivation can incorrectly return CONSISTENT when artifact states contain BROKEN_LINK or PERMISSION_DENIED.
+2. **Broken-link and permission-denied evidence now participate in consistency.**
+   A single failure class maps to its specific consistency state; mixed failure classes map to INCONSISTENT while individual artifact evidence remains available.
 
-3. **Unexpected errno must not imply missing evidence.**
-   Only definitive ENOENT should increment missing-file accounting. Other observation failures require their documented non-absence classification.
+3. **Unexpected errno no longer implies missing evidence.**
+   Only definitive ENOENT increments missing-file accounting. Other observation failures are represented as unverifiable/invalid evidence as appropriate.
 
-4. **Correlation completeness needs explicit internal state.**
-   The implementation should distinguish NOT_REQUESTED, COMPLETE, and INCOMPLETE correlation rather than infer completeness from artifact counts.
+4. **Correlation completeness is explicit internal state.**
+   Each package now tracks NOT_REQUESTED, COMPLETE, or INCOMPLETE correlation. This prevents zero artifacts from being confused with successful zero-record correlation.
 
 5. **Privileged filesystem evidence remains environment-gated.**
    Genuine bind-mount and procfs magic-link tests must produce PASS in a capable Linux environment before their release gate is satisfied. SKIP_UNAVAILABLE is not PASS.
@@ -221,6 +221,8 @@ P5 consistency contract
     -> P8 ABI contract audit
     -> P9 release/security gates
 ~~~
+
+P5 implementation is now source-complete at the contract level. Automated verification is still required in the real build environment before the gate can be marked PASS.
 
 Do not start unrelated refactors while these semantic gates are open.
 
