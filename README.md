@@ -30,6 +30,18 @@ The following are **planned, not implemented v0.1 functionality**:
 
 The public cache/capability headers and snapshot accessors are deliberately not part of the current v0.1 API. They will be introduced only when their data model, ownership, resource accounting, security behavior, tests, and ABI surface are ready for review.
 
+## Engineering onboarding
+
+New agents and engineers must start with:
+
+- `AGENTS.md`
+- `docs/AGENT_ONBOARDING.md`
+- `docs/ENGINEERING_STATUS.md`
+- `docs/ENGINEERING_WORKFLOW.md`
+- `docs/BRANCH_PROVENANCE.md`
+
+These documents define branch provenance, anti-duplication rules, evidence standards, security verification, and the Staff/Principal Engineer + CA/MBA/Management review discipline.
+
 ## Engineering rule
 
 > Build the smallest implementation that validates the largest architectural assumptions.
