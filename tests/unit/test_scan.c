@@ -45,7 +45,12 @@ int test_scan_behaviour(void) {
         assert(pkg_scan_result_package_count(uncorrelated_result) == 2U);
         assert(pkg_snapshot_artifact_count(uncorrelated_result) == 0U);
         assert(pkg_scan_result_package_file_count(uncorrelated_result, 0U) == 0U);
-        assert(pkg_scan_result_package_file_count(uncorrelated_result, 1U) == 0U);
+        assert(pkg_scan_result_package_file_count(uncorrelated_result, 1U) == 0U);\n        {
+            const pkg_package *package = NULL;
+            assert(pkg_snapshot_package_at(uncorrelated_result, 0U, &package) == PKG_OK);
+            assert(pkg_package_get_consistency(package) == PKG_CONSISTENCY_UNKNOWN);
+        }
+
         pkg_scan_result_destroy(uncorrelated_result);
         uncorrelated_result = NULL;
     }
