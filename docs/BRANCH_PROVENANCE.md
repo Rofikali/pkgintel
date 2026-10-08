@@ -52,7 +52,7 @@ codex/p0-foundation
   9a3ddd9f3dc0faa12eeec3bda30800df045f2518
 
 codex/p0-module-architecture
-  5c36a768a58b5b85fbb8f41acbe6ebcffddc54b1
+  15c4ee667ab74cc849eb021789ecec5ed5e10492
 ```
 
 The current P0 release-candidate pull request is:
@@ -89,27 +89,24 @@ This branch contains the foundation work plus the later module architecture, API
 
 Current P0 release work continues here unless the repository explicitly changes its release line.
 
-## Current local/remote provenance issue
+## Current local/remote provenance issue (historical checkpoint)
 
-The developer's Ubuntu 24.04 Codespace checkout was observed at:
+An earlier checkpoint observed a local/remote mismatch. That mismatch was subsequently reconciled by fast-forwarding the Codespace checkout to the current remote release-candidate head.
+
+Current observed release-candidate state:
 
 ```
 branch:
 codex/p0-module-architecture
 
 local HEAD:
-4b02a3807fc6c923bb0ebc773385210773334379
+15c4ee667ab74cc849eb021789ecec5ed5e10492
+
+origin/codex/p0-module-architecture:
+15c4ee667ab74cc849eb021789ecec5ed5e10492
 ```
 
-GitHub PR #1 currently identifies the branch head as:
-
-```
-5c36a768a58b5b85fbb8f41acbe6ebcffddc54b1
-```
-
-Therefore the local checkout is not the same provenance point as the current GitHub release-candidate head.
-
-This distinction is mandatory.
+The local and remote heads are synchronized at the current checkpoint.
 
 ### Evidence rule
 
