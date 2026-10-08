@@ -24,7 +24,6 @@ set(PKGINTEL_SOURCES
     src/support/string.c
     src/support/status.c
     src/backends/dpkg/dpkg.c
-    src/json/json.c
 )
 
 add_library(pkgintel SHARED ${PKGINTEL_SOURCES})
@@ -83,7 +82,7 @@ install(FILES
 )
 
 if(PKGINTEL_BUILD_CLI)
-    add_executable(pkgintel_cli src/cli/main.c)
+    add_executable(pkgintel_cli src/cli/main.c src/json/json.c)
     target_link_libraries(pkgintel_cli PRIVATE pkgintel)
     set_target_properties(pkgintel_cli PROPERTIES OUTPUT_NAME pkgintel)
     install(TARGETS pkgintel_cli
@@ -96,7 +95,7 @@ if(PKGINTEL_BUILD_TESTS)
     # Build a test-only static copy of production sources so allocator fault
     # injection reaches library-owned allocation sites. Executable-level
     # --wrap cannot reliably intercept calls made by a separately linked SO.
-    add_library(pkgintel_test STATIC ${PKGINTEL_SOURCES})
+    add_library(pkgintel_test STATIC ${PKGINTEL_SOURCES} src/json/json.c)
     target_include_directories(pkgintel_test
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
