@@ -6,6 +6,51 @@ This is the operational workflow for future humans and coding agents working on 
 
 It converts the engineering principles into a repeatable process.
 
+## Canonical design-to-evidence sequence
+
+For substantial work, the reasoning order is:
+
+```
+Business/product truth
+        ↓
+domain model
+        ↓
+HLD
+        ↓
+LLD
+        ↓
+mathematical/resource invariants
+        ↓
+security/evidence model
+        ↓
+algorithms/data structures
+        ↓
+implementation
+        ↓
+tests
+        ↓
+ADR/API documentation
+        ↓
+real runtime verification
+```
+
+This sequence is intentional:
+
+- **Business/product truth** defines why the system exists and what success means.
+- **Domain model** defines what the system is actually representing.
+- **HLD** defines system boundaries and responsibilities.
+- **LLD** defines concrete interfaces, ownership, lifecycle, and failure semantics.
+- **Mathematical/resource invariants** make bounds and capacity enforceable rather than aspirational.
+- **Security/evidence model** defines what must be protected and what evidence is strong enough to support each claim.
+- **Algorithms/data structures** are selected against the domain and invariants, with complexity and determinism justified.
+- **Implementation** encodes the chosen contracts.
+- **Tests** provide deterministic evidence of behavior.
+- **ADR/API documentation** records durable decisions and public contracts.
+- **Real runtime verification** is the final evidence step when the claim depends on the actual OS, kernel, VFS, namespace, capability, compiler, hardware, or deployment environment.
+
+A small change may collapse steps, but it must not silently skip a step whose assumptions affect correctness or security.
+
+
 ## Phase 0 — Establish reality
 
 Before touching code:
