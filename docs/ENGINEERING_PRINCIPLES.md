@@ -20,7 +20,36 @@ problem
 
 Passing tests is evidence, not proof of production readiness. A design is accepted only when the applicable engineering gates are satisfied.
 
-## 1. Separation of concerns
+## 1. Business/product truth before technical truth
+
+Engineering decisions start with the product reality they serve. Before selecting an architecture, algorithm, pattern, optimization, or dependency, establish:
+
+- the customer/user/operator problem;
+- the measurable product outcome;
+- acceptance criteria and explicit non-goals;
+- economics and operating constraints;
+- security, legal, and compliance constraints where applicable;
+- the cost of failure and the cost of the proposed solution.
+
+A technically elegant solution that solves the wrong product problem is still an engineering failure.
+
+## 2. Domain truth before implementation
+
+Model the real domain before choosing data structures or modules. Separate entities, state, observed evidence, derived conclusions, ownership, and lifecycle. Do not encode a domain distinction merely because it is convenient for the current implementation.
+
+## 3. HLD before LLD; LLD before code
+
+High-level boundaries and responsibilities come before low-level interfaces. Low-level contracts come before implementation. This ordering makes security boundaries, ownership, resource limits, and change impact reviewable.
+
+## 4. Mathematical/resource invariants before optimization
+
+State bounds, arithmetic constraints, complexity, capacity, resource budgets, and failure accounting before selecting algorithms or optimizations. A faster implementation that violates a resource invariant is not an optimization.
+
+## 5. Security/evidence strength must match the claim
+
+Threat modeling and evidence classification precede implementation of security-sensitive behavior. Source inspection, deterministic tests, sanitizer evidence, and real kernel/runtime evidence prove different things. Never promote one evidence class into another.
+
+## 6. Separation of concerns
 
 Keep different reasons to change separated.
 
@@ -35,7 +64,7 @@ Current examples:
 
 Separation is valuable when it prevents unrelated changes from crossing a boundary. Extra modules without a meaningful responsibility are not an architectural improvement.
 
-## 2. High cohesion
+## 7. High cohesion
 
 A module should contain behavior that changes for closely related reasons.
 
@@ -51,7 +80,7 @@ diagnostic -> diagnostic semantics
 
 Avoid modules that become generic dumping grounds.
 
-## 3. Loose coupling
+## 8. Loose coupling
 
 Depend on the smallest stable contract required by a consumer.
 
@@ -59,7 +88,7 @@ The dependency direction should make it possible to change a backend or implemen
 
 Coupling is not automatically bad. A direct dependency is acceptable when the relationship is stable, local, and cheaper than an abstraction. We optimize for **appropriate coupling**, not zero coupling.
 
-## 4. DRY: don't duplicate knowledge
+## 9. DRY: don't duplicate knowledge
 
 DRY means avoiding multiple independently maintained representations of the same knowledge. It does not mean mechanically deduplicating every similar line of code.
 
@@ -74,7 +103,7 @@ Bad DRY:
 - forcing unrelated operations through an abstraction only because their code looks similar;
 - creating a universal helper before a second real use case exists.
 
-## 5. SOLID, translated to C
+## 10. SOLID, translated to C
 
 SOLID is used as a reasoning tool, not as an object-oriented requirement.
 
@@ -86,7 +115,7 @@ SOLID is used as a reasoning tool, not as an object-oriented requirement.
 
 C function pointers, opaque handles, private headers, and small interfaces are valid mechanisms for these principles. None is mandatory merely to satisfy SOLID.
 
-## 6. Reuse after understanding
+## 11. Reuse after understanding
 
 Reusable code should capture a stable invariant or repeated operation.
 
@@ -100,7 +129,7 @@ Before extracting an abstraction ask:
 
 Premature generalization is treated as a cost.
 
-## 7. Design patterns are solutions, not goals
+## 12. Design patterns are solutions, not goals
 
 A named pattern is never a reason by itself to introduce code.
 
@@ -114,11 +143,11 @@ Only then may we name the resulting pattern if that vocabulary helps communicati
 
 For example, future package backends may use a Strategy-like function interface if multiple backend implementations genuinely need the same lifecycle contract. A registry or plugin system requires a separate security and lifecycle justification.
 
-## 8. Composition over accidental inheritance
+## 13. Composition over accidental inheritance
 
 C has no class inheritance model, and pkgintel should not simulate one unnecessarily. Prefer composition, explicit ownership, small interfaces, and opaque handles where they produce a clearer contract.
 
-## 9. Encapsulation and information hiding
+## 14. Encapsulation and information hiding
 
 Public headers expose supported concepts, not implementation layout.
 
@@ -132,7 +161,7 @@ An opaque handle protects:
 
 Private mutation functions must remain outside the public ABI unless a deliberate API decision says otherwise.
 
-## 10. Principle of least knowledge
+## 15. Principle of least knowledge
 
 A component should know only what it needs to perform its responsibility.
 
@@ -140,7 +169,7 @@ For example, a parser should not need to know CLI formatting. A CLI should not m
 
 This reduces accidental dependencies and makes security review tractable.
 
-## 11. Fail closed
+## 16. Fail closed
 
 When a requested security or resource control is unsupported, reject it rather than silently pretending it was applied.
 
@@ -148,7 +177,7 @@ When an input violates a security boundary, reject it and preserve structured ev
 
 When a resource limit is exceeded, return the documented resource-limit result and preserve the already committed partial snapshot where the contract allows it.
 
-## 12. Explicit ownership and lifetime
+## 17. Explicit ownership and lifetime
 
 Every heap object must have a clear owner and destruction path.
 
@@ -161,7 +190,7 @@ For v0.1 snapshots:
 
 Ownership is part of the API/ABI contract.
 
-## 13. Transactional mutation
+## 18. Transactional mutation
 
 A multi-step mutation follows:
 
@@ -179,7 +208,7 @@ A failure before commit must leave the previously committed state valid.
 
 This principle is especially important for resource exhaustion and allocation failure.
 
-## 14. Evidence before optimization
+## 19. Evidence before optimization
 
 Do not introduce arenas, slabs, SIMD, assembly, hash tables, caching, concurrency, or other complexity because they sound faster.
 
@@ -196,17 +225,17 @@ The optimization decision must include:
 
 See the allocation and assembly ADRs for current decisions.
 
-## 15. Determinism
+## 20. Determinism
 
 Where the public contract requires reproducible results, implementation choices must not leak nondeterministic ordering or behavior.
 
 A faster data structure that makes public results unstable is not automatically an improvement.
 
-## 16. Reversibility matters
+## 21. Reversibility matters
 
 Prefer small, isolated changes while a design is still experimental. Expensive-to-reverse decisions affecting ABI, security boundaries, persistence, concurrency, or domain semantics should be recorded as ADRs before deep implementation.
 
-## 17. Principal-engineer decision record
+## 22. Principal-engineer decision record
 
 For every significant architectural change, record:
 
