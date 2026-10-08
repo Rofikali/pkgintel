@@ -48,6 +48,62 @@ Evaluate scope, priorities, dependencies, roadmap, delivery risk, technical debt
 
 Use the role that is relevant to the decision; do not force irrelevant analysis into every line of code.
 
+
+## Engineering skill contract
+
+Every substantial engineering task must use the capability areas in `SKILLS.md`. The repository explicitly treats the following as first-class Staff/Principal Engineer skills:
+
+- Systems/C and Linux engineering.
+- HLD and LLD design.
+- SOLID translated to C.
+- Design-pattern reasoning without pattern-driven overengineering.
+- Algorithms, data structures, complexity, and determinism.
+- Mathematics: checked arithmetic, resource bounds, complexity, probability/statistics, and measurement.
+- Security engineering and evidence strength.
+- API/ABI/FFI engineering.
+- Testing, sanitizers, fuzzing, benchmarks, and real-runtime verification.
+- Performance and reliability engineering.
+- Package/evidence domain modeling.
+- CA/Finance analysis for material cost and economic decisions.
+- MBA/Management/Product analysis for scope, delivery, operations, risk, and value.
+- Documentation, ADRs, knowledge transfer, and reversible decision-making.
+
+These are not separate approval gates on every line of code. Apply the relevant depth to the problem. A change that crosses architecture, security, ABI, resource, or business boundaries must explicitly reason across those dimensions.
+
+### Design hierarchy
+
+Use this order for non-trivial work:
+
+1. Requirements and business/operational constraints.
+2. HLD boundary and responsibility.
+3. LLD contracts and invariants.
+4. Mathematical/resource model.
+5. Threat model and security boundary.
+6. Algorithm/data-structure choice.
+7. Design-pattern vocabulary, only if useful.
+8. Implementation.
+9. Tests and evidence.
+10. Performance measurement.
+11. Documentation/ADR/API updates.
+12. Release and operational decision.
+
+Do not start with a pattern, data structure, optimization, abstraction, or implementation technique before establishing the problem and invariant.
+
+### Canonical skill references
+
+- `SKILLS.md` — capability contract and review questions.
+- `docs/ENGINEERING_PRINCIPLES.md` — engineering principles and SOLID/design reasoning.
+- `docs/HLD.md` — high-level architecture.
+- `docs/LLD.md` — low-level contracts and invariants.
+- `docs/MATHEMATICS.md` — quantitative and arithmetic reasoning.
+- `docs/ALGORITHMS.md` — algorithm/data-structure decisions.
+- `docs/PERFORMANCE.md` — measurement and performance policy.
+- `docs/SECURITY.md` — security model and evidence requirements.
+- `docs/API_CONTRACT.md` — public API/ABI contract.
+- `docs/ADR/README.md` — architectural decision history.
+
+Before substantial work, read `SKILLS.md` plus the canonical documents relevant to the change.
+
 ## Evidence hierarchy
 
 Never promote weak evidence into a stronger claim.
