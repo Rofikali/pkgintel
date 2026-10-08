@@ -110,4 +110,21 @@ Behavior changes require documentation updates. At minimum, update the relevant 
 
 Where a claim depends on the real Linux kernel/VFS/namespace/capability/platform, execute the actual runtime verification after implementation, tests, and documentation. Record the host/container image, kernel, UID, capabilities, namespaces, exact command, and result.
 
+### Required privileged verification environment
+
+For pkgintel's genuine mount-boundary and procfs magic-link tests, the verification environment must be capable of performing the Linux mount operations used by the test. The intended developer/release topology is:
+
+~~~
+Windows 11 host
+  -> Docker Desktop
+  -> privileged Ubuntu 24.04 verification container
+  -> pkgintel
+~~~
+
+The normal development container must not be made privileged merely for convenience. Privilege is an explicit property of the dedicated security-verification environment. On Docker Desktop, the preferred first attempt is a dedicated container with `--privileged`; a narrower `CAP_SYS_ADMIN` plus an appropriate seccomp policy may be used only if the complete test still passes and the resulting capability set is recorded.
+
+A `sudo` shell inside an already restricted container is not equivalent to a privileged container. UID 0 can still lack the kernel capabilities or syscall permissions required for mount operations. Therefore, if the test reports `Operation not permitted`, inspect the container's effective/permitted capabilities, seccomp policy, user namespace, and mount namespace rather than weakening the test.
+
+The genuine security gate must be executed in that capable environment. Do not replace real mounts with ordinary directories or ordinary symlinks, and do not change the test to turn an unavailable mount operation into a successful assertion.
+
 A release candidate requires all applicable gates to pass and a written record of known limitations. `SKIP_UNAVAILABLE` is evidence that the environment was insufficient; it is never evidence that the security property passed.
