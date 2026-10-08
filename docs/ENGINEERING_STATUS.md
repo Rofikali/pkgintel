@@ -214,10 +214,11 @@ Before modifying code:
 
 ## Current next sequence
 
-1. Run the current reproducible performance benchmark and record results.
-2. Audit the required compiler/configuration matrix.
-5. Review API/ABI, architecture, resource, and security evidence together.
-6. Produce a written P0 sign-off or an explicit list of remaining blockers.
+1. Complete the Clang ASan/UBSan release-gate configuration.
+2. Review public API/ABI compatibility and installed-consumer evidence as a final release review.
+3. Reconcile the final production-relevant SHA and all evidence provenance.
+4. Produce written P0 sign-off or an explicit list of remaining blockers.
+5. Complete PR #1 review and merge decision under `docs/PR_MERGE_RELEASE_POLICY.md`.
 
 ## Related documents
 
@@ -244,7 +245,9 @@ This section supersedes older "pending" statements in historical checkpoint sect
 ### Provenance
 
 - Current branch: `codex/p0-module-architecture`
-- Current source SHA: `15c4ee667ab74cc849eb021789ecec5ed5e10492`
+- Current source/evidence documentation checkpoint: `c9202194a84c089ca2646e4092e4bb39eb444ff8`.
+- Last production-relevant source checkpoint: `946a7fc91c689dfbe408f254b81f20145ce9fa24`.
+- The intervening commits are documentation-only and do not invalidate completed implementation verification.
 - Local and origin branch heads are synchronized.
 - P9.2 performance evidence baseline: `5c36a768a58b5b85fbb8f41acbe6ebcffddc54e1`.
 - Diff from P9.2 baseline to current HEAD is documentation/agent-governance only; no production implementation, test, build configuration, ABI, or benchmark implementation changed.
@@ -260,11 +263,11 @@ The repeated performance evidence remains valid for the current source because t
 | Gate | Current result | Evidence |
 |---|---|---|
 | GCC Debug | **PASS** | Fresh build `build-p9-gcc-debug`; configure/build/CTest/install/exported-ABI/private-symbol/installed-consumer checks all passed |
-| GCC Release | PENDING | Required |
-| Clang Debug | PENDING | Required |
-| Clang Release | PENDING | Required |
-| Clang ASan/UBSan | PENDING | Required |
-| Privileged Linux filesystem security | PENDING/RE-QUALIFY | Must be executed in the dedicated capable verification runtime; unprivileged CTest skip is not a pass |
+| GCC Release | **PASS** | Fresh release matrix evidence recorded in `docs/RELEASE_EVIDENCE.md` |
+| Clang Debug | **PASS** | Fresh debug matrix evidence recorded in `docs/RELEASE_EVIDENCE.md` |
+| Clang Release | **PASS** | Fresh release matrix evidence recorded in `docs/RELEASE_EVIDENCE.md` |
+| Clang ASan/UBSan | PENDING | Required next compiler gate |
+| Privileged Linux filesystem security | **PASS** | Dedicated capable runtime, strict test 1/1, full security suite 2/2 |
 
 ### GCC Debug evidence
 
