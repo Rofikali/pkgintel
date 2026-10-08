@@ -112,7 +112,7 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 ### Not yet satisfied
 
 - Fuzzing safety execution gate: PASS (both Clang/libFuzzer targets completed bounded ASan/UBSan runs without sanitizer findings)
-- Fuzzing coverage/effectiveness gate: pending re-run after explicit SanitizerCoverage instrumentation fix; the prior runs emitted `no interesting inputs` and retained a one-entry corpus, so they are not accepted as coverage evidence
+- Fuzzing coverage/effectiveness gate: PASS — both Clang/libFuzzer targets now report real SanitizerCoverage counters, `cov:`/`ft:` growth, corpus growth/reduction, and bounded sanitizer-clean execution
 - Current performance evidence: pending current reproducible benchmark run
 - Full compiler/configuration matrix: pending audit against the release gate
 - Final P0 sign-off: pending all applicable gates
@@ -214,9 +214,8 @@ Before modifying code:
 
 ## Current next sequence
 
-1. Re-run the fuzz targets after the SanitizerCoverage instrumentation correction and require real `cov:`/`ft:` evidence plus corpus behavior.
-2. Run the current reproducible performance benchmark and record results.
-4. Audit the required compiler/configuration matrix.
+1. Run the current reproducible performance benchmark and record results.
+2. Audit the required compiler/configuration matrix.
 5. Review API/ABI, architecture, resource, and security evidence together.
 6. Produce a written P0 sign-off or an explicit list of remaining blockers.
 
