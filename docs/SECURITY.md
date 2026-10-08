@@ -15,6 +15,12 @@
 9. **No trust in encoding:** Linux paths are arbitrary bytes. UTF-8 conversion is an output concern and must be lossless or explicitly escaped.
 10. **Evidence provenance:** important conclusions retain source and confidence so consumers can distinguish package metadata from filesystem observations and heuristics.
 
+### Security-verification environment
+
+The genuine mount-boundary and procfs magic-link tests require a Linux environment capable of constructing the corresponding kernel objects. The intended verification topology is Windows 11 -> Docker Desktop -> dedicated Ubuntu 24.04 security-verification container. The normal development container should remain least-privileged.
+
+UID 0 obtained through `sudo` inside a restricted container is not sufficient evidence that `mount(2)` is available. Capability state, seccomp, user namespace, and mount namespace are part of the verification environment. If a real mount operation returns `EPERM`/permission denied, the security gate remains unsatisfied. Do not replace the real mount with a directory fixture or convert the result into PASS. Qualify a capable verification environment and rerun the unchanged test.
+
 ## Target boundary
 
 `pkg_target` owns a root directory descriptor after validation. The Linux implementation uses `openat2()` with an explicit resolution policy where supported by the current platform.
