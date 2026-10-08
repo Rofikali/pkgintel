@@ -10,7 +10,8 @@ Every significant release-gate result must identify the exact source SHA and the
 
 - Repository: `Rofikali/pkgintel`
 - Release line: `codex/p0-module-architecture`
-- Current SHA: `946a7fc91c689dfbe408f254b81f20145ce9fa24`
+- Current documentation/release checkpoint SHA: `5e3b412303e4c161f30c048e739ddd39a831e685`.
+- Last production-relevant source SHA: `946a7fc91c689dfbe408f254b81f20145ce9fa24`.
 - Remote synchronization: local and origin branch heads match at this SHA.
 - PR: #1, base `main`, not merged.
 - Release decision: **NOT READY TO MERGE**.
