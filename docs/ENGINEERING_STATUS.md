@@ -134,6 +134,22 @@ sudo ctest --test-dir build-security -R 'pkgintel[.]security[.]mounts' --output-
 
 In the intended Ubuntu 24.04 verification environment, the command must PASS. If the kernel/container denies the mount operation, strict mode must FAIL rather than silently skip. The CI workflow contains a dedicated privileged security-runtime job for this gate.
 
+### Current runtime qualification evidence
+
+The latest privileged attempt was executed from the Windows 11 -> Docker Desktop -> Ubuntu 24.04 development container at commit 6bf8bb76ac785b9bc4e54b74beb480a518f07ecf. The test was run with `PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON`, so return code 77 is a hard CTest failure rather than a skip.
+
+Observed environment:
+
+- Ubuntu 24.04.5 LTS userspace.
+- WSL2 kernel 5.15.167.4-microsoft-standard-WSL2.
+- Developer UID 1001 has `CapEff=0`.
+- `sudo` changes UID to 0 and exposes `CapEff=0xA80C25FB`, but the container remains under seccomp mode 2 with one seccomp filter.
+- UID/GID maps are identity mappings in the reported user namespace.
+- A direct `sudo mount --bind` probe returns permission denied / exit status 32.
+- The pkgintel genuine mount test therefore reports `bind mount unavailable: Operation not permitted` and correctly fails the strict security gate.
+
+Interpretation: this is an environment-capability/evidence gap, not evidence that the target-containment implementation passed or failed its intended mount-boundary invariant. The next action is to execute the same test in a dedicated capable Ubuntu 24.04 verification container, preferably Docker `--privileged` first, then optionally minimize capabilities after the security gate passes. Do not weaken or simulate the mount test.
+
 ## Evidence classification
 
 Use these categories for every P0 claim:
