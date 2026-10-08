@@ -36,11 +36,11 @@ It contains earlier foundational work and is an ancestor of the current P0 integ
 
 ### codex/p0-module-architecture
 
-Current cumulative P0 release-candidate line.
+Historical cumulative P0 integration line.
 
-It contains the foundation plus module architecture, public API/ABI work, DPKG semantics, resource governance, filesystem security, fuzzing, performance evidence, release documentation, and later verification work.
+It contains the foundation plus module architecture, public API/ABI work, DPKG semantics, resource governance, filesystem security, fuzzing, performance evidence, release documentation, and later verification work. It was intentionally integrated directly into `main` by PR #1 because foundation was already contained in this cumulative branch.
 
-Current P0 release work continues here unless an explicit repository decision changes the release line.
+After the merge, `main` is the canonical source of truth.
 
 ## 2. PR identity
 
@@ -58,7 +58,9 @@ For PR #1:
 - repository: `Rofikali/pkgintel`
 - base: `main`
 - head: `codex/p0-module-architecture`
-- merge decision: blocked until all applicable mandatory release gates are PASS.
+- reviewed head: `1a99cbe2e8bfeea427775a38877f70c34766c234`;
+- merge commit: `ec44a111cf215337d16e3c8800574248e109a3f1`;
+- state: **MERGED** at `2026-10-08T15:00:15Z`.
 
 A PR must never be described merely as "passed" without stating which source SHA the evidence applies to.
 
@@ -348,21 +350,31 @@ The branch/work provenance record is `docs/BRANCH_PROVENANCE.md`.
 
 The engineering operating contract is `AGENTS.md` and the related engineering documents.
 
-## 13. Current PR #1 policy
+## 13. Current PR #1 disposition
 
-PR #1 remains a release-candidate integration PR.
+PR #1 is **closed and merged**.
 
-It must remain unmerged until:
+The pre-merge checklist above is retained as historical governance evidence. It must not be interpreted as a current blocker.
 
-- the required compiler/configuration matrix is closed;
-- final API/ABI review is complete;
-- applicable final release/security verification is complete;
-- known limitations are recorded;
-- final P0 sign-off is explicit.
+Post-merge canonical state:
 
-Creating or updating the PR does not itself close any technical gate.
+```text
+reviewed P0 head
+1a99cbe2...
+      |
+      | PR #1
+      v
+main
+ ec44a111...
+```
 
-## 14. Engineering principle
+The merge itself did not introduce a production-file delta beyond the reviewed cumulative branch.
+
+## 14. Post-merge branch policy
+
+A merged cumulative branch is normally retained only until provenance and release reconciliation are complete. Once the exact reviewed SHA, merge SHA, evidence set, and integration rationale are recorded and reachable from `main`, the branch may be deleted. Deleting a branch reference does not rewrite or remove reachable Git history.
+
+## 15. Engineering principle
 
 The governing principle is:
 
