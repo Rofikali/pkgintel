@@ -372,3 +372,47 @@ The repository-level onboarding contract is:
 - `docs/BRANCH_PROVENANCE.md`
 
 These documents are the canonical handoff mechanism and must remain synchronized with major workflow or branch changes.
+
+
+## Final P0 release checkpoint — 2026-10-08
+
+### Provenance reconciliation
+
+- Remote `codex/p0-module-architecture` head: `dfe46210056a7b2e3cc5d7e31bf88b1bdb120271`.
+- `main`: `003ac31c9f6b12e71a13d8958002a5263717ffe8`.
+- `codex/p0-foundation`: `9a3ddd9f3dc0faa12eeec3bda30800df045f2518`.
+- Foundation is an ancestor of the cumulative P0 branch; no foundation-only work needs to be reimplemented.
+- Production source checkpoint remains `946a7fc91c689dfbe408f254b81f20145ce9fa24`.
+- All ten commits after that source checkpoint are documentation/provenance updates only.
+
+### Final gate disposition
+
+- P9.2 performance provenance/reproducibility: **PASS**.
+- P9.3 GCC Debug: **PASS**.
+- P9.3 GCC Release: **PASS**.
+- P9.3 Clang Debug: **PASS**.
+- P9.3 Clang Release: **PASS**.
+- P9.3 Clang ASan/UBSan: **PASS**, evidence at `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867` and inherited because only documentation/provenance changed afterward.
+- Genuine privileged Linux filesystem security runtime: **PASS**, with separate dedicated privileged runtime evidence; not inferred from the unprivileged CTest skip.
+- Public API/ABI compatibility review for the v0.1 release candidate: **PASS**. This is not an ABI-stability claim; SONAME 0 and Linux-focused evidence remain the documented scope.
+- Final release/security provenance reconciliation: **PASS**.
+
+### Staff/Principal Engineering disposition
+
+The branch topology, implementation provenance, evidence applicability, public contract, resource bounds, testing, install/consumer compatibility, and release/reversibility requirements are reconciled. No duplicate implementation is justified by the current evidence state. Documentation-only head movement does not trigger a new compiler, sanitizer, performance, or privileged-runtime execution.
+
+### Principal Security Engineering disposition
+
+The security claim remains bounded to the implemented hostile-filesystem surface and the qualified privileged Linux runtime. The ordinary development runtime's unavailable mount capability remains a `SKIP`, never a PASS. No production security boundary changed after the security evidence checkpoint. No new security-runtime execution is justified by the current documentation-only delta.
+
+### CA / Finance disposition
+
+No material infrastructure architecture or customer-facing cost changed in the final reconciliation interval. Avoiding redundant compiler/sanitizer/performance/security reruns preserves engineering compute/time without weakening assurance because applicability is established by exact production-diff provenance.
+
+### MBA / Management / Product disposition
+
+The release candidate remains scoped to the current P0 module/API/security foundation. The next management decision is release/merge authorization versus retaining the PR open for additional review; no new implementation scope should be introduced merely to fill the documentation checkpoint.
+
+### Current release decision
+
+**P0 technical release gates: PASS. Final merge decision: pending final PR approval/sign-off.**
