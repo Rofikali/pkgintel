@@ -171,3 +171,68 @@ Before modifying code:
 ## Rule
 
 > If a future engineer cannot determine what is implemented, what is merely planned, what has actually been verified, and what remains blocked by reading the repository documentation, the engineering documentation is incomplete.
+
+
+## Current Principal/Staff Engineer review checkpoint
+
+The current review has completed source-level inspection of the implemented P0 vertical slice. The principal findings are:
+
+### Confirmed strong areas
+
+- target-root descriptor anchoring and Linux openat2 containment design;
+- RESOLVE_IN_ROOT, RESOLVE_NO_MAGICLINKS, and RESOLVE_NO_XDEV policy;
+- O_PATH/O_NOFOLLOW artifact identity observation;
+- bounded dpkg record materialization;
+- deterministic package ordering;
+- snapshot ownership and package-to-artifact mapping;
+- aggregate resource ceilings and transactional mutation;
+- genuine hostile-filesystem test design;
+- opaque public-object architecture;
+- separation of package identity, installation state, and filesystem evidence.
+
+### Current blockers
+
+1. **Consistency semantics are incomplete.**
+   A package with no requested correlation can currently be indistinguishable from a package whose correlation completed without bad evidence. The public consistency result must not report CONSISTENT without complete evidence.
+
+2. **Broken-link and permission-denied evidence must participate in consistency.**
+   Current counter-only derivation can incorrectly return CONSISTENT when artifact states contain BROKEN_LINK or PERMISSION_DENIED.
+
+3. **Unexpected errno must not imply missing evidence.**
+   Only definitive ENOENT should increment missing-file accounting. Other observation failures require their documented non-absence classification.
+
+4. **Correlation completeness needs explicit internal state.**
+   The implementation should distinguish NOT_REQUESTED, COMPLETE, and INCOMPLETE correlation rather than infer completeness from artifact counts.
+
+5. **Privileged filesystem evidence remains environment-gated.**
+   Genuine bind-mount and procfs magic-link tests must produce PASS in a capable Linux environment before their release gate is satisfied. SKIP_UNAVAILABLE is not PASS.
+
+6. **Root identity timing must remain an explicit contract.**
+   The current design resolves the configured root path when scanning opens the target root and then anchors operations to the resulting descriptor. This timing should be documented as intentional rather than accidental.
+
+### Immediate engineering sequence
+
+~~~
+P5 consistency contract
+    -> explicit correlation completeness
+    -> evidence-derived consistency
+    -> regression tests
+    -> API/security documentation review
+    -> P8 ABI contract audit
+    -> P9 release/security gates
+~~~
+
+Do not start unrelated refactors while these semantic gates are open.
+
+## Agent handoff requirement
+
+A future agent must refresh the branch head before acting. The branch may move after this document is written.
+
+The repository-level onboarding contract is:
+
+- `AGENTS.md`
+- `docs/AGENT_ONBOARDING.md`
+- `docs/ENGINEERING_WORKFLOW.md`
+- `docs/BRANCH_PROVENANCE.md`
+
+These documents are the canonical handoff mechanism and must remain synchronized with major workflow or branch changes.
