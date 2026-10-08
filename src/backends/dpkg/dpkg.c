@@ -303,6 +303,7 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
                 "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+            continue;
         }
         if (rc == 1) {
             result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
@@ -310,6 +311,7 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
                 "PKG_DPKG_FILELIST_MISSING", "package file list is missing");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+            continue;
         }
         result->packages[i].correlation_state = PKG_CORRELATION_COMPLETE;
     }
