@@ -58,3 +58,22 @@ Independent contexts may be used concurrently. A context is not guaranteed safe 
 ## Strings
 
 Linux filesystem paths are arbitrary byte sequences and are not guaranteed to be UTF-8. The future JSON serializer must define an explicit lossless representation for invalid UTF-8. Public APIs must document whether a string is filesystem bytes or UTF-8 text.
+
+### Package consistency
+
+pkg_package_get_consistency() is evidence-derived. It does not infer filesystem consistency from dpkg installation state.
+
+The result is PKG_CONSISTENCY_UNKNOWN when correlation was not requested or when correlation for that package did not complete. PKG_CONSISTENCY_CONSISTENT is possible only after complete correlation, including a valid zero-record file list.
+
+When correlation completes, artifact observations determine the result:
+
+- all artifacts PRESENT -> CONSISTENT;
+- only MISSING failures -> MISSING_ARTIFACT;
+- only BROKEN_LINK failures -> BROKEN_LINK;
+- only PERMISSION_DENIED failures -> PERMISSION_DENIED;
+- only UNVERIFIABLE failures -> UNVERIFIABLE;
+- more than one failure class -> INCONSISTENT.
+
+UNEXPECTED_ARTIFACT is reserved for a future capability that enumerates filesystem artifacts not owned by the package. The current v0.1 correlation model does not claim to detect unexpected files.
+
+ENOENT is the only filesystem observation error treated as definitive absence. Other observation failures are not counted as missing merely because the scanner could not observe the object.
