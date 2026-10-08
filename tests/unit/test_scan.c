@@ -16,7 +16,7 @@ int test_scan_behaviour(void) {
     char fixture[256];
     pkg_context *context = NULL;
     pkg_target *target = NULL;
-    pkg_scan_result *result = NULL, *limited_result = NULL, *second_result = NULL;
+    pkg_scan_result *result = NULL, *limited_result = NULL, *second_result = NULL, *uncorrelated_result = NULL;
     pkg_scan_options options = PKG_SCAN_OPTIONS_INIT;
     options.max_packages = 10U;
     options.max_package_files = 100U;
@@ -35,6 +35,19 @@ int test_scan_behaviour(void) {
         assert(unlink(root_link) == 0);
     }
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK); assert(target != NULL);
+    {
+        pkg_scan_options no_correlation = PKG_SCAN_OPTIONS_INIT;
+        no_correlation.max_packages = 10U;
+        no_correlation.max_package_files = 100U;
+        assert(pkg_scan(context, target, &no_correlation, &uncorrelated_result) == PKG_OK);
+        assert(uncorrelated_result != NULL);
+        assert(pkg_scan_result_package_count(uncorrelated_result) == 2U);
+        assert(pkg_snapshot_artifact_count(uncorrelated_result) == 0U);
+        assert(pkg_scan_result_package_file_count(uncorrelated_result, 0U) == 0U);
+        assert(pkg_scan_result_package_file_count(uncorrelated_result, 1U) == 0U);
+        pkg_scan_result_destroy(uncorrelated_result);
+        uncorrelated_result = NULL;
+    }
     assert(pkg_scan(context, target, &options, &result) == PKG_OK); assert(result != NULL);
     assert(strcmp(pkg_scan_result_target_root(result), fixture) == 0); assert(pkg_scan_result_package_count(result) == 2U);
     assert(pkg_scan(context, target, &options, &second_result) == PKG_OK); assert(pkg_scan_result_package_count(second_result) == pkg_scan_result_package_count(result));
