@@ -84,6 +84,7 @@ install(FILES
 if(PKGINTEL_BUILD_CLI)
     add_executable(pkgintel_cli src/cli/main.c src/json/json.c)
     target_link_libraries(pkgintel_cli PRIVATE pkgintel)
+    target_include_directories(pkgintel_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     set_target_properties(pkgintel_cli PROPERTIES OUTPUT_NAME pkgintel)
     install(TARGETS pkgintel_cli
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
