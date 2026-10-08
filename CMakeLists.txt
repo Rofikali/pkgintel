@@ -8,6 +8,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 option(PKGINTEL_BUILD_TESTS "Build pkgintel tests" ON)
 option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
 option(PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS "Treat unavailable privileged security tests as failures" OFF)
+option(PKGINTEL_BUILD_FUZZERS "Build Clang libFuzzer targets with ASan/UBSan" OFF)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -172,6 +173,38 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
     target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 
+    if(PKGINTEL_BUILD_FUZZERS)
+        if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
+            message(FATAL_ERROR "PKGINTEL_BUILD_FUZZERS requires Clang with libFuzzer support")
+        endif()
+
+        # Fuzz the production parser through the public scan contract. Each
+        # harness keeps filesystem setup deterministic and bounds the input
+        # before constructing target metadata, while ASan/UBSan instrument the
+        # production sources themselves.
+        add_library(pkgintel_fuzz_core STATIC ${PKGINTEL_SOURCES})
+        target_include_directories(pkgintel_fuzz_core
+            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+        target_compile_definitions(pkgintel_fuzz_core PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
+        target_compile_options(pkgintel_fuzz_core PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+            -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+            -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(pkgintel_fuzz_core PRIVATE -fsanitize=address,undefined)
+
+        foreach(fuzz_name IN ITEMS dpkg_status dpkg_filelist)
+            add_executable(pkgintel_fuzz_${fuzz_name} tests/fuzz/fuzz_${fuzz_name}.c)
+            target_link_libraries(pkgintel_fuzz_${fuzz_name} PRIVATE pkgintel_fuzz_core)
+            target_include_directories(pkgintel_fuzz_${fuzz_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+            target_compile_options(pkgintel_fuzz_${fuzz_name} PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+                -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+                -fsanitize=address,undefined -fno-omit-frame-pointer)
+            target_link_options(pkgintel_fuzz_${fuzz_name} PRIVATE
+                -fsanitize=fuzzer,address,undefined)
+        endforeach()
+    endif()
     # Genuine Linux filesystem security gate. The executable uses only the
     # public pkgintel API; privileged environments may return CTest code 77
     # when mount setup is unavailable. Such a skip is evidence of an
