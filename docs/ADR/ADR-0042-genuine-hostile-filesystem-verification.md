@@ -47,6 +47,13 @@ The environment reported Ubuntu 24.04.5 LTS on WSL2 kernel `5.15.167.4-microsoft
 
 This is the expected evidence behavior: UID 0 inside a restricted container is not treated as equivalent to a mount-capable verification environment. The release gate remains unsatisfied. The next verification must use a dedicated capable Ubuntu 24.04 container and repeat the unchanged genuine test. A privileged Docker container is the preferred first qualification; capability minimization is a later hardening exercise, not a reason to weaken this test.
 
+
+## Dedicated verification runtime
+
+The repository now provides a dedicated Docker Compose security-verification service rather than making the ordinary development service privileged. The normal `pkgintel` service remains non-root and non-privileged; `pkgintel-security` is exposed only through the `security` Compose profile and runs as root with `privileged: true`. It reuses the normal service definition via Compose `extends` so the verification runtime does not duplicate build, mount, environment, or working-directory configuration.
+
+The service has been created successfully in the Windows 11 -> Docker Desktop workflow. Entering `pkgintel-security-verify` confirmed UID 0. This establishes that the dedicated privileged runtime is operational, but it is not itself security PASS evidence. The next checkpoint must record effective capabilities, seccomp state, namespaces, and a successful real bind-mount operation before the unchanged pkgintel security test is executed.
+
 ## Alternatives rejected
 
 ### Fake mount fixture
