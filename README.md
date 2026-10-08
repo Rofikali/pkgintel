@@ -30,6 +30,10 @@ The following are **planned, not implemented v0.1 functionality**:
 
 The public cache/capability headers and snapshot accessors are deliberately not part of the current v0.1 API. They will be introduced only when their data model, ownership, resource accounting, security behavior, tests, and ABI surface are ready for review.
 
+## Engineering skills
+
+The repository engineering capability contract is in [SKILLS.md](SKILLS.md), covering systems/C, HLD/LLD, SOLID, design-pattern reasoning, mathematics, security, ABI/FFI, testing, performance, CA/Finance, and MBA/Management/Product decision-making.
+
 ## Engineering onboarding
 
 New agents and engineers must start with:
