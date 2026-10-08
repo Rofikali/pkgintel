@@ -133,7 +133,11 @@ unit
 
 Do not claim a later gate passed because an earlier gate passed.
 
-## Phase 12 — ADR/API documentation and real OS verification
+## Phase 12 — ADR/API documentation
+
+Record durable decisions and public-contract changes before the final runtime claim. Documentation must state the exact semantics, evidence level, known limitations, and verification procedure.
+
+## Phase 13 — Real OS verification
 
 If a property depends on Linux kernel/VFS/namespace/capability behavior, identify the exact environment requirement.
 
@@ -153,7 +157,7 @@ Record:
 
 A privileged test that cannot run is SKIP_UNAVAILABLE, not PASS.
 
-## Phase 13 — Review the diff as a Principal Engineer
+## Phase 14 — Review the diff as a Principal Engineer
 
 After implementation inspect changed behavior, unchanged invariants, ownership, error paths, resource accounting, security boundary, ABI impact, test coverage, documentation consistency, complexity, performance, and operational consequences.
 
@@ -161,7 +165,7 @@ Ask:
 
 > Did the patch solve the actual problem, or merely make the test green?
 
-## Phase 14 — Business and management checkpoint
+## Phase 15 — Business and management checkpoint
 
 For changes with material architecture or operational cost, record:
 
@@ -181,7 +185,7 @@ reversibility
 
 Reject complexity whose value cannot be demonstrated.
 
-## Phase 15 — Handoff
+## Phase 16 — Handoff
 
 Every significant change should finish with:
 
