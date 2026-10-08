@@ -106,7 +106,7 @@ Rejected under YAGNI/KISS. An abstraction without a measured second use case inc
 
 ### Keep current fuzz link-only instrumentation
 
-Rejected. LLVM documents that libFuzzer relies on SanitizerCoverage instrumentation and supports `-fsanitize=fuzzer-no-link` when instrumentation is required without adding the fuzzer driver's `main()`. citeturn0search0
+Rejected. LLVM documents that libFuzzer relies on SanitizerCoverage instrumentation and supports `-fsanitize=fuzzer-no-link` when instrumentation is required without adding the fuzzer driver's `main()`.
 
 ## Consequences
 
