@@ -20,6 +20,7 @@ pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
     const pkg_package_record *p = (const pkg_package_record *)package;
     size_t i;
     pkg_artifact_state first_bad = PKG_ARTIFACT_STATE_UNKNOWN;
+    bool has_bad = false;
     if (p == NULL) return PKG_CONSISTENCY_UNKNOWN;
     if (p->correlation_state != PKG_CORRELATION_COMPLETE || p->owner_snapshot == NULL) return PKG_CONSISTENCY_UNKNOWN;
     if (p->artifact_start > p->owner_snapshot->artifact_count ||
@@ -28,16 +29,19 @@ pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
     for (i = 0U; i < p->artifact_count; ++i) {
         const pkg_artifact_record *artifact = &p->owner_snapshot->artifacts[p->artifact_start + i];
         if (artifact->state == PKG_ARTIFACT_PRESENT) continue;
-        if (first_bad == PKG_ARTIFACT_STATE_UNKNOWN) {
+        if (!has_bad) {
             first_bad = artifact->state;
+            has_bad = true;
         } else if (first_bad != artifact->state) {
             return PKG_CONSISTENCY_INCONSISTENT;
         }
     }
 
+    if (!has_bad) return PKG_CONSISTENCY_CONSISTENT;
+
     switch (first_bad) {
         case PKG_ARTIFACT_STATE_UNKNOWN:
-            return PKG_CONSISTENCY_CONSISTENT;
+            return PKG_CONSISTENCY_UNVERIFIABLE;
         case PKG_ARTIFACT_MISSING:
             return PKG_CONSISTENCY_MISSING_ARTIFACT;
         case PKG_ARTIFACT_BROKEN_LINK:
