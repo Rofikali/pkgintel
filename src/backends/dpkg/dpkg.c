@@ -131,6 +131,7 @@ static int append_package(pkg_snapshot *result, const pkg_scan_options *options,
     grown[result->package_count].invalid_path_count = 0U;
     grown[result->package_count].artifact_start = 0U;
     grown[result->package_count].artifact_count = 0U;
+    grown[result->package_count].correlation_state = PKG_CORRELATION_NOT_REQUESTED;
     if (grown[result->package_count].name == NULL || grown[result->package_count].version == NULL || grown[result->package_count].architecture == NULL) {
         free(grown[result->package_count].name);
         free(grown[result->package_count].version);
@@ -218,7 +219,7 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
             if (errno == ENOENT) { ++missing; artifact_state = PKG_ARTIFACT_MISSING; }
             else if (errno == EACCES || errno == EPERM) { artifact_state = PKG_ARTIFACT_PERMISSION_DENIED; }
             else if (errno == EXDEV || errno == ELOOP || errno == EINVAL) { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
-            else { ++missing; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
+            else { ++invalid; artifact_state = PKG_ARTIFACT_UNVERIFIABLE; }
             add_rc = pkg_snapshot_add_artifact(result, (const unsigned char *)entry, strlen(entry), PKG_ARTIFACT_UNKNOWN, artifact_state, NULL);
         } else {
             pkg_artifact_kind kind = PKG_ARTIFACT_OTHER;
@@ -280,9 +281,16 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
         int rc = package_file_list(target, result, &result->packages[i], options);
         result->packages[i].artifact_start = before;
         result->packages[i].artifact_count = result->artifact_count - before;
-        if (rc == 2) return PKG_ERR_RESOURCE_LIMIT;
-        if (rc == -3) return PKG_ERR_INTERNAL;
+        if (rc == 2) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
+            return PKG_ERR_RESOURCE_LIMIT;
+        }
+        if (rc == -3) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
+            return PKG_ERR_INTERNAL;
+        }
         if (rc == 3) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_PACKAGE_NAME_INVALID", "package name is invalid for filesystem correlation");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
@@ -290,17 +298,20 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
             continue;
         }
         if (rc < 0) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_FILELIST_READ_FAILED", "package file list could not be read");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
         }
         if (rc == 1) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_NOT_FOUND, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_FILELIST_MISSING", "package file list is missing");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
         }
+        result->packages[i].correlation_state = PKG_CORRELATION_COMPLETE;
     }
     return PKG_OK;
 }
