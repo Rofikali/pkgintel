@@ -21,7 +21,7 @@ This document is the entry point for understanding what has already been impleme
 
 ## Current branch model
 
-The repository currently uses three relevant branches:
+The repository historically used three relevant branches; `main` is now canonical:
 
 ```
 origin/main
@@ -34,10 +34,10 @@ origin/codex/p0-module-architecture  <-- historical cumulative P0 branch
     |
     | PR #1
     v
-origin/main @ ec44a111cf215337d16e3c8800574248e109a3f1  <-- canonical
+origin/main @ 8f425bfd7e40fc047c80fa91f8a5cc54208ec313  <-- canonical
 ```
 
-At the current P0 checkpoint:
+At the final P0 checkpoint:
 
 - `origin/main` is an ancestor of `origin/codex/p0-foundation`.
 - `origin/codex/p0-foundation` is an ancestor of `origin/codex/p0-module-architecture`.
@@ -425,3 +425,8 @@ P0 scope remains closed at the merged implementation. No new implementation scop
 ### Current release decision
 
 **P0 technical release gates: PASS. PR #1: MERGED. Post-merge CI: PASS. P0 release integration: CLOSED, subject only to routine historical branch-reference cleanup.**
+
+
+## Final P0 integration state
+
+As of the final reconciliation, `main` is canonical at `8f425bfd7e40fc047c80fa91f8a5cc54208ec313`. PR #1 integrated the cumulative P0 implementation, PR #2 reconciled release evidence, and PR #3 reconciled the agent branch contract. P0 sign-off remains CLOSED / MERGED. No P0 gate requires rerun solely because these documentation commits advanced the SHA.
