@@ -119,11 +119,6 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 The earlier unprivileged runtime qualification remains historical evidence that the normal developer container cannot exercise the genuine mount test. The dedicated security runtime now supplies the required capable environment, and strict verification has passed there.
 
 The ordinary developer CTest suite intentionally retains the three-state SKIP behavior so an unprivileged workstation does not falsely claim the security property.
-- Fuzzing release gate: pending current operational evidence
-- Current performance evidence: pending current reproducible benchmark run
-- Full compiler/configuration matrix: pending audit against the release gate
-- Final P0 sign-off: pending all applicable gates
-
 A privileged security test returning 77 means the environment cannot provide the kernel capability required by the test. It is not a security pass.
 
 ## Genuine filesystem security test
@@ -218,8 +213,7 @@ Before modifying code:
 
 ## Current next sequence
 
-1. Qualify the genuine filesystem security environment and obtain PASS evidence.
-2. Audit and operationalize the required fuzz targets for the implemented parsers.
+1. Audit and operationalize the required fuzz targets for the implemented parsers.
 3. Run the current reproducible performance benchmark and record results.
 4. Audit the required compiler/configuration matrix.
 5. Review API/ABI, architecture, resource, and security evidence together.
