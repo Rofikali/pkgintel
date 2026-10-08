@@ -300,6 +300,8 @@ Canonical source: docs/PERFORMANCE.md and docs/ENGINEERING_GATES.md.
 
 Know the real platform contract behind the abstraction:
 
+For kernel/VFS security verification, the engineer must also be able to qualify the test environment itself. On the intended Windows 11 + Docker Desktop + Ubuntu 24.04 workflow, distinguish the host, container, UID, Linux capabilities, seccomp policy, user namespace, and mount namespace. `sudo` changing UID to 0 does not prove that the container can perform `mount(2)`. When a genuine mount/procfs test requires privilege, use a dedicated privileged verification container rather than weakening or skipping the test. Record the exact runtime qualification alongside the security result.
+
 - Linux VFS and path resolution;
 - file descriptors and descriptor-relative operations;
 - mounts/namespaces/capabilities;
