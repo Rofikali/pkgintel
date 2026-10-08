@@ -48,6 +48,40 @@ Linux `perf stat` can provide additional CPU-level evidence such as task-clock, 
 
 Do not compare raw numbers from unrelated machines as if they were equivalent. CPU frequency/boost behavior can make results vary; reproducible benchmark environments are therefore required for meaningful comparisons.
 
+## Current v0.1 evidence checkpoint
+
+A Release benchmark was executed on the Docker/Ubuntu development environment with GCC 13.3.0. The source-level benchmark contract and allocation probe were unchanged by this measurement. The run is recorded as **preliminary Gate 6 evidence**, not as the final release baseline, because CPU model, core count, kernel version, exact source SHA, and repeated-run distributions still need to be captured.
+
+### End-to-end scan benchmark
+
+| Workload | Iterations | Observed artifacts | Wall time | Peak RSS | Artifacts/sec |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 100 packages × 100 files | 20 | 200,000 | 0.276767 s | 2,740 KiB | 722,629 |
+| 1,000 packages × 100 files | 10 | 1,000,000 | 1.140413 s | 13,692 KiB | 876,875 |
+| 5,000 packages × 20 files | 5 | 500,000 | 0.709738 s | 14,616 KiB | 704,485 |
+
+The observed throughput is in the same broad range across the three workload shapes. The large-package-count shape consumes more resident memory than the 100-package shape, which is expected for the current snapshot model and should be interpreted together with the aggregate resource ceilings rather than optimized from one measurement.
+
+### Allocation evidence
+
+The allocation probe shows that artifact creation is the dominant allocation-call source in these synthetic correlation-heavy workloads: each observed artifact currently results in one artifact allocation. Snapshot destruction correspondingly reports one free per owned snapshot/artifact object. Reallocation activity is concentrated in growable storage and remains substantially below the artifact allocation count.
+
+The four supplied allocation runs produced these headline results:
+
+| Workload | Observed artifacts | Wall time | Peak live allocator bytes | Artifact malloc calls | Total malloc calls |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 100 × 100 | 50,000 | 0.063581 s | 1,210,248 | 50,000 | 53,505 |
+| 1,000 × 100 | 500,000 | 0.566476 s | 10,466,120 | 500,000 | 535,005 |
+| 100 × 1,000 | 500,000 | 0.612127 s | 10,315,272 | 500,000 | 503,505 |
+| 5,000 × 20 | 500,000 | 0.735755 s | 11,446,336 | 500,000 | 675,005 |
+
+These numbers do **not** justify an arena/slab allocator by themselves. The end-to-end benchmark is still dominated by system time in the supplied runs, so an allocator redesign would be premature without CPU profiling demonstrating material allocator CPU cost or memory-management overhead.
+
+### Engineering decision
+
+**Decision: retain the current allocation strategy and defer assembly/SIMD and allocator redesign.** The evidence is sufficient to reject speculative optimization, but not sufficient to declare a performance regression threshold or final Gate 6 baseline. The next evidence step is repeated benchmark runs with environment metadata and, if warranted, `perf stat`/profiling to identify actual CPU hotspots.
+
+
 ## Allocation instrumentation
 
 A separate benchmark target provides allocation evidence without changing the
