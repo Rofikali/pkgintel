@@ -4,7 +4,7 @@
 
 **Decision:** SELECTED — Versioned machine-readable JSON export of the existing pkgintel observation model.
 
-**Decision scope:** P1 product-selection and requirements gate only. This document does not authorize implementation before the required HLD/LLD, security, resource, API/ABI, and acceptance review is complete.
+**Decision scope:** P1 product-selection and requirements gate. The selection is now followed by the reviewed HLD/LLD and frozen schema; implementation is tracked in PR #7 and remains subject to applicable evidence gates.
 
 **Decision basis:** current `main` after PR #6 merge, commit `9bbbdbb237a1f7601686e818e1df2cbb416f905a`.
 
@@ -483,3 +483,17 @@ The selection of JSON export does not imply these are permanently rejected.
 The next engineering artifact is **HLD/LLD review of this selected capability**.
 
 No implementation should begin until that review confirms the domain, security, resource, API/ABI, and acceptance contracts above.
+
+
+## 13. Implementation handoff
+
+The selected capability has moved from decision/design into implementation on PR #7.
+
+Authoritative implementation contract:
+
+- `docs/P1_JSON_HLD_LLD.md`
+- `docs/P1_JSON_SCHEMA.md`
+
+The implementation remains intentionally CLI-private and does not add a public C JSON ABI.
+
+Implementation acceptance is not implied by the product decision. PR #7 must still establish build, sanitizer, independent-parser, fuzz, ABI, performance, and exact-SHA review evidence before merge.
