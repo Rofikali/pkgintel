@@ -52,7 +52,7 @@ codex/p0-foundation
   9a3ddd9f3dc0faa12eeec3bda30800df045f2518
 
 codex/p0-module-architecture
-  15c4ee667ab74cc849eb021789ecec5ed5e10492
+  ea6a4ea120cd43e52940b6dd6aa791c2643d5661
 ```
 
 The current P0 release-candidate pull request is:
@@ -100,13 +100,13 @@ branch:
 codex/p0-module-architecture
 
 local HEAD:
-15c4ee667ab74cc849eb021789ecec5ed5e10492
+946a7fc91c689dfbe408f254b81f20145ce9fa24
 
 origin/codex/p0-module-architecture:
-15c4ee667ab74cc849eb021789ecec5ed5e10492
+ea6a4ea120cd43e52940b6dd6aa791c2643d5661
 ```
 
-The local and remote heads are synchronized at the current checkpoint.
+The repository remote now contains the documentation reconciliation commits `27898b9464a480177970af634bf5c28570224527` and `ea6a4ea120cd43e52940b6dd6aa791c2643d5661`. The local verification checkout must be fast-forwarded before it is used as release evidence again.
 
 ### Evidence rule
 
