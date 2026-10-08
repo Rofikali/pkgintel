@@ -23,6 +23,13 @@ typedef enum pkg_installation_state {
  * Consistency describes observed package-file evidence, not whether dpkg
  * considers the installation complete. A PARTIAL or REMOVED package is not
  * automatically reported as INCONSISTENT merely from its installation state.
+ *
+ * CONSISTENT is returned only when file correlation was requested, completed
+ * for this package, and every observed artifact is PRESENT. If correlation
+ * was not requested or could not be completed, the result is UNKNOWN.
+ * A single failure class maps to its specific state. Mixed failure classes
+ * map to INCONSISTENT. UNEXPECTED_ARTIFACT is reserved for a future scan
+ * capability that enumerates unowned filesystem artifacts.
  */
 typedef enum pkg_consistency_state {
  PKG_CONSISTENCY_UNKNOWN=0,
