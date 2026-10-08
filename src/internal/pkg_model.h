@@ -16,6 +16,12 @@ typedef struct pkg_artifact_record {
     bool allocated_size_valid;
 } pkg_artifact_record;
 
+typedef enum pkg_correlation_state {
+    PKG_CORRELATION_NOT_REQUESTED = 0,
+    PKG_CORRELATION_COMPLETE = 1,
+    PKG_CORRELATION_INCOMPLETE = 2
+} pkg_correlation_state;
+
 struct pkg_snapshot;
 typedef struct pkg_package_record {
     char *name;
@@ -28,6 +34,7 @@ typedef struct pkg_package_record {
     uint64_t invalid_path_count;
     size_t artifact_start;
     size_t artifact_count;
+    pkg_correlation_state correlation_state;
     struct pkg_snapshot *owner_snapshot;
 } pkg_package_record;
 
