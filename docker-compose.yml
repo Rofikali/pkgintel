@@ -77,3 +77,14 @@ services:
 
     security_opt:
       - seccomp:unconfined
+
+  # Dedicated privileged runtime for genuine hostile-filesystem verification.
+  # Normal development remains least-privileged in the pkgintel service above.
+  pkgintel-security:
+    extends:
+      service: pkgintel
+    container_name: pkgintel-security-verify
+    privileged: true
+    user: root
+    profiles:
+      - security
