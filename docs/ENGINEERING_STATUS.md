@@ -1,3 +1,17 @@
+
+### Dedicated security-verification runtime created
+
+A dedicated Docker Compose security-verification service is now part of the repository so privileged kernel/VFS evidence does not require making the normal development service privileged.
+
+- Normal service: `pkgintel`, non-root developer runtime, existing `SYS_PTRACE` capability and unconfined seccomp policy.
+- Security service: `pkgintel-security`, Compose `security` profile, container name `pkgintel-security-verify`, `privileged: true`, `user: root`.
+- The security service reuses the existing Compose service definition through `extends`, avoiding duplicated build, volume, environment, and working-directory configuration.
+- `build-security/` is now ignored as generated verification-build state.
+- The service has been successfully created and started through the repository's Compose configuration on the Windows 11 -> Docker Desktop workflow.
+- At the latest checkpoint, the interactive shell inside `pkgintel-security-verify` is confirmed to be UID 0. Capability/seccomp and genuine mount probes are intentionally the next evidence step; the P7 gate is not yet marked PASS.
+
+This separation is intentional: normal development remains least-privileged, while privileged authority is granted only to the explicit security-verification runtime.
+
 # Engineering Status
 
 This document is the entry point for understanding what has already been implemented, what has been verified, and what remains before a v0.1 release candidate.
