@@ -306,3 +306,9 @@ Hand-written assembly is deferred from v0.1. Architecture-specific assembly is a
 **Status:** Accepted
 
 v0.1 retains explicit `malloc`/`calloc`/`realloc` ownership. An arena/slab allocator is not introduced without representative allocation and memory measurements proving that allocator overhead, fragmentation, or peak snapshot memory is material. Any future allocator must preserve checked arithmetic, bounded capacity, transactional mutation, ownership/lifetime invariants, sanitizer coverage, and public error semantics.
+
+## ADR-0043 — Evidence-derived package consistency
+
+**Status:** Accepted
+
+Package filesystem consistency requires complete correlation evidence. The public consistency state is derived from artifact observations, with explicit handling for incomplete correlation and mixed failure classes. Installation state and filesystem consistency remain separate.
