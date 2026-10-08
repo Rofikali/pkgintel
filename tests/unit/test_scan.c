@@ -56,12 +56,12 @@ int test_scan_behaviour(void) {
         correlated.flags = PKG_SCAN_CORRELATE_FILES;
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", fixture) > 0);
         file = fopen(path, "wb"); assert(file != NULL);
-        assert(fputs("Package: bad/name\\nVersion: 1.0\\nArchitecture: amd64\\nStatus: install ok installed\\nInstalled-Size: 1\\n", file) >= 0);
+        assert(fputs("Package: bad/name\nVersion: 1.0\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 1\n", file) >= 0);
         assert(fclose(file) == 0);
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad", fixture) > 0); assert(mkdir(path, 0700) == 0);
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad/name.list", fixture) > 0);
         file = fopen(path, "wb"); assert(file != NULL);
-        assert(fputs("/should/not/be-read\\n", file) >= 0); assert(fclose(file) == 0);
+        assert(fputs("/should/not/be-read\n", file) >= 0); assert(fclose(file) == 0);
         assert(pkg_scan(context, target, &correlated, &uncorrelated_result) == PKG_OK);
         assert(uncorrelated_result != NULL);
         assert(pkg_scan_result_package_count(uncorrelated_result) == 1U);
@@ -80,7 +80,7 @@ int test_scan_behaviour(void) {
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad", fixture) > 0); assert(rmdir(path) == 0);
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", fixture) > 0);
         file = fopen(path, "wb"); assert(file != NULL);
-        assert(fputs("Package: fixture-pkg\\nVersion: 1.2.3\\nArchitecture: amd64\\nStatus: install ok installed\\nInstalled-Size: 10\\n\\nPackage: removed-pkg\\nVersion: 9.9\\nArchitecture: amd64\\nStatus: deinstall ok config-files\\nInstalled-Size: 999\\n", file) >= 0);
+        assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\nPackage: removed-pkg\nVersion: 9.9\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 999\n", file) >= 0);
         assert(fclose(file) == 0);
     }
     assert(pkg_scan(context, target, &options, &result) == PKG_OK); assert(result != NULL);
