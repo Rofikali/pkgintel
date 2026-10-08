@@ -429,4 +429,4 @@ P0 scope remains closed at the merged implementation. No new implementation scop
 
 ## Final P0 integration state
 
-As of the final reconciliation, `main` is canonical at `8f425bfd7e40fc047c80fa91f8a5cc54208ec313`. PR #1 integrated the cumulative P0 implementation, PR #2 reconciled release evidence, and PR #3 reconciled the agent branch contract. P0 sign-off remains CLOSED / MERGED. No P0 gate requires rerun solely because these documentation commits advanced the SHA.
+As of the final reconciliation, `main` is canonical at the current documentation checkpoint: `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`. PR #1 integrated the cumulative P0 implementation, PR #2 reconciled release evidence, and PR #3 reconciled the agent branch contract. P0 sign-off remains CLOSED / MERGED. No P0 gate requires rerun solely because these documentation commits advanced the SHA.

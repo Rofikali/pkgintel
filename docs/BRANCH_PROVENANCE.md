@@ -362,6 +362,6 @@ Do not confuse a skipped security test with PASS.
 
 ## Final post-merge reconciliation
 
-Final canonical main SHA: `8f425bfd7e40fc047c80fa91f8a5cc54208ec313`.
+Current canonical main SHA at this documentation checkpoint: `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`.
 
 PR #2 and PR #3 completed documentation reconciliation after PR #1. PR #3 updated the agent contract to make current `main` the canonical development line. The historical P0 branches may be removed as branch references when repository maintenance permits; no implementation work depends on keeping them alive.
