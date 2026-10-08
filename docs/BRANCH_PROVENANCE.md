@@ -101,7 +101,7 @@ The historical P0 release-candidate pull request was:
 
 Canonical post-merge integration and development line.
 
-`main` at `ec44a111cf215337d16e3c8800574248e109a3f1` is now the source of truth. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
+`main` at `8f425bfd7e40fc047c80fa91f8a5cc54208ec313` is now the source of truth. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
 
 ### codex/p0-foundation
 
