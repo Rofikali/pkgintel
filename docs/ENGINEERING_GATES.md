@@ -2,19 +2,31 @@
 
 This document is the release discipline for pkgintel. A feature is not complete because it compiles or works on one developer machine.
 
-## Gate 0 — Design
+## Gate 0 — Business/product and domain truth
+
+Before implementation, record the user/customer problem, measurable outcome, acceptance criteria, non-goals, operating/economic constraints, and failure impact. Then define the domain entities, states, evidence, ownership, and invariants.
+
+## Gate 1 — HLD / LLD design
 
 Before implementation:
 
-- domain responsibility is identified;
+- system boundaries and responsibilities are explicit;
 - public/private boundary is explicit;
-- threat model is reviewed;
-- ownership/lifetime is defined;
-- failure modes are defined;
-- resource limits are identified;
+- low-level interfaces define ownership/lifetime and failure semantics;
+- resource limits and state transitions are identified;
 - target-boundary implications are reviewed.
 
-## Gate 1 — Build
+## Gate 2 — Mathematical/resource and security/evidence model
+
+Before implementation:
+
+- arithmetic and resource bounds are stated;
+- complexity and capacity assumptions are explicit;
+- threat model and trust assumptions are reviewed;
+- evidence strength required for each security claim is defined;
+- fail-closed behavior is specified.
+
+## Gate 3 — Build
 
 Required configurations:
 
@@ -26,7 +38,7 @@ Required configurations:
 
 No new warning should be accepted casually.
 
-## Gate 2 — Correctness
+## Gate 4 — Correctness
 
 Every feature gets deterministic unit tests and, where applicable, real Ubuntu/Debian integration fixtures.
 
@@ -41,7 +53,7 @@ Tests must cover:
 - boundary values;
 - ownership/lifetime behavior.
 
-## Gate 3 — Security
+## Gate 5 — Security
 
 For system-facing code:
 
@@ -64,7 +76,7 @@ For filesystem confinement claims that depend on Linux kernel namespace/VFS beha
 - a skipped privileged environment is an infrastructure-qualification gap, while a failed genuine security test is a security defect;
 - the target-relative observation path and metadata/lstat path must both be verified when both implement the security boundary.
 
-## Gate 4 — Performance
+## Gate 6 — Performance
 
 Measure before optimizing. Record:
 
@@ -78,7 +90,7 @@ Measure before optimizing. Record:
 
 Performance claims require a reproducible fixture and environment.
 
-## Gate 5 — API/ABI
+## Gate 7 — API/ABI
 
 Public C API changes require:
 
@@ -90,10 +102,12 @@ Public C API changes require:
 
 v0.1 is not ABI-stable. ABI stability is a release milestone, not an assumption.
 
-## Gate 6 — Documentation
+## Gate 8 — Documentation
 
 Behavior changes require documentation updates. At minimum, update the relevant architecture, API, security, and CLI contracts.
 
-## Gate 7 — Release
+## Gate 9 — Real runtime and release
 
-A release candidate requires all applicable gates to pass and a written record of known limitations. Unknown behavior is not silently classified as success.
+Where a claim depends on the real Linux kernel/VFS/namespace/capability/platform, execute the actual runtime verification after implementation, tests, and documentation. Record the host/container image, kernel, UID, capabilities, namespaces, exact command, and result.
+
+A release candidate requires all applicable gates to pass and a written record of known limitations. `SKIP_UNAVAILABLE` is evidence that the environment was insufficient; it is never evidence that the security property passed.
