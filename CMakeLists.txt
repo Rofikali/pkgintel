@@ -175,6 +175,12 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
     target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND AND PKGINTEL_BUILD_CLI)
+        add_test(NAME pkgintel.cli.json.parse
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/json/validate_cli_json.py $<TARGET_FILE:pkgintel_cli>)
+    endif()
+
     if(PKGINTEL_BUILD_FUZZERS)
         if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
             message(FATAL_ERROR "PKGINTEL_BUILD_FUZZERS requires Clang with libFuzzer support")
