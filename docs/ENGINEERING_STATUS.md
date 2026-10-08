@@ -30,7 +30,11 @@ origin/main
 origin/codex/p0-foundation
     |
     v
-origin/codex/p0-module-architecture  <-- current P0 integration branch
+origin/codex/p0-module-architecture  <-- historical cumulative P0 branch
+    |
+    | PR #1
+    v
+origin/main @ ec44a111cf215337d16e3c8800574248e109a3f1  <-- canonical
 ```
 
 At the current P0 checkpoint:
@@ -116,7 +120,7 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 - Fuzzing coverage/effectiveness gate: PASS — both Clang/libFuzzer targets now report real SanitizerCoverage counters, `cov:`/`ft:` growth, corpus growth/reduction, and bounded sanitizer-clean execution
 - Current performance evidence: PASS and provenance-reconciled
 - Full compiler/configuration matrix: PASS
-- Final P0 sign-off: pending final review and release gates
+- Final P0 sign-off: **closed by the merged P0 integration decision**
 
 The earlier unprivileged runtime qualification remains historical evidence that the normal developer container cannot exercise the genuine mount test. The dedicated security runtime now supplies the required capable environment, and strict verification has passed there.
 
@@ -376,14 +380,18 @@ These documents are the canonical handoff mechanism and must remain synchronized
 
 ## Final P0 release checkpoint — 2026-10-08
 
-### Provenance reconciliation
+### Post-merge provenance reconciliation
 
-- Remote `codex/p0-module-architecture` head: `dfe46210056a7b2e3cc5d7e31bf88b1bdb120271`.
-- `main`: `003ac31c9f6b12e71a13d8958002a5263717ffe8`.
-- `codex/p0-foundation`: `9a3ddd9f3dc0faa12eeec3bda30800df045f2518`.
-- Foundation is an ancestor of the cumulative P0 branch; no foundation-only work needs to be reimplemented.
-- Production source checkpoint remains `946a7fc91c689dfbe408f254b81f20145ce9fa24`.
-- All ten commits after that source checkpoint are documentation/provenance updates only.
+- PR #1: **MERGED**.
+- Reviewed P0 head: `1a99cbe2e8bfeea427775a38877f70c34766c234`.
+- Merge commit: `ec44a111cf215337d16e3c8800574248e109a3f1`.
+- `main` now points to the merge commit.
+- `codex/p0-foundation` is an ancestor of the reviewed cumulative P0 head.
+- The cumulative `codex/p0-module-architecture` branch was intentionally integrated directly into `main`; no separate foundation merge is required.
+
+### Post-merge CI
+
+GitHub Actions workflow `ci` ran on push to `main` at merge SHA `ec44a111cf215337d16e3c8800574248e109a3f1` and completed with conclusion **success**. This is post-merge CI evidence and is supplemental to the dedicated privileged Linux filesystem evidence.
 
 ### Final gate disposition
 
@@ -392,27 +400,28 @@ These documents are the canonical handoff mechanism and must remain synchronized
 - P9.3 GCC Release: **PASS**.
 - P9.3 Clang Debug: **PASS**.
 - P9.3 Clang Release: **PASS**.
-- P9.3 Clang ASan/UBSan: **PASS**, evidence at `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867` and inherited because only documentation/provenance changed afterward.
-- Genuine privileged Linux filesystem security runtime: **PASS**, with separate dedicated privileged runtime evidence; not inferred from the unprivileged CTest skip.
-- Public API/ABI compatibility review for the v0.1 release candidate: **PASS**. This is not an ABI-stability claim; SONAME 0 and Linux-focused evidence remain the documented scope.
+- P9.3 Clang ASan/UBSan: **PASS**.
+- Genuine privileged Linux filesystem security runtime: **PASS**.
+- Public API/ABI compatibility review for the v0.1 release candidate: **PASS**; not an ABI-stability claim.
 - Final release/security provenance reconciliation: **PASS**.
+- Post-merge CI at `ec44a111cf215337d16e3c8800574248e109a3f1`: **PASS**.
 
 ### Staff/Principal Engineering disposition
 
-The branch topology, implementation provenance, evidence applicability, public contract, resource bounds, testing, install/consumer compatibility, and release/reversibility requirements are reconciled. No duplicate implementation is justified by the current evidence state. Documentation-only head movement does not trigger a new compiler, sanitizer, performance, or privileged-runtime execution.
+The cumulative branch ancestry and integration are consistent. The merge commit has the original `main` base and reviewed cumulative P0 head as its two parents. No duplicate implementation or second foundation merge is warranted.
 
 ### Principal Security Engineering disposition
 
-The security claim remains bounded to the implemented hostile-filesystem surface and the qualified privileged Linux runtime. The ordinary development runtime's unavailable mount capability remains a `SKIP`, never a PASS. No production security boundary changed after the security evidence checkpoint. No new security-runtime execution is justified by the current documentation-only delta.
+The merge did not introduce a new security implementation delta beyond the reviewed P0 head. The previously qualified privileged Linux/VFS evidence remains the security-runtime evidence for the implemented surface. Post-merge CI does not replace that evidence.
 
 ### CA / Finance disposition
 
-No material infrastructure architecture or customer-facing cost changed in the final reconciliation interval. Avoiding redundant compiler/sanitizer/performance/security reruns preserves engineering compute/time without weakening assurance because applicability is established by exact production-diff provenance.
+No material infrastructure or customer-facing cost architecture changed as part of the merge.
 
 ### MBA / Management / Product disposition
 
-The release candidate remains scoped to the current P0 module/API/security foundation. The next management decision is release/merge authorization versus retaining the PR open for additional review; no new implementation scope should be introduced merely to fill the documentation checkpoint.
+P0 scope remains closed at the merged implementation. No new implementation scope should be introduced merely to create post-merge activity.
 
 ### Current release decision
 
-**P0 technical release gates: PASS. Final merge decision: pending final PR approval/sign-off.**
+**P0 technical release gates: PASS. PR #1: MERGED. Post-merge CI: PASS. P0 release integration: CLOSED, subject only to routine historical branch-reference cleanup.**
