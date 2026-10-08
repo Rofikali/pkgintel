@@ -8,7 +8,10 @@ A dedicated Docker Compose security-verification service is now part of the repo
 - The security service reuses the existing Compose service definition through `extends`, avoiding duplicated build, volume, environment, and working-directory configuration.
 - `build-security/` is now ignored as generated verification-build state.
 - The service has been successfully created and started through the repository's Compose configuration on the Windows 11 -> Docker Desktop workflow.
-- At the latest checkpoint, the interactive shell inside `pkgintel-security-verify` is confirmed to be UID 0. Capability/seccomp and genuine mount probes are intentionally the next evidence step; the P7 gate is not yet marked PASS.
+- At the latest checkpoint, the interactive shell inside `pkgintel-security-verify` is confirmed to be UID 0. Capability/seccomp and genuine mount probes are intentionally the next evidence step; the latest privileged runtime is fully qualified: UID 0, broad effective capabilities, identity UID mapping, a real mount namespace, and a successful real bind-mount probe were observed.
+- The unchanged pkgintel genuine security test passed in strict mode: `pkgintel.security.mounts` 1/1.
+- The complete security-runtime CTest suite passed: `pkgintel.unit.core` and `pkgintel.security.mounts`, 2/2.
+- This closes the P7 hostile-filesystem runtime verification gate for the currently implemented security surface.
 
 This separation is intentional: normal development remains least-privileged, while privileged authority is granted only to the explicit security-verification runtime.
 
@@ -108,9 +111,14 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 
 ### Not yet satisfied
 
-- Genuine privileged mount-boundary runtime verification in the current Codespace: **SKIP_UNAVAILABLE** — the test source explicitly returns 77 when the process is not root, and the previous runtime evidence recorded `bind mount unavailable: Operation not permitted`.
-- Strict privileged security gate: must be executed in a capable environment; strict CMake mode now converts an unavailable 77 result into a test failure rather than a green skip.
-- The ordinary developer CTest suite intentionally retains the three-state SKIP behavior so an unprivileged workstation does not falsely claim the security property.
+- Fuzzing release gate: pending current operational evidence
+- Current performance evidence: pending current reproducible benchmark run
+- Full compiler/configuration matrix: pending audit against the release gate
+- Final P0 sign-off: pending all applicable gates
+
+The earlier unprivileged runtime qualification remains historical evidence that the normal developer container cannot exercise the genuine mount test. The dedicated security runtime now supplies the required capable environment, and strict verification has passed there.
+
+The ordinary developer CTest suite intentionally retains the three-state SKIP behavior so an unprivileged workstation does not falsely claim the security property.
 - Fuzzing release gate: pending current operational evidence
 - Current performance evidence: pending current reproducible benchmark run
 - Full compiler/configuration matrix: pending audit against the release gate
@@ -120,6 +128,8 @@ A privileged security test returning 77 means the environment cannot provide the
 
 ## Genuine filesystem security test
 
+**P7 status: PASS for the implemented hostile-filesystem verification surface.**
+
 The test is intentionally exposed through the public pkgintel API. It attempts to exercise:
 
 1. a real bind mount crossing;
@@ -127,13 +137,13 @@ The test is intentionally exposed through the public pkgintel API. It attempts t
 3. a procfs-style magic-link path;
 4. the normal target-relative scan path.
 
-The Docker environment currently reports:
+The ordinary developer container previously reported:
 
 ```
 SKIP: bind mount unavailable: Operation not permitted
 ```
 
-Therefore this environment is insufficient for the genuine mount-boundary release gate.
+That environment remains intentionally unprivileged and is not the release-security runtime. The dedicated `pkgintel-security` service provides the required kernel capability without changing the normal development service.
 
 The repository now has a strict qualification mode:
 
@@ -150,19 +160,30 @@ In the intended Ubuntu 24.04 verification environment, the command must PASS. If
 
 ### Current runtime qualification evidence
 
-The latest privileged attempt was executed from the Windows 11 -> Docker Desktop -> Ubuntu 24.04 development container at commit 6bf8bb76ac785b9bc4e54b74beb480a518f07ecf. The test was run with `PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON`, so return code 77 is a hard CTest failure rather than a skip.
+The dedicated privileged verification runtime was executed from the Windows 11 -> Docker Desktop -> Ubuntu 24.04 workflow. The build used `PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON`, and the genuine test was run without changing or weakening the test source.
 
 Observed environment:
 
-- Ubuntu 24.04.5 LTS userspace.
-- WSL2 kernel 5.15.167.4-microsoft-standard-WSL2.
-- Developer UID 1001 has `CapEff=0`.
-- `sudo` changes UID to 0 and exposes `CapEff=0xA80C25FB`, but the container remains under seccomp mode 2 with one seccomp filter.
-- UID/GID maps are identity mappings in the reported user namespace.
-- A direct `sudo mount --bind` probe returns permission denied / exit status 32.
-- The pkgintel genuine mount test therefore reports `bind mount unavailable: Operation not permitted` and correctly fails the strict security gate.
+- UID/GID: `0/0`.
+- `CapPrm`, `CapEff`, and `CapBnd`: `000001ffffffffff`.
+- Seccomp mode 2 with one active filter.
+- Identity UID mapping: `0 0 4294967295`.
+- A dedicated mount namespace was present.
+- An independent real `mount --bind` probe returned `mount_rc=0` and successfully read the mounted file.
 
-Interpretation: this is an environment-capability/evidence gap, not evidence that the target-containment implementation passed or failed its intended mount-boundary invariant. The next action is to execute the same test in a dedicated capable Ubuntu 24.04 verification container, preferably Docker `--privileged` first, then optionally minimize capabilities after the security gate passes. Do not weaken or simulate the mount test.
+Actual pkgintel evidence:
+
+```
+Test #2: pkgintel.security.mounts ......... Passed
+1/1 test passed
+
+Test #1: pkgintel.unit.core ............... Passed
+Test #2: pkgintel.security.mounts ......... Passed
+2/2 tests passed
+100% tests passed
+```
+
+Interpretation: the environment-capability gap is closed for this verification runtime. The genuine hostile-filesystem test now has real kernel/VFS evidence, and the full security-runtime CTest suite passes. No fake mount, test relaxation, or silent skip was used.
 
 
 ## Evidence classification
