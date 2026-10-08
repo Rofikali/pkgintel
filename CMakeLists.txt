@@ -170,4 +170,15 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
     target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
+
+    # Genuine Linux filesystem security gate. The executable uses only the
+    # public pkgintel API; privileged environments may return CTest code 77
+    # when mount setup is unavailable. Such a skip is evidence of an
+    # infrastructure limitation, not a security pass.
+    add_executable(pkgintel_security_mounts tests/security/test_target_mounts.c)
+    target_link_libraries(pkgintel_security_mounts PRIVATE pkgintel)
+    target_compile_options(pkgintel_security_mounts PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+        -Wstrict-prototypes -Wmissing-prototypes -Wformat=2)
+    add_test(NAME pkgintel.security.mounts COMMAND pkgintel_security_mounts)
 endif()
