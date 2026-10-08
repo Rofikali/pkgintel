@@ -10,7 +10,7 @@ Every significant release-gate result must identify the exact source SHA and the
 
 - Repository: `Rofikali/pkgintel`
 - Release line: `codex/p0-module-architecture`
-- Current SHA: `15c4ee667ab74cc849eb021789ecec5ed5e10492`
+- Current SHA: `946a7fc91c689dfbe408f254b81f20145ce9fa24`
 - Remote synchronization: local and origin branch heads match at this SHA.
 - PR: #1, base `main`, not merged.
 - Release decision: **NOT READY TO MERGE**.
@@ -245,14 +245,42 @@ These dimensions are decision-specific, not mandatory ceremony for every code ch
 |---|---|
 | P9.2 performance provenance/reproducibility | **PASS** |
 | P9.3 GCC Debug | **PASS** |
-| P9.3 GCC Release | PENDING |
-| P9.3 Clang Debug | PENDING |
-| P9.3 Clang Release | PENDING |
+| P9.3 GCC Release | **PASS** |
+| P9.3 Clang Debug | **PASS** |
+| P9.3 Clang Release | **PASS** |
 | P9.3 Clang ASan/UBSan | PENDING |
-| Genuine privileged filesystem security runtime | PENDING/RE-QUALIFY |
+| Genuine privileged filesystem security runtime | **PASS** |
 | Final API/ABI review | PENDING |
 | Final release/security verification | PENDING |
 | P0 sign-off | PENDING |
+
+## Current evidence checkpoint — 2026-10-08
+
+The current release-candidate source checkpoint is `946a7fc91c689dfbe408f254b81f20145ce9fa24`. The intervening production-relevant change after the previously recorded compiler evidence was documentation-only: dedicated security-verification runtime documentation. No production implementation, public ABI/API, tests, build configuration, or benchmark implementation changed.
+
+### P9.3 GCC Debug — PASS
+
+Fresh `build-p9-gcc-debug` evidence passed configure, build, CTest, install, public ABI audit, private-symbol audit, and installed-consumer build/run. The normal unprivileged security.mounts test was skipped and is not promoted to PASS.
+
+### P9.3 GCC Release — PASS
+
+Fresh `build-p9-gcc-release` evidence passed configure, build, CTest, install, public ABI audit, private-symbol audit, and installed-consumer build/run. The normal unprivileged security.mounts test was skipped and remains separate from the privileged security gate.
+
+### P9.3 Clang Debug — PASS
+
+Fresh `build-p9-clang-debug` evidence with Clang 18.1.3 passed configure, build, CTest, install, public ABI audit, private-symbol audit, and installed-consumer build/run. The normal unprivileged security.mounts test was skipped and is not promoted to PASS.
+
+### P9.3 Clang Release — PASS
+
+Fresh `build-p9-clang-release` evidence with Clang 18.1.3 passed configure, build, CTest, install, public ABI audit, private-symbol audit, and installed-consumer build/run. The normal unprivileged security.mounts test was skipped and remains separate from the privileged security gate.
+
+### Privileged Linux filesystem security — PASS
+
+The dedicated privileged security runtime was qualified in the Windows 11 → Docker Desktop → Ubuntu 24.04 workflow. Real capability, namespace, identity, and bind-mount evidence was observed; strict `pkgintel.security.mounts` passed 1/1 and the complete security-runtime CTest suite passed 2/2. This evidence is separate from the normal development-container skip.
+
+### Evidence inheritance decision
+
+The four completed P9.3 compiler gates remain applicable at the current source checkpoint because the intervening source delta was documentation-only. They must not be rerun merely because the repository SHA advanced.
 
 ## Anti-repetition rule
 
