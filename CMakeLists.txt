@@ -24,6 +24,7 @@ set(PKGINTEL_SOURCES
     src/support/string.c
     src/support/status.c
     src/backends/dpkg/dpkg.c
+    src/json/json.c
 )
 
 add_library(pkgintel SHARED ${PKGINTEL_SOURCES})
@@ -168,6 +169,7 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         tests/unit/test_context.c
         tests/unit/test_scan.c
         tests/unit/test_resource.c
+        tests/unit/test_json.c
         tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
     target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
