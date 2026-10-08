@@ -74,18 +74,20 @@ These are not separate approval gates on every line of code. Apply the relevant 
 
 Use this order for non-trivial work:
 
-1. Requirements and business/operational constraints.
-2. HLD boundary and responsibility.
-3. LLD contracts and invariants.
-4. Mathematical/resource model.
-5. Threat model and security boundary.
-6. Algorithm/data-structure choice.
-7. Design-pattern vocabulary, only if useful.
-8. Implementation.
-9. Tests and evidence.
-10. Performance measurement.
-11. Documentation/ADR/API updates.
-12. Release and operational decision.
+1. **Business/product truth** — customer/user problem, product outcome, acceptance criteria, economics, operational constraints, legal/compliance constraints, and what must *not* be built.
+2. **Domain model** — define the real entities, states, evidence, ownership, and invariants before choosing implementation structures.
+3. **HLD** — system boundaries, responsibilities, trust boundaries, dependencies, and major data/control flows.
+4. **LLD** — concrete interfaces, ownership/lifetime, error semantics, state transitions, and module contracts.
+5. **Mathematical/resource invariants** — bounds, checked arithmetic, complexity, capacity, quotas, and conservation/resource-accounting rules.
+6. **Security/evidence model** — threat model, trust assumptions, attacker capabilities, evidence strength, and fail-closed behavior.
+7. **Algorithm/data-structure choice** — select only after the model and invariants are explicit; justify complexity and determinism.
+8. **Design-pattern vocabulary**, only if useful for communicating an already-justified design.
+9. **Implementation** — smallest change that preserves the contracts.
+10. **Tests** — deterministic correctness, malformed-input, resource, ownership, and security-boundary tests as applicable.
+11. **ADR/API documentation** — record durable decisions and public contract changes.
+12. **Real runtime verification** — exercise the actual OS/kernel/platform/security primitive when the claim depends on it; record the exact environment and result.
+
+This order is a reasoning dependency, not a bureaucracy requirement. Small changes may collapse several steps, but they must not silently skip the reasoning that determines correctness.
 
 Do not start with a pattern, data structure, optimization, abstraction, or implementation technique before establishing the problem and invariant.
 
