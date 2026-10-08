@@ -22,6 +22,22 @@ The purpose is to prevent:
 
 ## Current branch topology
 
+Post-merge integration is now complete. The development branches were cumulative, while `main` is the canonical post-merge line.
+
+```text
+main @ ec44a111...
+  ^
+  | PR #1 merge
+  |
+codex/p0-module-architecture @ 1a99cbe2...
+  ^
+  |
+codex/p0-foundation @ 9a3ddd9f...
+```
+
+Verified: `codex/p0-foundation` is an ancestor of `codex/p0-module-architecture`; PR #1 intentionally integrated the cumulative module-architecture branch directly into `main`, so foundation did not require a separate merge event.
+
+
 The repository currently has three relevant branches:
 
 ```
@@ -44,6 +60,20 @@ GitHub comparison currently establishes:
 
 ### Exact known base/current references
 
+Post-merge integration references:
+
+```text
+main
+  ec44a111cf215337d16e3c8800574248e109a3f1
+
+reviewed P0 head
+  1a99cbe2e8bfeea427775a38877f70c34766c234
+
+codex/p0-foundation
+  9a3ddd9f3dc0faa12eeec3bda30800df045f2518
+```
+
+
 ```
 main
   003ac31c9f6b12e71a13d8958002a5263717ffe8
@@ -60,18 +90,18 @@ The current P0 release-candidate pull request is:
 - PR #1;
 - head: `codex/p0-module-architecture`;
 - base: `main`;
-- merge status: not merged;
-- merge policy: do not merge until all applicable release gates are explicitly PASS.
+- merge status: **merged**;
+- merge commit: `ec44a111cf215337d16e3c8800574248e109a3f1`;
+- merge time: `2026-10-08T15:00:15Z`;
+- post-merge CI at the merge SHA: **PASS**.
 
 ## Branch responsibilities
 
 ### main
 
-Historical/base line.
+Canonical post-merge integration line.
 
-Use it as the comparison baseline unless the task explicitly concerns the historical implementation.
-
-Do not start current P0 implementation from `main` merely because it is the default branch.
+`main` at `ec44a111cf215337d16e3c8800574248e109a3f1` is now the source of truth. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
 
 ### codex/p0-foundation
 
@@ -83,11 +113,13 @@ Do not recreate foundation functionality on `codex/p0-module-architecture`.
 
 ### codex/p0-module-architecture
 
-Current cumulative P0 engineering/release-candidate line.
+Historical cumulative P0 integration branch.
 
-This branch contains the foundation work plus the later module architecture, API/ABI, DPKG parsing/correlation, target containment, resource governance, security verification, test architecture, fuzzing, performance evidence, and associated documentation.
+This branch contains the foundation work plus the later module architecture, API/ABI, DPKG parsing/correlation, target containment, resource governance, security verification, test architecture, fuzzing, performance evidence, and associated documentation. It was integrated into `main` through PR #1 and is no longer the active P0 development line.
 
-Current P0 release work continues here unless the repository explicitly changes its release line.
+## Post-merge branch lifecycle
+
+`codex/p0-module-architecture` and `codex/p0-foundation` are retained temporarily for historical provenance. Branch names are references; Git history is the permanent record. Once provenance/release documentation is reconciled, these merged/historical branches may be deleted without rewriting the commits now reachable from `main`.
 
 ## Current local/remote provenance issue (historical checkpoint)
 
