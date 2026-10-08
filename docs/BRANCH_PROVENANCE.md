@@ -25,7 +25,7 @@ The purpose is to prevent:
 Post-merge integration is now complete. The development branches were cumulative, while `main` is the canonical post-merge line.
 
 ```text
-main @ ec44a111...
+main @ 8f425bfd...
   ^
   | PR #1 merge
   |
@@ -38,7 +38,7 @@ codex/p0-foundation @ 9a3ddd9f...
 Verified: `codex/p0-foundation` is an ancestor of `codex/p0-module-architecture`; PR #1 intentionally integrated the cumulative module-architecture branch directly into `main`, so foundation did not require a separate merge event.
 
 
-The repository currently has three relevant branches:
+The repository historically used three relevant P0 branches; after merge, only `main` is canonical:
 
 ```
 main
@@ -60,11 +60,11 @@ GitHub comparison currently establishes:
 
 ### Exact known base/current references
 
-Post-merge integration references:
+Post-merge integration references (final reconciled state):
 
 ```text
 main
-  ec44a111cf215337d16e3c8800574248e109a3f1
+  8f425bfd7e40fc047c80fa91f8a5cc54208ec313
 
 reviewed P0 head
   1a99cbe2e8bfeea427775a38877f70c34766c234
@@ -85,7 +85,7 @@ codex/p0-module-architecture
   c5225b8d817d8a8c7050d3f7645ed70e038b1680
 ```
 
-The current P0 release-candidate pull request is:
+The historical P0 release-candidate pull request was:
 
 - PR #1;
 - head: `codex/p0-module-architecture`;
@@ -99,9 +99,9 @@ The current P0 release-candidate pull request is:
 
 ### main
 
-Canonical post-merge integration line.
+Canonical post-merge integration and development line.
 
-`main` at `ec44a111cf215337d16e3c8800574248e109a3f1` is now the source of truth. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
+`main` at `8f425bfd7e40fc047c80fa91f8a5cc54208ec313` is now the source of truth. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
 
 ### codex/p0-foundation
 
@@ -358,3 +358,10 @@ Do not reuse stale evidence silently.
 Do not confuse implementation with verification.
 Do not confuse a skipped security test with PASS.
 ```
+
+
+## Final post-merge reconciliation
+
+Final canonical main SHA: `8f425bfd7e40fc047c80fa91f8a5cc54208ec313`.
+
+PR #2 and PR #3 completed documentation reconciliation after PR #1. PR #3 updated the agent contract to make current `main` the canonical development line. The historical P0 branches may be removed as branch references when repository maintenance permits; no implementation work depends on keeping them alive.
