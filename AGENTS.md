@@ -48,7 +48,6 @@ Evaluate scope, priorities, dependencies, roadmap, delivery risk, technical debt
 
 Use the role that is relevant to the decision; do not force irrelevant analysis into every line of code.
 
-
 ## Engineering skill contract
 
 Every substantial engineering task must use the capability areas in `SKILLS.md`. The repository explicitly treats the following as first-class Staff/Principal Engineer skills:
@@ -94,6 +93,7 @@ Do not start with a pattern, data structure, optimization, abstraction, or imple
 ### Canonical skill references
 
 - `SKILLS.md` — capability contract and review questions.
+- `docs/ENGINEERING_OPERATING_MODEL.md` — role, provenance, evidence, branch, release, and management operating contract.
 - `docs/ENGINEERING_PRINCIPLES.md` — engineering principles and SOLID/design reasoning.
 - `docs/HLD.md` — high-level architecture.
 - `docs/LLD.md` — low-level contracts and invariants.
@@ -211,11 +211,15 @@ Before modifying a branch, establish its current SHA. After modification, report
 
 Do not create duplicate implementations on multiple branches.
 
+When local and remote branch heads differ, stop and reconcile provenance before using either head as release evidence.
+
 ## Canonical repository documents
 
 Read these before substantial work:
 
 - AGENTS.md
+- SKILLS.md
+- docs/ENGINEERING_OPERATING_MODEL.md
 - docs/ENGINEERING_STATUS.md
 - docs/ENGINEERING_PRINCIPLES.md
 - docs/ENGINEERING_WORKFLOW.md
