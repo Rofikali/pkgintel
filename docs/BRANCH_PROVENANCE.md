@@ -52,7 +52,7 @@ codex/p0-foundation
   9a3ddd9f3dc0faa12eeec3bda30800df045f2518
 
 codex/p0-module-architecture
-  dfe46210056a7b2e3cc5d7e31bf88b1bdb120271
+  c5225b8d817d8a8c7050d3f7645ed70e038b1680
 ```
 
 The current P0 release-candidate pull request is:
@@ -100,7 +100,7 @@ branch:
 codex/p0-module-architecture
 
 remote HEAD:
-dfe46210056a7b2e3cc5d7e31bf88b1bdb120271
+c5225b8d817d8a8c7050d3f7645ed70e038b1680
 ```
 
 The latest ten commits after production source checkpoint `946a7fc91c689dfbe408f254b81f20145ce9fa24` are documentation/provenance updates only. The synchronized developer checkout used for the earlier sanitizer evidence was `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867`; the current remote head is later but has no production-relevant source delta.
