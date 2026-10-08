@@ -2,7 +2,7 @@
 
 ## Status
 
-**Design status:** READY FOR IMPLEMENTATION REVIEW, with explicit design constraints below.
+**Design status:** IMPLEMENTATION BASELINE FROZEN; implementation/evidence review is now in progress.
 
 **Scope:** versioned machine-readable JSON projection of the existing immutable scan result, initially CLI-first and stdout-first.
 
@@ -560,3 +560,24 @@ API/ABI: no new public serializer ABI in P1.
 Evidence: implementation-specific runtime, performance, and security evidence remains pending and must not be claimed until produced.
 
 Next gate: close the implementation-gate checklist, then implement and run the applicable verification matrix.
+
+
+## 26. Implementation closure and frozen v1 schema
+
+Source review closed the remaining design questions:
+
+- **Exact schema:** frozen in `docs/P1_JSON_SCHEMA.md`.
+- **Package ordering:** source-level proof exists in `src/backends/dpkg/dpkg.c`; packages are sorted by name, architecture, then version before correlation. The serializer preserves this order and does not sort again.
+- **Artifact ordering:** each package's artifacts are the contiguous snapshot range created by correlation, preserving package-file-list order.
+- **Diagnostic ordering:** diagnostics preserve snapshot emission order.
+- **Scan status:** `PKG_OK -> complete`; `PKG_ERR_RESOURCE_LIMIT -> resource_limit`. Other scan failures do not reach JSON mode.
+- **Byte encoding:** all byte-oriented strings are encoded as standard padded RFC 4648 Base64 objects. This applies to package metadata, paths, and diagnostics, avoiding invalid UTF-8 output and lossy replacement.
+- **Output failure:** write/flush failures return non-success. The CLI exits non-zero; a partial stream is never represented as a successful result.
+- **Writer placement:** serializer implementation is private under `src/json/json.c`; its private header is under `src/internal/json.h`.
+- **ABI:** no public serializer header or exported serializer symbol is introduced.
+- **Memory:** no output-sized intermediate DOM or allocation is required; the serializer streams directly to `FILE *`.
+- **Relationship model:** artifacts remain nested under their owning package in JSON, while the C snapshot remains the authoritative flat artifact collection.
+
+The implementation is intentionally projection-only: it consumes public read-only accessors and never re-enters target observation.
+
+The schema and implementation must still pass the applicable build, sanitizer, parser, fuzz, CLI, ABI, and performance evidence gates before PR #7 can be accepted.
