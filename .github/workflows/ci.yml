@@ -94,3 +94,29 @@ jobs:
 
       - name: Install sanitized build
         run: cmake --install build-sanitized --prefix "$GITHUB_WORKSPACE/_install-sanitized"
+
+  security-runtime:
+    # This is a mandatory real-kernel security gate. It is intentionally
+    # separate from the ordinary build matrix because genuine mount tests
+    # require privilege/capability that normal developer jobs must not assume.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc
+
+      - name: Configure strict security mode
+        env:
+          CC: gcc
+          CFLAGS: -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fno-common
+        run: |
+          cmake -S . -B build-security -G Ninja             -DCMAKE_BUILD_TYPE=Debug             -DPKGINTEL_BUILD_TESTS=ON             -DPKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON
+
+      - name: Build security test
+        run: cmake --build build-security --parallel
+
+      - name: Genuine Linux filesystem security gate
+        run: sudo ctest --test-dir build-security -R '^pkgintel\\.security\\.mounts --output-on-failure
