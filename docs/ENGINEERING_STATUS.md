@@ -80,6 +80,10 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 ### Verified
 
 - Git branch synchronization: PASS
+- Developer Debug configure with `PKGINTEL_BUILD_TESTS=ON`: PASS
+- Developer Debug build: PASS
+- Developer CTest unit suite: PASS (1/1 executed test passed; privileged security test was unavailable)
+- CTest test-name audit: `-R scan` is not a valid selector for the current registered test name; the scan coverage is part of `pkgintel.unit.core`.
 - Working tree clean at the verification checkpoint: PASS
 - Release CMake configuration: PASS
 - Release build: PASS
@@ -90,7 +94,9 @@ The following evidence has been produced on Ubuntu 24.04 in the Docker developme
 
 ### Not yet satisfied
 
-- Genuine privileged mount-boundary runtime verification: **SKIP_UNAVAILABLE**
+- Genuine privileged mount-boundary runtime verification in the current Codespace: **SKIP_UNAVAILABLE** — the test source explicitly returns 77 when the process is not root, and the previous runtime evidence recorded `bind mount unavailable: Operation not permitted`.
+- Strict privileged security gate: must be executed in a capable environment; strict CMake mode now converts an unavailable 77 result into a test failure rather than a green skip.
+- The ordinary developer CTest suite intentionally retains the three-state SKIP behavior so an unprivileged workstation does not falsely claim the security property.
 - Fuzzing release gate: pending current operational evidence
 - Current performance evidence: pending current reproducible benchmark run
 - Full compiler/configuration matrix: pending audit against the release gate
@@ -115,7 +121,18 @@ SKIP: bind mount unavailable: Operation not permitted
 
 Therefore this environment is insufficient for the genuine mount-boundary release gate.
 
-The correct next step is to run the same test in a Linux environment where the required mount capability is intentionally granted, or in a dedicated privileged CI/security runner. Do not weaken the production security policy merely to make the test pass in an unprivileged container.
+The repository now has a strict qualification mode:
+
+```bash
+cmake -S . -B build-security \\
+  -DCMAKE_BUILD_TYPE=Debug \\
+  -DPKGINTEL_BUILD_TESTS=ON \\
+  -DPKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON
+cmake --build build-security -j"$(nproc)"
+sudo ctest --test-dir build-security -R 'pkgintel[.]security[.]mounts' --output-on-failure
+```
+
+In the intended Ubuntu 24.04 verification environment, the command must PASS. If the kernel/container denies the mount operation, strict mode must FAIL rather than silently skip. The CI workflow contains a dedicated privileged security-runtime job for this gate.
 
 ## Evidence classification
 
