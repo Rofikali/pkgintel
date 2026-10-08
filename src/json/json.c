@@ -30,13 +30,6 @@ static int write_u64(FILE *output, uint64_t value) {
     return write_bytes(output, buffer, (size_t)written);
 }
 
-static int write_size(FILE *output, size_t value) {
-    char buffer[32];
-    int written = snprintf(buffer, sizeof(buffer), "%zu", value);
-    if (written < 0 || (size_t)written >= sizeof(buffer)) return -1;
-    return write_bytes(output, buffer, (size_t)written);
-}
-
 /*
  * JSON string values are UTF-8 text. pkgintel's public byte-oriented values
  * are therefore represented as an explicit RFC 4648 standard base64 object.
@@ -189,15 +182,6 @@ static const char *evidence_source_name(pkg_evidence_source source) {
     }
 }
 
-static int write_named_string(FILE *output, const char *name, pkg_string_view value, int comma_before) {
-    if (comma_before && putc_checked(output, ',') != 0) return -1;
-    if (write_literal(output, "\n      \"") != 0 ||
-        write_literal(output, name) != 0 ||
-        write_literal(output, "\":") != 0 ||
-        write_string_view(output, value) != 0) return -1;
-    return 0;
-}
-
 static int write_artifact(FILE *output, const pkg_artifact *artifact) {
     const char *kind;
     const char *state;
@@ -347,7 +331,7 @@ pkg_status pkg_json_write(FILE *output, const struct pkg_snapshot *snapshot, pkg
         if (i != 0U && putc_checked(output, ',') != 0) return PKG_ERR_INTERNAL;
         if (write_literal(output, "\n") != 0 || write_diagnostic(output, diagnostic) != 0) return PKG_ERR_INTERNAL;
     }
-    if (diagnostic_count != 0U && write_literal(output, "\n  ") != 0;
+    if (diagnostic_count != 0U && write_literal(output, "\n  ") != 0) return PKG_ERR_INTERNAL;
     if (write_literal(output, "]\n}\n") != 0) return PKG_ERR_INTERNAL;
     if (fflush(output) != 0) return PKG_ERR_IO;
     return PKG_OK;
