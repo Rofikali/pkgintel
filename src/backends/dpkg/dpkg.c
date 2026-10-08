@@ -257,14 +257,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
 
 static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *result, const pkg_scan_options *options) {
     size_t i;
-    int limited = 0;
     if (target == NULL || result == NULL) return PKG_ERR_INVALID_ARGUMENT;
     for (i = 0U; i < result->package_count; ++i) {
         size_t before = result->artifact_count;
         int rc = package_file_list(target, result, &result->packages[i], options);
         result->packages[i].artifact_start = before;
         result->packages[i].artifact_count = result->artifact_count - before;
-        if (rc == 2) { limited = 1; continue; }
+        if (rc == 2) return PKG_ERR_RESOURCE_LIMIT;
         if (rc == -3) return PKG_ERR_INTERNAL;
         if (rc < 0) {
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_IO, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
@@ -279,7 +278,7 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
         }
     }
-    return limited ? PKG_ERR_RESOURCE_LIMIT : PKG_OK;
+    return PKG_OK;
 }
 
 pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_scan_options *options, pkg_snapshot *result) {
