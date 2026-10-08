@@ -312,3 +312,10 @@ v0.1 retains explicit `malloc`/`calloc`/`realloc` ownership. An arena/slab alloc
 **Status:** Accepted
 
 Package filesystem consistency requires complete correlation evidence. The public consistency state is derived from artifact observations, with explicit handling for incomplete correlation and mixed failure classes. Installation state and filesystem consistency remain separate.
+
+
+## ADR-0044 — Evidence-gated native optimization and fuzz coverage
+
+**Status:** Accepted
+
+Native optimization and fuzzing coverage are release decisions gated by representative measurement and real SanitizerCoverage/libFuzzer evidence. Assembly/SIMD is deferred until profiling and end-to-end benchmarking demonstrate material benefit.
