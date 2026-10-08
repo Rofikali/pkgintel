@@ -30,3 +30,4 @@
 # CMake Build Directories
 build/
 build-asan/
+build-security/
