@@ -1,0 +1,199 @@
+#define _GNU_SOURCE
+#include "pkgintel/pkgintel.h"
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+#include "alloc_stats.h"
+#endif
+#include <errno.h>
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
+
+static double timespec_seconds_since(const struct timespec *start, const struct timespec *end) {
+    return (double)(end->tv_sec - start->tv_sec) +
+           (double)(end->tv_nsec - start->tv_nsec) / 1000000000.0;
+}
+
+static double timeval_seconds_since(const struct timeval *start, const struct timeval *end) {
+    return (double)(end->tv_sec - start->tv_sec) +
+           (double)(end->tv_usec - start->tv_usec) / 1000000.0;
+}
+
+static int write_fixture(const char *root, size_t packages, size_t files_per_package) {
+    char path[1024];
+    FILE *status = NULL;
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", root) < 0) return -1;
+    status = fopen(path, "wb");
+    if (status == NULL) return -1;
+    for (size_t p = 0; p < packages; ++p) {
+        if (fprintf(status,
+                    "Package: bench-%06zu\nVersion: 1.0\nArchitecture: amd64\n"
+                    "Status: install ok installed\nInstalled-Size: 1\n\n", p) < 0) {
+            fclose(status);
+            return -1;
+        }
+        if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bench-%06zu.list", root, p) < 0) {
+            fclose(status);
+            return -1;
+        }
+        FILE *list = fopen(path, "wb");
+        if (list == NULL) {
+            fclose(status);
+            return -1;
+        }
+        for (size_t f = 0; f < files_per_package; ++f) {
+            if (fprintf(list, "/bench/missing-%06zu-%06zu\n", p, f) < 0) {
+                fclose(list);
+                fclose(status);
+                return -1;
+            }
+        }
+        if (fclose(list) != 0) {
+            fclose(status);
+            return -1;
+        }
+    }
+    return fclose(status) == 0 ? 0 : -1;
+}
+
+static int make_tree(char *root, size_t root_size, size_t packages, size_t files_per_package) {
+    char path[1024];
+    int n = snprintf(root, root_size, "/tmp/pkgintel-perf-XXXXXX");
+    if (n < 0 || (size_t)n >= root_size || mkdtemp(root) == NULL) return -1;
+    if (snprintf(path, sizeof(path), "%s/var", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var/lib", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) < 0 || mkdir(path, 0700) != 0) return -1;
+    return write_fixture(root, packages, files_per_package);
+}
+
+static void remove_tree(const char *root, size_t packages) {
+    char path[1024];
+    for (size_t p = 0; p < packages; ++p) {
+        if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bench-%06zu.list", root, p) > 0) {
+            (void)unlink(path);
+        }
+    }
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", root) > 0) (void)unlink(path);
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg/info", root) > 0) (void)rmdir(path);
+    if (snprintf(path, sizeof(path), "%s/var/lib/dpkg", root) > 0) (void)rmdir(path);
+    if (snprintf(path, sizeof(path), "%s/var/lib", root) > 0) (void)rmdir(path);
+    if (snprintf(path, sizeof(path), "%s/var", root) > 0) (void)rmdir(path);
+    (void)rmdir(root);
+}
+
+int main(int argc, char **argv) {
+    size_t packages = 100U;
+    size_t files_per_package = 100U;
+    size_t iterations = 10U;
+    char root[256];
+    pkg_context *context = NULL;
+    pkg_target *target = NULL;
+    struct timespec wall_start, wall_end;
+    struct rusage usage_start, usage_end;
+    uint64_t total_artifacts = 0U;
+    uint64_t total_packages = 0U;
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+    pkg_bench_alloc_stats alloc_stats;
+#endif
+
+    if (argc > 1 && (packages = (size_t)strtoull(argv[1], NULL, 10)) == 0U) return 2;
+    if (argc > 2 && (files_per_package = (size_t)strtoull(argv[2], NULL, 10)) == 0U) return 2;
+    if (argc > 3 && (iterations = (size_t)strtoull(argv[3], NULL, 10)) == 0U) return 2;
+
+    if (make_tree(root, sizeof(root), packages, files_per_package) != 0) {
+        perror("benchmark fixture");
+        return 1;
+    }
+    if (pkg_context_create(NULL, &context) != PKG_OK ||
+        pkg_target_create_rootfs(context, root, &target) != PKG_OK) {
+        remove_tree(root, packages);
+        pkg_context_destroy(context);
+        return 1;
+    }
+
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+    pkg_bench_alloc_stats_reset();
+#endif
+
+    if (clock_gettime(CLOCK_MONOTONIC, &wall_start) != 0 ||
+        getrusage(RUSAGE_SELF, &usage_start) != 0) {
+        pkg_target_destroy(target);
+        pkg_context_destroy(context);
+        remove_tree(root, packages);
+        return 1;
+    }
+
+    for (size_t i = 0; i < iterations; ++i) {
+        pkg_scan_result *result = NULL;
+        pkg_status status = pkg_scan(context, target, NULL, &result);
+        if (status != PKG_OK || result == NULL) {
+            fprintf(stderr, "scan failed at iteration %zu: %s\n", i, pkg_status_string(status));
+            pkg_target_destroy(target);
+            pkg_context_destroy(context);
+            remove_tree(root, packages);
+            return 1;
+        }
+        total_packages += (uint64_t)pkg_scan_result_package_count(result);
+        total_artifacts += (uint64_t)pkg_snapshot_artifact_count(result);
+        pkg_scan_result_destroy(result);
+    }
+
+    (void)getrusage(RUSAGE_SELF, &usage_end);
+    (void)clock_gettime(CLOCK_MONOTONIC, &wall_end);
+
+    double wall = timespec_seconds_since(&wall_start, &wall_end);
+    double user = timeval_seconds_since(&usage_start.ru_utime, &usage_end.ru_utime);
+    double sys = timeval_seconds_since(&usage_start.ru_stime, &usage_end.ru_stime);
+    long peak_rss_kib = usage_end.ru_maxrss;
+
+    printf("packages=%zu files_per_package=%zu iterations=%zu\n", packages, files_per_package, iterations);
+    printf("observed_packages=%" PRIu64 " observed_artifacts=%" PRIu64 "\n", total_packages, total_artifacts);
+    printf("wall_seconds=%.9f user_seconds=%.9f system_seconds=%.9f peak_rss_kib=%ld\n",
+           wall, user, sys, peak_rss_kib);
+    printf("artifacts_per_second=%.3f\n",
+           wall > 0.0 ? (double)total_artifacts / wall : 0.0);
+#ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
+    pkg_bench_alloc_stats_get(&alloc_stats);
+    {
+        static const char *const class_names[] = {
+            "unknown", "context", "scan", "snapshot", "package",
+            "artifact", "diagnostic", "target", "dpkg", "support"
+        };
+        size_t class_index;
+        for (class_index = 0U; class_index < PKG_BENCH_ALLOC_CLASS_COUNT; ++class_index) {
+            const pkg_bench_alloc_class_stats *class_stats = &alloc_stats.by_class[class_index];
+            if (class_stats->malloc_calls == 0U && class_stats->calloc_calls == 0U &&
+                class_stats->realloc_calls == 0U && class_stats->free_calls == 0U) {
+                continue;
+            }
+            printf("alloc_class=%s malloc_calls=%" PRIu64 " calloc_calls=%" PRIu64
+                   " realloc_calls=%" PRIu64 " free_calls=%" PRIu64
+                   " malloc_bytes=%" PRIu64 " calloc_bytes=%" PRIu64
+                   " realloc_bytes=%" PRIu64 "\n",
+                   class_names[class_index],
+                   class_stats->malloc_calls, class_stats->calloc_calls,
+                   class_stats->realloc_calls, class_stats->free_calls,
+                   class_stats->malloc_bytes_requested, class_stats->calloc_bytes_requested,
+                   class_stats->realloc_bytes_requested);
+        }
+    }
+    printf("alloc_malloc_calls=%" PRIu64 " alloc_calloc_calls=%" PRIu64 " alloc_realloc_calls=%" PRIu64 " alloc_free_calls=%" PRIu64 "\n",
+           alloc_stats.malloc_calls, alloc_stats.calloc_calls, alloc_stats.realloc_calls, alloc_stats.free_calls);
+    printf("alloc_malloc_bytes=%" PRIu64 " alloc_calloc_bytes=%" PRIu64 " alloc_realloc_bytes=%" PRIu64 "\n",
+           alloc_stats.malloc_bytes_requested, alloc_stats.calloc_bytes_requested, alloc_stats.realloc_bytes_requested);
+    printf("alloc_realloc_growth_bytes=%" PRIu64 " alloc_realloc_shrink_bytes=%" PRIu64 "\n",
+           alloc_stats.realloc_bytes_grown, alloc_stats.realloc_bytes_shrunk);
+    printf("alloc_peak_live_bytes=%" PRIu64 " alloc_final_live_bytes=%" PRIu64 "\n",
+           alloc_stats.peak_live_bytes, alloc_stats.final_live_bytes);
+#endif
+
+    pkg_target_destroy(target);
+    pkg_context_destroy(context);
+    remove_tree(root, packages);
+    return 0;
+}

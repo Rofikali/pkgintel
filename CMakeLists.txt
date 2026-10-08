@@ -7,23 +7,39 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 option(PKGINTEL_BUILD_TESTS "Build pkgintel tests" ON)
 option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
+option(PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS "Treat unavailable privileged security tests as failures" OFF)
+option(PKGINTEL_BUILD_FUZZERS "Build Clang libFuzzer targets with ASan/UBSan" OFF)
 
-add_library(pkgintel SHARED
-    src/pkgintel.c
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set(PKGINTEL_SOURCES
+    src/core/context.c
+    src/core/scan.c
+    src/snapshot/snapshot.c
+    src/package/package.c
+    src/artifact/artifact.c
+    src/diagnostic/diagnostic.c
+    src/target/target.c
+    src/support/string.c
+    src/support/status.c
     src/backends/dpkg/dpkg.c
 )
+
+add_library(pkgintel SHARED ${PKGINTEL_SOURCES})
+
 set_target_properties(pkgintel PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION 0
+    C_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
 )
 
-# v0.1 ABI symbols are intentionally default-visible while the public export
-# set is being stabilized. Before v1.0, replace this with an explicit linker
-# version script so only reviewed ABI symbols are exported.
-
+# Public ABI is opt-in through PKGINTEL_API. This prevents private
+# implementation symbols from becoming accidental ABI.
 target_include_directories(pkgintel
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-           $<INSTALL_INTERFACE:include>
+           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
@@ -34,15 +50,179 @@ target_compile_options(pkgintel PRIVATE
 
 target_compile_definitions(pkgintel PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
 
+install(TARGETS pkgintel
+    EXPORT pkgintelTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(DIRECTORY include/pkgintel/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pkgintel
+)
+install(EXPORT pkgintelTargets
+    FILE pkgintelTargets.cmake
+    NAMESPACE pkgintel::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pkgintel
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgintelConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pkgintel
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/pkgintelConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/pkgintel
+)
+
 if(PKGINTEL_BUILD_CLI)
     add_executable(pkgintel_cli src/cli/main.c)
     target_link_libraries(pkgintel_cli PRIVATE pkgintel)
     set_target_properties(pkgintel_cli PROPERTIES OUTPUT_NAME pkgintel)
+    install(TARGETS pkgintel_cli
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
 
 if(PKGINTEL_BUILD_TESTS)
     enable_testing()
-    add_executable(pkgintel_unit_tests tests/unit/test_core.c)
-    target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel)
+    # Build a test-only static copy of production sources so allocator fault
+    # injection reaches library-owned allocation sites. Executable-level
+    # --wrap cannot reliably intercept calls made by a separately linked SO.
+    add_library(pkgintel_test STATIC ${PKGINTEL_SOURCES})
+    target_include_directories(pkgintel_test
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(pkgintel_test PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
+    target_compile_options(pkgintel_test PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+        -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+        -Dmalloc=pkg_test_malloc
+        -Dcalloc=pkg_test_calloc
+        -Drealloc=pkg_test_realloc
+        -include${CMAKE_CURRENT_SOURCE_DIR}/tests/unit/test_allocator.h)
+
+    add_executable(pkgintel_benchmark tests/benchmark/benchmark_scan.c)
+    target_link_libraries(pkgintel_benchmark PRIVATE pkgintel)
+    target_compile_options(pkgintel_benchmark PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+set_source_files_properties(src/core/context.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_CONTEXT)
+
+set_source_files_properties(src/core/scan.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SCAN)
+
+set_source_files_properties(src/snapshot/snapshot.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SNAPSHOT)
+
+set_source_files_properties(src/package/package.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_PACKAGE)
+
+set_source_files_properties(src/artifact/artifact.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_ARTIFACT)
+
+set_source_files_properties(src/diagnostic/diagnostic.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_DIAGNOSTIC)
+
+set_source_files_properties(src/target/target.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_TARGET)
+
+set_source_files_properties(src/support/string.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SUPPORT)
+
+set_source_files_properties(src/support/status.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SUPPORT)
+
+set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_DPKG)
+
+    # Performance-only allocation instrumentation. Production sources are compiled
+    # into a private static copy with allocator calls redirected to the benchmark
+    # probe. This does not alter the production shared library or ABI.
+    add_library(pkgintel_benchmark_instrumented_objects OBJECT ${PKGINTEL_SOURCES})
+    target_include_directories(pkgintel_benchmark_instrumented_objects
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark)
+    target_compile_definitions(pkgintel_benchmark_instrumented_objects PRIVATE
+        PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE
+        PKGINTEL_BENCHMARK_ALLOC_STATS=1)
+    target_compile_options(pkgintel_benchmark_instrumented_objects PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+        -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+        -I${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark
+        -include${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark/alloc_stats.h)
+
+    add_library(pkgintel_benchmark_instrumented STATIC
+        $<TARGET_OBJECTS:pkgintel_benchmark_instrumented_objects>
+        tests/benchmark/alloc_stats.c)
+    target_include_directories(pkgintel_benchmark_instrumented
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark)
+    target_compile_options(pkgintel_benchmark_instrumented PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+    add_executable(pkgintel_benchmark_alloc tests/benchmark/benchmark_scan.c)
+    target_link_libraries(pkgintel_benchmark_alloc PRIVATE pkgintel_benchmark_instrumented)
+    target_include_directories(pkgintel_benchmark_alloc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark)
+    target_compile_definitions(pkgintel_benchmark_alloc PRIVATE PKGINTEL_BENCHMARK_ALLOC_STATS=1)
+    target_compile_options(pkgintel_benchmark_alloc PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+    add_executable(pkgintel_unit_tests tests/unit/test_main.c
+        tests/unit/test_context.c
+        tests/unit/test_scan.c
+        tests/unit/test_resource.c
+        tests/unit/fixtures.c)
+    target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
+    target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
+
+    if(PKGINTEL_BUILD_FUZZERS)
+        if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
+            message(FATAL_ERROR "PKGINTEL_BUILD_FUZZERS requires Clang with libFuzzer support")
+        endif()
+
+        # Fuzz the production parser through the public scan contract. Each
+        # harness keeps filesystem setup deterministic and bounds the input
+        # before constructing target metadata, while ASan/UBSan instrument the
+        # production sources themselves.
+        add_library(pkgintel_fuzz_core STATIC ${PKGINTEL_SOURCES})
+        target_include_directories(pkgintel_fuzz_core
+            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+        target_compile_definitions(pkgintel_fuzz_core PRIVATE PKGINTEL_BUILDING_LIBRARY=1 _GNU_SOURCE)
+        target_compile_options(pkgintel_fuzz_core PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+            -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+            -fsanitize=fuzzer-no-link,address,undefined -fno-omit-frame-pointer)
+        target_link_options(pkgintel_fuzz_core PRIVATE -fsanitize=address,undefined)
+
+        foreach(fuzz_name IN ITEMS dpkg_status dpkg_filelist)
+            add_executable(pkgintel_fuzz_${fuzz_name} tests/fuzz/fuzz_${fuzz_name}.c)
+            target_link_libraries(pkgintel_fuzz_${fuzz_name} PRIVATE pkgintel_fuzz_core)
+            target_include_directories(pkgintel_fuzz_${fuzz_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+            target_compile_options(pkgintel_fuzz_${fuzz_name} PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+                -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
+                -fsanitize=fuzzer-no-link,address,undefined -fno-omit-frame-pointer)
+            target_link_options(pkgintel_fuzz_${fuzz_name} PRIVATE
+                -fsanitize=fuzzer,address,undefined)
+        endforeach()
+    endif()
+    # Genuine Linux filesystem security gate. The executable uses only the
+    # public pkgintel API; privileged environments may return CTest code 77
+    # when mount setup is unavailable. Such a skip is evidence of an
+    # infrastructure limitation, not a security pass.
+    add_executable(pkgintel_security_mounts tests/security/test_target_mounts.c)
+    target_link_libraries(pkgintel_security_mounts PRIVATE pkgintel)
+    target_compile_options(pkgintel_security_mounts PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+        -Wstrict-prototypes -Wmissing-prototypes -Wformat=2)
+    add_test(NAME pkgintel.security.mounts COMMAND pkgintel_security_mounts)
+    if(PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS)
+        # Release/security qualification must not turn an unavailable genuine
+        # runtime check into a green result. The test itself returns 77 for an
+        # unavailable privilege/capability; here that result is intentionally a
+        # test failure until a capable environment is provided.
+    else()
+        # Developer environments may lack CAP_SYS_ADMIN. Preserve the explicit
+        # three-state evidence model without weakening the production policy.
+        set_tests_properties(pkgintel.security.mounts PROPERTIES SKIP_RETURN_CODE 77)
+    endif()
 endif()

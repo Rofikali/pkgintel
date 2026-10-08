@@ -17,35 +17,108 @@ jobs:
         build_type: [Debug, Release]
     steps:
       - uses: actions/checkout@v4
+
       - name: Install toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build ${{ matrix.compiler }}
+
+      - name: Enforce header placement
+        run: |
+          if find src -type f -name '*.h' ! -path 'src/internal/*.h' -print -quit | grep -q .; then
+            echo 'Private headers must live under src/internal/; public headers must live under include/.'
+            find src -type f -name '*.h' ! -path 'src/internal/*.h' -print
+            exit 1
+          fi
+
       - name: Configure
         env:
           CC: ${{ matrix.compiler }}
           CFLAGS: -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fno-common
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DPKGINTEL_BUILD_TESTS=ON
+
       - name: Build
         run: cmake --build build --parallel
+
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+      - name: Install
+        run: cmake --install build --prefix "$GITHUB_WORKSPACE/_install"
+
+      - name: Audit exported ABI
+        run: |
+          nm -D --defined-only build/libpkgintel.so |
+            awk '$2 ~ /^[A-Z]$/ {print $3}' |
+            sort -u > build/exported_symbols.txt
+          diff -u tests/abi/public_symbols.txt build/exported_symbols.txt
+
+      - name: Audit private symbols
+        run: |
+          if nm -D --defined-only build/libpkgintel.so |
+            awk '$2 ~ /^[A-Z]$/ {print $3}' |
+            grep -E '^pkg_(dpkg_scan|snapshot_add_|strdup_internal|target_(open_path|lstat_path|open_root))$'
+          then
+            echo 'ERROR: private implementation symbol leaked into exported ABI'
+            exit 1
+          fi
+
+      - name: Verify installed package consumer
+        run: |
+          cmake -S tests/install -B build-consumer -G Ninja             -DCMAKE_BUILD_TYPE=Release             -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/_install"
+          cmake --build build-consumer --parallel
+          LD_LIBRARY_PATH="$GITHUB_WORKSPACE/_install/lib" ./build-consumer/pkgintel_consumer
 
   sanitized:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+
       - name: Install toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build clang
+
       - name: Configure
         env:
           CC: clang
           CFLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer -fno-common
           LDFLAGS: -fsanitize=address,undefined
         run: cmake -S . -B build-sanitized -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPKGINTEL_BUILD_TESTS=ON
+
       - name: Build
         run: cmake --build build-sanitized --parallel
+
       - name: Test
         run: ctest --test-dir build-sanitized --output-on-failure
+
+      - name: Install sanitized build
+        run: cmake --install build-sanitized --prefix "$GITHUB_WORKSPACE/_install-sanitized"
+
+  security-runtime:
+    # Mandatory real-kernel security gate. It is separate from the ordinary
+    # build matrix because genuine mount tests require privilege/capability.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc
+
+      - name: Configure strict security mode
+        env:
+          CC: gcc
+          CFLAGS: -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fno-common
+        run: |
+          cmake -S . -B build-security -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DPKGINTEL_BUILD_TESTS=ON \
+            -DPKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON
+
+      - name: Build security test
+        run: cmake --build build-security --parallel
+
+      - name: Genuine Linux filesystem security gate
+        run: sudo ctest --test-dir build-security -R 'pkgintel[.]security[.]mounts' --output-on-failure

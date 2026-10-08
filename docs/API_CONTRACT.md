@@ -80,10 +80,23 @@ and missing artifacts are distinct observations.
 
 ## 9. Resource bounds
 
-Scans are bounded. Limits are part of the security contract. Future releases may
-add independent package, artifact, ELF, cache, diagnostic, path, and string limits.
+Scans are bounded. Limits are security controls and their unit and scope are explicit.
 
-Zero-valued limits use implementation defaults where documented.
+For the current dpkg backend:
+
+- `max_packages` is a per-scan limit on installed package records consumed.
+- `max_package_files` is a per-package limit on non-empty package-file records consumed.
+- Every consumed non-empty package-file record consumes one unit, including malformed records; empty records consume no unit.
+- A limit is exceeded only when the scanner would consume one more record than the configured maximum. Exactly N records may therefore complete successfully with a maximum of N.
+- Exceeding an implemented limit returns `PKG_ERR_RESOURCE_LIMIT` and preserves the partial snapshot accumulated before the refused record.
+
+The fields `max_files`, `max_directories`, `max_file_bytes`, `max_total_bytes`, and `max_duration_ms` are reserved for future aggregate resource controls. They are not enforced by the current v0.1 implementation and non-zero values are rejected with `PKG_ERR_UNSUPPORTED`; callers must not treat them as active security controls.
+
+The context-option fields `max_files`, `max_directories`, `max_depth`, `max_bytes`, and `max_elf_bytes` are also reserved in v0.1. Non-zero values are rejected with `PKG_ERR_UNSUPPORTED`; the context currently carries no fake defaults for controls that are not enforced.
+
+Package-file record length is a separate resource dimension and must be bounded before an input record is materialized. Record-count limits alone are not sufficient protection against oversized metadata records.
+
+Future aggregate budgets may cover bytes, time, descriptors, artifacts, diagnostics, and parser input. Each such budget requires an explicit unit, scope, enforcement point, exhaustion rule, documentation, and boundary tests.
 
 ## 10. Diagnostics
 
