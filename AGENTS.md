@@ -136,6 +136,8 @@ When kernel/VFS/namespace/privilege behavior cannot be proved from an unprivileg
 
 Do not weaken a security test merely because the current container lacks a required capability.
 
+For genuine Linux mount/VFS verification, qualify the runtime before declaring the gate complete. The intended verification path is Windows 11 -> Docker Desktop -> Ubuntu 24.04 in a dedicated privileged security container. A `sudo` shell inside a restricted container is insufficient if `mount(2)` remains unavailable. Inspect capabilities/seccomp/namespaces and move the test to a capable verification container rather than converting the security test into a skip or simulated filesystem test.
+
 ## Change discipline
 
 For every non-trivial change record:
