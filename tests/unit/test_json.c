@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 static char *read_stream(FILE *file, size_t *out_size) {
     long length;
@@ -103,7 +105,6 @@ int test_json_behaviour(void) {
         char raw_fixture[256];
         FILE *status_file;
         char status_path[512];
-        const unsigned char bad_name[] = {'b','a','d','-',0xff,'p','k','g'};
         assert(mkdtemp(raw_fixture) != NULL);
         assert(snprintf(status_path, sizeof(status_path), "%s/var", raw_fixture) > 0);
         assert(mkdir(status_path, 0700) == 0);
@@ -130,14 +131,15 @@ int test_json_behaviour(void) {
         assert(first != NULL);
         assert(pkg_json_write(first, result, PKG_OK) == PKG_OK);
         first_text = read_stream(first, &first_size);
-        assert_contains(first_text, "YmFkL/3wa2c=");
+        assert_contains(first_text, "YmFkLf9wa2c=");
         free(first_text);
         fclose(first);
         pkg_scan_result_destroy(result);
         pkg_target_destroy(target);
         result = NULL;
         target = NULL;
-        assert(unlink(status_path) != 0 || 1);
+        assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/status", raw_fixture) > 0);
+        assert(unlink(status_path) == 0);
         /* Remove the small fixture tree explicitly; no target data is retained. */
         assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/info", raw_fixture) > 0);
         assert(rmdir(status_path) == 0);
