@@ -190,7 +190,7 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         target_compile_options(pkgintel_fuzz_core PRIVATE
             -Wall -Wextra -Wpedantic -Wconversion -Wshadow
             -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
-            -fsanitize=address,undefined -fno-omit-frame-pointer)
+            -fsanitize=fuzzer-no-link,address,undefined -fno-omit-frame-pointer)
         target_link_options(pkgintel_fuzz_core PRIVATE -fsanitize=address,undefined)
 
         foreach(fuzz_name IN ITEMS dpkg_status dpkg_filelist)
@@ -200,7 +200,7 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
             target_compile_options(pkgintel_fuzz_${fuzz_name} PRIVATE
                 -Wall -Wextra -Wpedantic -Wconversion -Wshadow
                 -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
-                -fsanitize=address,undefined -fno-omit-frame-pointer)
+                -fsanitize=fuzzer-no-link,address,undefined -fno-omit-frame-pointer)
             target_link_options(pkgintel_fuzz_${fuzz_name} PRIVATE
                 -fsanitize=fuzzer,address,undefined)
         endforeach()
