@@ -18,10 +18,36 @@ pkg_installation_state pkg_package_get_state(const pkg_package *package) {
 
 pkg_consistency_state pkg_package_get_consistency(const pkg_package *package) {
     const pkg_package_record *p = (const pkg_package_record *)package;
+    size_t i;
+    pkg_artifact_state first_bad = PKG_ARTIFACT_STATE_UNKNOWN;
     if (p == NULL) return PKG_CONSISTENCY_UNKNOWN;
-    if (p->missing_file_count != 0U) return PKG_CONSISTENCY_MISSING_ARTIFACT;
-    if (p->invalid_path_count != 0U) return PKG_CONSISTENCY_UNVERIFIABLE;
-    return PKG_CONSISTENCY_CONSISTENT;
+    if (p->correlation_state != PKG_CORRELATION_COMPLETE || p->owner_snapshot == NULL) return PKG_CONSISTENCY_UNKNOWN;
+    if (p->artifact_start > p->owner_snapshot->artifact_count ||
+        p->artifact_count > p->owner_snapshot->artifact_count - p->artifact_start) return PKG_CONSISTENCY_UNVERIFIABLE;
+
+    for (i = 0U; i < p->artifact_count; ++i) {
+        const pkg_artifact_record *artifact = &p->owner_snapshot->artifacts[p->artifact_start + i];
+        if (artifact->state == PKG_ARTIFACT_PRESENT) continue;
+        if (first_bad == PKG_ARTIFACT_STATE_UNKNOWN) {
+            first_bad = artifact->state;
+        } else if (first_bad != artifact->state) {
+            return PKG_CONSISTENCY_INCONSISTENT;
+        }
+    }
+
+    switch (first_bad) {
+        case PKG_ARTIFACT_STATE_UNKNOWN:
+            return PKG_CONSISTENCY_CONSISTENT;
+        case PKG_ARTIFACT_MISSING:
+            return PKG_CONSISTENCY_MISSING_ARTIFACT;
+        case PKG_ARTIFACT_BROKEN_LINK:
+            return PKG_CONSISTENCY_BROKEN_LINK;
+        case PKG_ARTIFACT_PERMISSION_DENIED:
+            return PKG_CONSISTENCY_PERMISSION_DENIED;
+        case PKG_ARTIFACT_UNVERIFIABLE:
+        default:
+            return PKG_CONSISTENCY_UNVERIFIABLE;
+    }
 }
 
 uint64_t pkg_package_installed_size_bytes(const pkg_package *package) { const pkg_package_record *p=(const pkg_package_record *)package; return p==NULL?0U:p->installed_size; }
