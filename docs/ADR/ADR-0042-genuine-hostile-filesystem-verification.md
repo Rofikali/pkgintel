@@ -87,10 +87,32 @@ Negative:
 - privileged CI can be unavailable on some runners;
 - mount cleanup must be defensive because failed cleanup can contaminate a runner.
 
+## Final verification record
+
+The dedicated privileged security runtime was subsequently qualified in the Windows 11 -> Docker Desktop -> Ubuntu 24.04 workflow.
+
+Environment evidence:
+
+- UID/GID: `0/0`.
+- `CapPrm`, `CapEff`, and `CapBnd`: `000001ffffffffff`.
+- Seccomp mode 2 with one active filter.
+- Identity UID mapping: `0 0 4294967295`.
+- A dedicated mount namespace was present.
+- An independent real `mount --bind` probe returned `mount_rc=0` and successfully read the mounted file.
+
+Security verification evidence:
+
+- Strict build configuration used `PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON`.
+- `pkgintel.security.mounts`: 1/1 PASS.
+- Full security-runtime CTest suite: 2/2 PASS, covering `pkgintel.unit.core` and `pkgintel.security.mounts`.
+- No test relaxation, fake mount fixture, or silent skip was used.
+
+The environment-capability gap is therefore closed for the implemented hostile-filesystem verification surface. This ADR's security gate is **PASS** for that surface. The normal developer runtime remains intentionally unprivileged and is not expected to satisfy the privileged mount test.
+
 ## Gate interpretation
 
-Until the genuine privileged verification is exercised successfully:
+The genuine privileged verification has now been exercised successfully in the dedicated security runtime:
 
-**Security gate: PARTIAL.**
+**Security gate: PASS for the implemented hostile-filesystem verification surface.**
 
 The existing hostile fixtures remain valid evidence for their specific cases, but they must not be generalized into a claim that mount and procfs magic-link containment has been fully verified.
