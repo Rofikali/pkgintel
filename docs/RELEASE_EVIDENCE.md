@@ -10,7 +10,7 @@ Every significant release-gate result must identify the exact source SHA and the
 
 - Repository: `Rofikali/pkgintel`
 - Release line: `codex/p0-module-architecture`
-- Current documentation/release checkpoint SHA: `5e3b412303e4c161f30c048e739ddd39a831e685`.
+- Current documentation/release checkpoint SHA: `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867`.
 - Last production-relevant source SHA: `946a7fc91c689dfbe408f254b81f20145ce9fa24`.
 - Remote synchronization: local and origin branch heads match at this SHA.
 - PR: #1, base `main`, not merged.
@@ -36,7 +36,7 @@ Known heads at this checkpoint:
 |---|---|---|
 | `main` | `003ac31c9f6b12e71a13d8958002a5263717ffe8` | historical/base line |
 | `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | foundational work |
-| `codex/p0-module-architecture` | `15c4ee667ab74cc849eb021789ecec5ed5e10492` | cumulative P0/release line |
+| `codex/p0-module-architecture` | `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867` | cumulative P0/release line |
 
 Before implementing anything, identify whether the requested work already exists on an ancestor or the current cumulative branch. Missing evidence is an evidence problem, not permission to create duplicate implementation.
 
@@ -249,13 +249,15 @@ These dimensions are decision-specific, not mandatory ceremony for every code ch
 | P9.3 GCC Release | **PASS** |
 | P9.3 Clang Debug | **PASS** |
 | P9.3 Clang Release | **PASS** |
-| P9.3 Clang ASan/UBSan | PENDING |
+| P9.3 Clang ASan/UBSan | **PASS** |
 | Genuine privileged filesystem security runtime | **PASS** |
 | Final API/ABI review | PENDING |
 | Final release/security verification | PENDING |
 | P0 sign-off | PENDING |
 
 ## Current evidence checkpoint — 2026-10-08
+
+The current release checkpoint is `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867`. Local and remote heads match. The P9.3 Clang ASan/UBSan gate has now passed on this exact source SHA; the remaining release work is final API/ABI review, final release/security verification, P0 sign-off, and PR review/merge.
 
 The current release-candidate source checkpoint is `946a7fc91c689dfbe408f254b81f20145ce9fa24`. The intervening production-relevant change after the previously recorded compiler evidence was documentation-only: dedicated security-verification runtime documentation. No production implementation, public ABI/API, tests, build configuration, or benchmark implementation changed.
 
@@ -325,3 +327,46 @@ Next action:
 ```
 
 The goal is simple: **know what exists, know which branch contains it, know which SHA proved it, and never perform or claim the same work twice without a reason.**
+
+
+### P9.3 Clang ASan/UBSan — PASS
+
+Source SHA:
+
+```
+40b1d37d3eba5b3ba1d5207b495dbf00f3efb867
+```
+
+Environment:
+
+- Ubuntu 24.04.5 LTS userland;
+- Docker Desktop/WSL2-backed kernel `5.15.167.4-microsoft-standard-WSL2`;
+- x86_64;
+- Clang 18.1.3;
+- CMake 3.28.3;
+- Ninja 1.11.1.
+
+Configuration:
+
+```
+CMAKE_BUILD_TYPE=Debug
+PKGINTEL_BUILD_TESTS=ON
+CC=clang
+CFLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer -fno-common'
+LDFLAGS='-fsanitize=address,undefined'
+```
+
+Observed evidence:
+
+- configure: PASS;
+- build: PASS, 49/49 build steps;
+- `pkgintel.unit.core`: PASS;
+- `pkgintel.security.mounts`: SKIPPED because this normal development runtime is not privileged;
+- CTest: 100% tests passed, 0 failed, 1 skipped;
+- sanitized install: PASS.
+
+The skipped genuine mount test is not promoted to PASS. The separate dedicated privileged filesystem security runtime already supplies the real-kernel security evidence.
+
+This matches the repository CI `sanitized` job contract exactly for compiler, sanitizer flags, Debug configuration, build, CTest, and install. GitHub Actions CI for the exact source SHA also completed successfully.
+
+**Gate: PASS.**
