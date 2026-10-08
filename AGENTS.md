@@ -11,14 +11,14 @@ The objective is not maximum code or maximum abstraction. The objective is a sys
 ## Current working branch
 
 ~~~
-main
-  |
-  v
-codex/p0-foundation
-  |
-  v
-codex/p0-module-architecture   <-- current P0 integration line
+main   <-- canonical P0 integration line
 ~~~
+
+Historical P0 branches:
+- `codex/p0-module-architecture` — cumulative P0 integration branch, merged by PR #1.
+- `codex/p0-foundation` — ancestor of the cumulative P0 branch; no separate merge into `main` was required.
+
+Current source of truth: `main` at the post-merge P0 reconciliation line. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
 
 Do not repeat work already present on an ancestor branch. Before changing code:
 
@@ -269,7 +269,7 @@ A verification result must record, as applicable:
 
 Do not rerun a gate merely to create a newer timestamp when the source and required environment are unchanged. Do not reuse evidence silently when production code, ABI, compiler/toolchain, configuration, security boundary, or runtime assumptions changed.
 
-For multi-branch work, branch ancestry is part of the implementation contract. The current cumulative P0 line is the release line unless the repository explicitly changes it. If another branch contains a requested feature, consume or reconcile that existing work rather than implementing a second copy.
+For multi-branch work, branch ancestry is part of the implementation contract. The canonical release/development line is current `main` unless the repository explicitly changes it. Historical merged branches remain provenance references only. If another branch contains a requested feature, consume or reconcile that existing work rather than implementing a second copy.
 
 The authoritative developer runtime for OS/platform evidence is:
 
