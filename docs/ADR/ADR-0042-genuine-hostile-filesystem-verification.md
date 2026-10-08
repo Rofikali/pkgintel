@@ -39,6 +39,14 @@ The genuine procfs test proves the externally observable invariant: a procfs mag
 
 Isolating individual kernel resolution flags would require a separate syscall experiment and would not, by itself, be evidence about the production resolver.
 
+## Current verification record
+
+The first strict runtime qualification was performed in the intended Windows 11 -> Docker Desktop -> Ubuntu 24.04 workflow. The application was built with `PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS=ON` and the genuine security test was executed through `sudo`.
+
+The environment reported Ubuntu 24.04.5 LTS on WSL2 kernel `5.15.167.4-microsoft-standard-WSL2`. Root had an effective capability set reported as `0xA80C25FB`, but the container remained under seccomp mode 2 with one active filter. A direct `sudo mount --bind` probe failed with permission denied (exit status 32), and the pkgintel test consequently reported `bind mount unavailable: Operation not permitted`. Strict CTest converted that unavailable result into a test failure.
+
+This is the expected evidence behavior: UID 0 inside a restricted container is not treated as equivalent to a mount-capable verification environment. The release gate remains unsatisfied. The next verification must use a dedicated capable Ubuntu 24.04 container and repeat the unchanged genuine test. A privileged Docker container is the preferred first qualification; capability minimization is a later hardening exercise, not a reason to weaken this test.
+
 ## Alternatives rejected
 
 ### Fake mount fixture
