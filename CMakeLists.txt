@@ -7,6 +7,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 option(PKGINTEL_BUILD_TESTS "Build pkgintel tests" ON)
 option(PKGINTEL_BUILD_CLI "Build pkgintel CLI" ON)
+option(PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS "Treat unavailable privileged security tests as failures" OFF)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -181,5 +182,14 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow
         -Wstrict-prototypes -Wmissing-prototypes -Wformat=2)
     add_test(NAME pkgintel.security.mounts COMMAND pkgintel_security_mounts)
-    set_tests_properties(pkgintel.security.mounts PROPERTIES SKIP_RETURN_CODE 77)
+    if(PKGINTEL_REQUIRE_PRIVILEGED_SECURITY_TESTS)
+        # Release/security qualification must not turn an unavailable genuine
+        # runtime check into a green result. The test itself returns 77 for an
+        # unavailable privilege/capability; here that result is intentionally a
+        # test failure until a capable environment is provided.
+    else()
+        # Developer environments may lack CAP_SYS_ADMIN. Preserve the explicit
+        # three-state evidence model without weakening the production policy.
+        set_tests_properties(pkgintel.security.mounts PROPERTIES SKIP_RETURN_CODE 77)
+    endif()
 endif()
