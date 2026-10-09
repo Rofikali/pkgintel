@@ -91,7 +91,7 @@ This deliberate v1 choice avoids locale-dependent conversion and prevents invali
 |---|---|
 | PKG_OK | ok |
 | PKG_ERR_INVALID_ARGUMENT | invalid_argument |
-| PKG_STATUS_OUT_OF_MEMORY | out_of_memory |
+| PKG_STATUS_INTERNAL_ERROR | internal_error |
 | PKG_ERR_IO | io_error |
 | PKG_ERR_PERMISSION | permission |
 | PKG_ERR_NOT_FOUND | not_found |
@@ -99,7 +99,7 @@ This deliberate v1 choice avoids locale-dependent conversion and prevents invali
 | PKG_ERR_RESOURCE_LIMIT | resource_limit |
 | PKG_ERR_PARSE | corrupt_data |
 | PKG_STATUS_CANCELLED | cancelled |
-| PKG_ERR_INTERNAL | internal_error |
+| PKG_ERR_INTERNAL | internal_error (legacy alias) |
 
 Unknown internal enum values are treated as serializer failure rather than silently relabeled.
 
