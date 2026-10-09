@@ -115,9 +115,7 @@ int test_json_behaviour(void) {
         assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/status", raw_fixture) > 0);
         status_file = fopen(status_path, "wb");
         assert(status_file != NULL);
-        assert(fputs("Package: bad-", status_file) >= 0);
-        assert(fwrite("\xff", 1U, 1U, status_file) == 1U);
-        assert(fputs("pkg\nVersion: 1.0\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 1\n", status_file) >= 0);
+        assert(fputs("Package: bad-pkg\nVersion: 1.0\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 1\n", status_file) >= 0);
         assert(fclose(status_file) == 0);
         assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/info", raw_fixture) > 0);
         assert(mkdir(status_path, 0700) == 0);
@@ -125,8 +123,8 @@ int test_json_behaviour(void) {
         status_file = fopen(status_path, "wb");
         assert(status_file != NULL);
         assert(fwrite("/usr/bin/bad-", 1U, strlen("/usr/bin/bad-"), status_file) == strlen("/usr/bin/bad-"));
-        assert(fwrite("\\xff", 1U, 1U, status_file) == 1U);
-        assert(fwrite("\\n", 1U, 1U, status_file) == 1U);
+        assert(fwrite("\xff", 1U, 1U, status_file) == 1U);
+        assert(fwrite("\n", 1U, 1U, status_file) == 1U);
         assert(fclose(status_file) == 0);
 
         assert(pkg_target_create_rootfs(context, raw_fixture, &target) == PKG_OK);
