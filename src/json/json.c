@@ -281,7 +281,7 @@ static int write_diagnostic(FILE *output, const pkg_diagnostic *diagnostic) {
         write_literal(output, severity) != 0 ||
         write_literal(output, "\",\n      \"evidence_source\":\"") != 0 ||
         write_literal(output, source) != 0 ||
-        write_literal(output, "\n    }") != 0) return -1;
+        write_literal(output, "\"\n    }") != 0) return -1;
     return 0;
 }
 
