@@ -113,6 +113,13 @@ if(PKGINTEL_BUILD_TESTS)
     target_link_libraries(pkgintel_benchmark PRIVATE pkgintel)
     target_compile_options(pkgintel_benchmark PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 
+    # Separate benchmark keeps the existing scan-only measurement unchanged.
+    add_executable(pkgintel_benchmark_json tests/benchmark/benchmark_scan.c src/json/json.c)
+    target_link_libraries(pkgintel_benchmark_json PRIVATE pkgintel)
+    target_include_directories(pkgintel_benchmark_json PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(pkgintel_benchmark_json PRIVATE PKGINTEL_BENCHMARK_JSON=1)
+    target_compile_options(pkgintel_benchmark_json PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
 set_source_files_properties(src/core/context.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_CONTEXT)
 
 set_source_files_properties(src/core/scan.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_SCAN)
@@ -204,9 +211,11 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         target_link_options(pkgintel_fuzz_core PRIVATE -fsanitize=address,undefined)
 
         foreach(fuzz_name IN ITEMS dpkg_status dpkg_filelist)
-            add_executable(pkgintel_fuzz_${fuzz_name} tests/fuzz/fuzz_${fuzz_name}.c)
+            add_executable(pkgintel_fuzz_${fuzz_name} tests/fuzz/fuzz_${fuzz_name}.c src/json/json.c)
             target_link_libraries(pkgintel_fuzz_${fuzz_name} PRIVATE pkgintel_fuzz_core)
-            target_include_directories(pkgintel_fuzz_${fuzz_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+            target_include_directories(pkgintel_fuzz_${fuzz_name} PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/include
+                ${CMAKE_CURRENT_SOURCE_DIR}/src)
             target_compile_options(pkgintel_fuzz_${fuzz_name} PRIVATE
                 -Wall -Wextra -Wpedantic -Wconversion -Wshadow
                 -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
