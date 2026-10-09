@@ -497,3 +497,17 @@ Authoritative implementation contract:
 The implementation remains intentionally CLI-private and does not add a public C JSON ABI.
 
 Implementation acceptance is not implied by the product decision. PR #7 must still establish build, sanitizer, independent-parser, fuzz, ABI, performance, and exact-SHA review evidence before merge.
+
+
+## Implementation outcome — 2026-10-09
+
+**Status: IMPLEMENTED AND MERGED.** The selected P1 capability shipped through [PR #7](https://github.com/Rofikali/pkgintel/pull/7).
+
+- Reviewed implementation head: `a75214124d0d1027c1eb1e9eedd2a358832a84c1`.
+- Merge commit: `8b4380d4f353017854a2104ac5a39a8029675c66`.
+- Exact-head verification: [GitHub Actions run 37882487979](https://github.com/Rofikali/pkgintel/actions/runs/37882487979).
+- Frozen v1 schema: `docs/P1_JSON_SCHEMA.md`.
+- HLD/LLD: `docs/P1_JSON_HLD_LLD.md`.
+- Post-merge engineering handoff and reproduction details: `docs/P1_JSON_EXPORT_HANDOFF.md`.
+
+The dedicated strict Linux filesystem security runtime passed the genuine mount-boundary test. The separate generic unprivileged sanitizer job skipped that mount test; the skip is not a security pass. See the handoff document for exact evidence classification, fuzz resource results, benchmark caveats, and future-agent instructions.
