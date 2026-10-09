@@ -43,6 +43,12 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+      - name: Measure scan and JSON serialization separately
+        if: matrix.compiler == 'gcc' && matrix.build_type == 'Release'
+        run: |
+          ./build/pkgintel_benchmark_json 100 100 3
+          ./build/pkgintel_benchmark_json 1000 20 1
+
       - name: Install
         run: cmake --install build --prefix "$GITHUB_WORKSPACE/_install"
 
