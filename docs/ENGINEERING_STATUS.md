@@ -430,3 +430,34 @@ P0 scope remains closed at the merged implementation. No new implementation scop
 ## Final P0 integration state
 
 As of the final reconciliation, `main` is canonical at the current documentation checkpoint: `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`. PR #1 integrated the cumulative P0 implementation, PR #2 reconciled release evidence, and PR #3 reconciled the agent branch contract. P0 sign-off remains CLOSED / MERGED. No P0 gate requires rerun solely because these documentation commits advanced the SHA.
+
+
+## Current checkpoint — P1 JSON export merged (2026-10-09)
+
+This checkpoint supersedes older statements that JSON export remains planned or that PR #7 is still open.
+
+- Capability: versioned CLI JSON export via `pkgintel scan --json`.
+- PR: [#7](https://github.com/Rofikali/pkgintel/pull/7), merged.
+- Reviewed implementation head: `a75214124d0d1027c1eb1e9eedd2a358832a84c1`.
+- Merge commit: `8b4380d4f353017854a2104ac5a39a8029675c66`.
+- Exact-head CI evidence: [run 37882487979](https://github.com/Rofikali/pkgintel/actions/runs/37882487979), required jobs completed successfully.
+- Detailed contract, reproduction instructions, fuzz/benchmark observations, security qualification, and agent handoff: `docs/P1_JSON_EXPORT_HANDOFF.md`.
+
+### Security evidence — important distinction
+
+- The dedicated strict `security-runtime` job passed the genuine Linux filesystem mount-boundary security test without skipping it.
+- The generic unprivileged sanitized CTest job passed its applicable checks but skipped `pkgintel.security.mounts`, because its runtime cannot guarantee the required mount capability.
+- The skip is not a security pass. Keep the privileged runtime separate from normal least-privileged development. Never weaken the test or convert an environment skip into a pass.
+- The sanitizer job's success does not replace the dedicated real-runtime security evidence; each claim must identify its environment and tested property.
+
+### Exact-head additional evidence
+
+- GCC Debug/Release and Clang Debug/Release: build, CTest, exported ABI audit, private-symbol audit, installed-consumer check — PASS.
+- ASan/UBSan build, tests, and sanitized install — PASS.
+- Independent CLI JSON parser test — PASS.
+- JSON-aware fuzzing: status parser + serializer 35,832 executions (~143 MiB observed peak RSS); file-list parser + serializer 28,112 executions (~146 MiB observed peak RSS). Both used bounded ASan quarantine settings and completed without reported sanitizer findings.
+- Initial benchmark observations and their limitations are recorded in `docs/P1_JSON_EXPORT_HANDOFF.md`; they are not comparative performance claims.
+
+### Current next action
+
+P1 JSON export is delivered. Select the next capability from actual product/customer value and existing backlog, document the decision and non-goals, and only then implement. Before any change, inspect the current `main` SHA and read the onboarding/workflow/provenance documents. Tie new evidence to the exact SHA and never promote SKIP to PASS.
