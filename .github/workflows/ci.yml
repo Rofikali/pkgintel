@@ -43,6 +43,12 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+      - name: Measure scan and JSON serialization separately
+        if: matrix.compiler == 'gcc' && matrix.build_type == 'Release'
+        run: |
+          ./build/pkgintel_benchmark_json 100 100 3
+          ./build/pkgintel_benchmark_json 1000 20 1
+
       - name: Install
         run: cmake --install build --prefix "$GITHUB_WORKSPACE/_install"
 
@@ -122,3 +128,38 @@ jobs:
 
       - name: Genuine Linux filesystem security gate
         run: sudo ctest --test-dir build-security -R 'pkgintel[.]security[.]mounts' --output-on-failure
+
+  json-fuzz:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Clang and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang
+
+      - name: Configure sanitizer-backed fuzz targets
+        env:
+          CC: clang
+          CFLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer -fno-common
+          LDFLAGS: -fsanitize=address,undefined
+        run: |
+          cmake -S . -B build-fuzz -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DPKGINTEL_BUILD_TESTS=ON \
+            -DPKGINTEL_BUILD_CLI=OFF \
+            -DPKGINTEL_BUILD_FUZZERS=ON
+
+      - name: Build parser and JSON-export fuzzers
+        run: cmake --build build-fuzz --parallel --target pkgintel_fuzz_dpkg_status pkgintel_fuzz_dpkg_filelist
+
+      - name: Fuzz status parsing plus JSON serialization
+        env:
+          ASAN_OPTIONS: quarantine_size_mb=64:thread_local_quarantine_size_kb=256:detect_leaks=1:abort_on_error=1
+        run: ./build-fuzz/pkgintel_fuzz_dpkg_status -max_total_time=10 -max_len=131072
+
+      - name: Fuzz file-list paths plus JSON serialization
+        env:
+          ASAN_OPTIONS: quarantine_size_mb=64:thread_local_quarantine_size_kb=256:detect_leaks=1:abort_on_error=1
+        run: ./build-fuzz/pkgintel_fuzz_dpkg_filelist -max_total_time=10 -max_len=131072

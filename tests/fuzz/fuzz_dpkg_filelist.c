@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 
 #include <pkgintel/pkgintel.h>
+#include "internal/json.h"
 
 #include <fcntl.h>
 #include <limits.h>
@@ -13,6 +14,7 @@
 
 static pkg_context *g_context;
 static pkg_target *g_target;
+static FILE *g_json_sink;
 static char g_root[] = "/tmp/pkgintel-fuzz-XXXXXX";
 
 int LLVMFuzzerInitialize(int *argc, char ***argv);
@@ -53,9 +55,12 @@ static void init_fixture(void) {
     make_dir(path);
     if (pkg_context_create(NULL, &g_context) != PKG_OK) abort();
     if (pkg_target_create_rootfs(g_context, g_root, &g_target) != PKG_OK) abort();
+    g_json_sink = fopen("/dev/null", "wb");
+    if (g_json_sink == NULL) die("fopen /dev/null");
 }
 
 static void destroy_fixture(void) {
+    if (g_json_sink != NULL) (void)fclose(g_json_sink);
     if (g_target != NULL) pkg_target_destroy(g_target);
     if (g_context != NULL) pkg_context_destroy(g_context);
 }
@@ -75,6 +80,11 @@ static void run_scan(void) {
     options.max_packages = 8U;
     options.max_package_files = 256U;
     pkg_status status = pkg_scan(g_context, g_target, &options, &snapshot);
+    if (snapshot != NULL &&
+        (status == PKG_OK || status == PKG_ERR_RESOURCE_LIMIT)) {
+        if (pkg_json_write(g_json_sink, snapshot, status) != PKG_OK) abort();
+        if (fflush(g_json_sink) != 0) abort();
+    }
     if (snapshot != NULL) pkg_snapshot_destroy(snapshot);
     if (status == PKG_ERR_INTERNAL) abort();
 }

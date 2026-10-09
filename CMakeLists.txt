@@ -82,8 +82,9 @@ install(FILES
 )
 
 if(PKGINTEL_BUILD_CLI)
-    add_executable(pkgintel_cli src/cli/main.c)
+    add_executable(pkgintel_cli src/cli/main.c src/json/json.c)
     target_link_libraries(pkgintel_cli PRIVATE pkgintel)
+    target_include_directories(pkgintel_cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     set_target_properties(pkgintel_cli PROPERTIES OUTPUT_NAME pkgintel)
     install(TARGETS pkgintel_cli
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -95,7 +96,7 @@ if(PKGINTEL_BUILD_TESTS)
     # Build a test-only static copy of production sources so allocator fault
     # injection reaches library-owned allocation sites. Executable-level
     # --wrap cannot reliably intercept calls made by a separately linked SO.
-    add_library(pkgintel_test STATIC ${PKGINTEL_SOURCES})
+    add_library(pkgintel_test STATIC ${PKGINTEL_SOURCES} src/json/json.c)
     target_include_directories(pkgintel_test
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -111,6 +112,13 @@ if(PKGINTEL_BUILD_TESTS)
     add_executable(pkgintel_benchmark tests/benchmark/benchmark_scan.c)
     target_link_libraries(pkgintel_benchmark PRIVATE pkgintel)
     target_compile_options(pkgintel_benchmark PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+    # Separate benchmark keeps the existing scan-only measurement unchanged.
+    add_executable(pkgintel_benchmark_json tests/benchmark/benchmark_scan.c src/json/json.c)
+    target_link_libraries(pkgintel_benchmark_json PRIVATE pkgintel)
+    target_include_directories(pkgintel_benchmark_json PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(pkgintel_benchmark_json PRIVATE PKGINTEL_BENCHMARK_JSON=1)
+    target_compile_options(pkgintel_benchmark_json PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 
 set_source_files_properties(src/core/context.c PROPERTIES COMPILE_DEFINITIONS PKGINTEL_BENCH_ALLOC_CLASS=PKG_BENCH_ALLOC_CONTEXT)
 
@@ -168,10 +176,19 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         tests/unit/test_context.c
         tests/unit/test_scan.c
         tests/unit/test_resource.c
+        tests/unit/test_json.c
         tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
-    target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
+    target_include_directories(pkgintel_unit_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit
+        ${CMAKE_CURRENT_SOURCE_DIR}/src)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
+
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND AND PKGINTEL_BUILD_CLI)
+        add_test(NAME pkgintel.cli.json.parse
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/json/validate_cli_json.py $<TARGET_FILE:pkgintel_cli>)
+    endif()
 
     if(PKGINTEL_BUILD_FUZZERS)
         if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -194,9 +211,11 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         target_link_options(pkgintel_fuzz_core PRIVATE -fsanitize=address,undefined)
 
         foreach(fuzz_name IN ITEMS dpkg_status dpkg_filelist)
-            add_executable(pkgintel_fuzz_${fuzz_name} tests/fuzz/fuzz_${fuzz_name}.c)
+            add_executable(pkgintel_fuzz_${fuzz_name} tests/fuzz/fuzz_${fuzz_name}.c src/json/json.c)
             target_link_libraries(pkgintel_fuzz_${fuzz_name} PRIVATE pkgintel_fuzz_core)
-            target_include_directories(pkgintel_fuzz_${fuzz_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+            target_include_directories(pkgintel_fuzz_${fuzz_name} PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/include
+                ${CMAKE_CURRENT_SOURCE_DIR}/src)
             target_compile_options(pkgintel_fuzz_${fuzz_name} PRIVATE
                 -Wall -Wextra -Wpedantic -Wconversion -Wshadow
                 -Wstrict-prototypes -Wmissing-prototypes -Wformat=2
