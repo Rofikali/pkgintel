@@ -15,6 +15,10 @@ if proc.stderr:
 try:
     document = json.loads(proc.stdout.decode("utf-8"))
 except Exception as exc:
+    position = getattr(exc, "pos", None)
+    if isinstance(position, int):
+        context = proc.stdout[max(0, position - 48):position + 48]
+        sys.stderr.write(f"JSON error context at byte/character {position}: {context!r}\\n")
     raise SystemExit(f"CLI did not emit valid UTF-8 JSON: {exc}")
 
 assert document["schema"]["name"] == "pkgintel.scan"
