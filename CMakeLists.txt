@@ -172,7 +172,9 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         tests/unit/test_json.c
         tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
-    target_include_directories(pkgintel_unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
+    target_include_directories(pkgintel_unit_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit
+        ${CMAKE_CURRENT_SOURCE_DIR}/src)
     add_test(NAME pkgintel.unit.core COMMAND pkgintel_unit_tests)
 
     find_package(Python3 COMPONENTS Interpreter QUIET)
