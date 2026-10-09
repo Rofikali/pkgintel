@@ -11,14 +11,14 @@ The objective is not maximum code or maximum abstraction. The objective is a sys
 ## Current working branch
 
 ~~~
-main   <-- canonical P0 integration line
+main   <-- canonical P0 + P1 JSON-export integration line
 ~~~
 
 Historical P0 branches:
 - `codex/p0-module-architecture` — cumulative P0 integration branch, merged by PR #1.
 - `codex/p0-foundation` — ancestor of the cumulative P0 branch; no separate merge into `main` was required.
 
-Current source of truth: `main` at the post-merge P0 reconciliation line. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
+Current source of truth: `main` at the latest merged commit. P0 is closed and P1 versioned CLI JSON export is implemented. Read `docs/ENGINEERING_STATUS.md` and `docs/P1_JSON_EXPORT_HANDOFF.md` for exact evidence and security qualifications. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
 
 Do not repeat work already present on an ancestor branch. Before changing code:
 
