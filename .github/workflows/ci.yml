@@ -155,7 +155,11 @@ jobs:
         run: cmake --build build-fuzz --parallel --target pkgintel_fuzz_dpkg_status pkgintel_fuzz_dpkg_filelist
 
       - name: Fuzz status parsing plus JSON serialization
+        env:
+          ASAN_OPTIONS: quarantine_size_mb=64:thread_local_quarantine_size_kb=256:detect_leaks=1:abort_on_error=1
         run: ./build-fuzz/pkgintel_fuzz_dpkg_status -max_total_time=10 -max_len=131072
 
       - name: Fuzz file-list paths plus JSON serialization
+        env:
+          ASAN_OPTIONS: quarantine_size_mb=64:thread_local_quarantine_size_kb=256:detect_leaks=1:abort_on_error=1
         run: ./build-fuzz/pkgintel_fuzz_dpkg_filelist -max_total_time=10 -max_len=131072
