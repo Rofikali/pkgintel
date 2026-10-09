@@ -429,7 +429,7 @@ P0 scope remains closed at the merged implementation. No new implementation scop
 
 ## Final P0 integration state
 
-As of the final reconciliation, `main` is canonical at the current documentation checkpoint: `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`. PR #1 integrated the cumulative P0 implementation, PR #2 reconciled release evidence, and PR #3 reconciled the agent branch contract. P0 sign-off remains CLOSED / MERGED. No P0 gate requires rerun solely because these documentation commits advanced the SHA.
+Historical P0-only checkpoint (before P1 JSON export): `main` was recorded at `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`. PR #1 integrated the cumulative P0 implementation, PR #2 reconciled release evidence, and PR #3 reconciled the agent branch contract. P0 sign-off remains CLOSED / MERGED. This SHA is historical, not the current `main` head; see the newer checkpoint below.
 
 
 ## Current checkpoint — P1 JSON export merged (2026-10-09)
