@@ -16,14 +16,14 @@ The current v0.1 vertical slice is intentionally narrower than the long-term pro
 - read-only target confinement
 - resource-bounded package metadata parsing
 - opaque C API with an explicit, tested exported-symbol allowlist
-- basic CLI and installable CMake package
+- basic CLI including versioned JSON export via `pkgintel scan --json`
+- installable CMake package
 
 The following are **planned, not implemented v0.1 functionality**:
 
 - ELF inspection
 - capability inference
 - APT metadata/cache analysis
-- versioned JSON serialization through `pkgintel scan --json` (P1)
 - full filesystem crawling
 - vulnerability/SBOM/commercial features
 - Rust FFI
@@ -65,4 +65,5 @@ pkgintel is developed using an evidence-backed Principal/Staff Engineer discipli
 - `docs/MATHEMATICS.md` — complexity, overflow, and resource-bound reasoning
 - `docs/ARCHITECTURE.md` — current architecture contract
 - `docs/ENGINEERING_GATES.md` — verification and release gates
-- `docs/ENGINEERING_STATUS.md` — current implementation, evidence, branch lineage, and P0 handoff status
+- `docs/ENGINEERING_STATUS.md` — current implementation, evidence, branch lineage, and release status
+- `docs/P1_JSON_EXPORT_HANDOFF.md` — P1 JSON contract, exact verification provenance, security caveats, reproduction, and agent handoff
