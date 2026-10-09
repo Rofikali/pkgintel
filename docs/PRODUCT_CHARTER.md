@@ -121,14 +121,13 @@ The current v0.1 vertical slice is:
 - resource-bounded package metadata parsing;
 - opaque C API;
 - installable CMake package;
-- basic CLI.
+- basic CLI with versioned JSON export via `pkgintel scan --json`.
 
 Explicitly outside implemented v0.1:
 
 - ELF inspection;
 - capability inference;
 - APT metadata/cache analysis;
-- stable JSON serialization contract;
 - full filesystem crawling;
 - vulnerability/SBOM features;
 - commercial/cloud inventory features;
@@ -158,7 +157,7 @@ The intended long-term direction is a layered intelligence engine:
 
 Potential future capabilities include additional package-manager adapters, ELF/binary inspection, broader filesystem inventory, package/cache metadata, capability/security metadata, versioned machine-readable export, Rust FFI, and higher-level integrations.
 
-These are candidates. Each must earn entry through product value, domain-model review, security review, resource accounting, API/ABI impact analysis, tests, and operational evidence.
+These are candidates. Versioned CLI JSON export is now implemented as the P1 integration boundary; see `docs/P1_JSON_EXPORT_HANDOFF.md` for exact evidence. Remaining candidates must earn entry through product value, domain-model review, security review, resource accounting, API/ABI impact analysis, tests, and operational evidence. The next gate is validating a real downstream consumer before selecting another production capability.
 
 ## 9. Product differentiation
 
