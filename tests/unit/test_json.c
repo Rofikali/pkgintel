@@ -102,7 +102,7 @@ int test_json_behaviour(void) {
     remove_fixture(fixture);
 
     {
-        char raw_fixture[256];
+        char raw_fixture[] = "/tmp/pkgintel-json-XXXXXX";
         FILE *status_file;
         char status_path[512];
         assert(mkdtemp(raw_fixture) != NULL);
