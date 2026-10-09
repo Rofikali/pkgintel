@@ -67,3 +67,4 @@ pkgintel is developed using an evidence-backed Principal/Staff Engineer discipli
 - `docs/ENGINEERING_GATES.md` — verification and release gates
 - `docs/ENGINEERING_STATUS.md` — current implementation, evidence, branch lineage, and release status
 - `docs/P1_JSON_EXPORT_HANDOFF.md` — P1 JSON contract, exact verification provenance, security caveats, reproduction, and agent handoff
+- `docs/P2_CONSUMER_VALIDATION_DECISION.md` — next-step decision: validate downstream integration value before expanding the product surface
