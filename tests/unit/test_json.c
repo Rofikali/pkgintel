@@ -121,23 +121,33 @@ int test_json_behaviour(void) {
         assert(fclose(status_file) == 0);
         assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/info", raw_fixture) > 0);
         assert(mkdir(status_path, 0700) == 0);
+        assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/info/bad-pkg.list", raw_fixture) > 0);
+        status_file = fopen(status_path, "wb");
+        assert(status_file != NULL);
+        assert(fwrite("/usr/bin/bad-", 1U, strlen("/usr/bin/bad-"), status_file) == strlen("/usr/bin/bad-"));
+        assert(fwrite("\\xff", 1U, 1U, status_file) == 1U);
+        assert(fwrite("\\n", 1U, 1U, status_file) == 1U);
+        assert(fclose(status_file) == 0);
 
         assert(pkg_target_create_rootfs(context, raw_fixture, &target) == PKG_OK);
         {
-            pkg_scan_options no_correlation = PKG_SCAN_OPTIONS_INIT;
-            assert(pkg_scan(context, target, &no_correlation, &result) == PKG_OK);
+            pkg_scan_options correlate = PKG_SCAN_OPTIONS_INIT;
+            correlate.flags = PKG_SCAN_CORRELATE_FILES;
+            assert(pkg_scan(context, target, &correlate, &result) == PKG_OK);
         }
         first = tmpfile();
         assert(first != NULL);
         assert(pkg_json_write(first, result, PKG_OK) == PKG_OK);
         first_text = read_stream(first, &first_size);
-        assert_contains(first_text, "YmFkLf9wa2c=");
+        assert_contains(first_text, "L3Vzci9iaW4vYmFkLf8=");
         free(first_text);
         fclose(first);
         pkg_scan_result_destroy(result);
         pkg_target_destroy(target);
         result = NULL;
         target = NULL;
+        assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/info/bad-pkg.list", raw_fixture) > 0);
+        assert(unlink(status_path) == 0);
         assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/status", raw_fixture) > 0);
         assert(unlink(status_path) == 0);
         /* Remove the small fixture tree explicitly; no target data is retained. */
