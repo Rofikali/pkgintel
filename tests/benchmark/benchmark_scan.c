@@ -1,5 +1,8 @@
 #define _GNU_SOURCE
 #include "pkgintel/pkgintel.h"
+#ifdef PKGINTEL_BENCHMARK_JSON
+#include "internal/json.h"
+#endif
 #ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
 #include "alloc_stats.h"
 #endif
@@ -157,6 +160,83 @@ int main(int argc, char **argv) {
            wall, user, sys, peak_rss_kib);
     printf("artifacts_per_second=%.3f\n",
            wall > 0.0 ? (double)total_artifacts / wall : 0.0);
+#ifdef PKGINTEL_BENCHMARK_JSON
+    {
+        double serialization_wall = 0.0;
+        uint64_t serialized_bytes = 0U;
+        pkg_scan_options json_options = PKG_SCAN_OPTIONS_INIT;
+        json_options.flags = PKG_SCAN_CORRELATE_FILES;
+
+        for (size_t i = 0U; i < iterations; ++i) {
+            pkg_scan_result *result = NULL;
+            pkg_status scan_status = pkg_scan(context, target, &json_options, &result);
+            FILE *output;
+            struct timespec json_start, json_end;
+            pkg_status write_status;
+            long output_size;
+
+            if ((scan_status != PKG_OK && scan_status != PKG_ERR_RESOURCE_LIMIT) || result == NULL) {
+                fprintf(stderr, "JSON benchmark scan failed at iteration %zu: %s\n",
+                        i, pkg_status_string(scan_status));
+                pkg_target_destroy(target);
+                pkg_context_destroy(context);
+                remove_tree(root, packages);
+                return 1;
+            }
+            output = tmpfile();
+            if (output == NULL) {
+                perror("JSON benchmark tmpfile");
+                pkg_scan_result_destroy(result);
+                pkg_target_destroy(target);
+                pkg_context_destroy(context);
+                remove_tree(root, packages);
+                return 1;
+            }
+            if (clock_gettime(CLOCK_MONOTONIC, &json_start) != 0) {
+                fclose(output);
+                pkg_scan_result_destroy(result);
+                pkg_target_destroy(target);
+                pkg_context_destroy(context);
+                remove_tree(root, packages);
+                return 1;
+            }
+            write_status = pkg_json_write(output, result, scan_status);
+            if (clock_gettime(CLOCK_MONOTONIC, &json_end) != 0) {
+                fclose(output);
+                pkg_scan_result_destroy(result);
+                pkg_target_destroy(target);
+                pkg_context_destroy(context);
+                remove_tree(root, packages);
+                return 1;
+            }
+            serialization_wall += timespec_seconds_since(&json_start, &json_end);
+            output_size = ftell(output);
+            if (write_status != PKG_OK || output_size < 0L) {
+                fprintf(stderr, "JSON benchmark serialization failed: %s\n",
+                        pkg_status_string(write_status));
+                fclose(output);
+                pkg_scan_result_destroy(result);
+                pkg_target_destroy(target);
+                pkg_context_destroy(context);
+                remove_tree(root, packages);
+                return 1;
+            }
+            serialized_bytes += (uint64_t)output_size;
+            if (fclose(output) != 0) {
+                pkg_scan_result_destroy(result);
+                pkg_target_destroy(target);
+                pkg_context_destroy(context);
+                remove_tree(root, packages);
+                return 1;
+            }
+            pkg_scan_result_destroy(result);
+        }
+        printf("json_serialization_wall_seconds=%.9f json_bytes_total=%" PRIu64
+               " json_bytes_per_second=%.3f\n",
+               serialization_wall, serialized_bytes,
+               serialization_wall > 0.0 ? (double)serialized_bytes / serialization_wall : 0.0);
+    }
+#endif
 #ifdef PKGINTEL_BENCHMARK_ALLOC_STATS
     pkg_bench_alloc_stats_get(&alloc_stats);
     {
