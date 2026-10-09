@@ -98,7 +98,6 @@ static const char *status_name(pkg_status status) {
     switch (status) {
         case PKG_OK: return "ok";
         case PKG_ERR_INVALID_ARGUMENT: return "invalid_argument";
-        case PKG_STATUS_OUT_OF_MEMORY: return "out_of_memory";
         case PKG_ERR_IO: return "io_error";
         case PKG_ERR_PERMISSION: return "permission";
         case PKG_ERR_NOT_FOUND: return "not_found";
