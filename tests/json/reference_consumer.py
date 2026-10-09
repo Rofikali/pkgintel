@@ -153,6 +153,7 @@ def main(argv):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=False,
+            timeout=60,
         )
         if process.stderr:
             sys.stderr.buffer.write(process.stderr)
@@ -166,7 +167,7 @@ def main(argv):
         decision = evaluate_document(document, process.returncode)
         print(json.dumps(decision, sort_keys=True, separators=(",", ":")))
         return 0 if decision["decision"] == "accept_complete" else 3
-    except (OSError, ConsumerError) as exc:
+    except (OSError, subprocess.SubprocessError, ConsumerError) as exc:
         print(f"reference-consumer: reject: {exc}", file=sys.stderr)
         return 2
 
