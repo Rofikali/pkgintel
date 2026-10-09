@@ -88,6 +88,11 @@ static void run_scan(void) {
     options.max_packages = 8U;
     options.max_package_files = 256U;
     pkg_status status = pkg_scan(g_context, g_target, &options, &snapshot);
+    if (snapshot != NULL &&
+        (status == PKG_OK || status == PKG_ERR_RESOURCE_LIMIT)) {
+        if (pkg_json_write(g_json_sink, snapshot, status) != PKG_OK) abort();
+        if (fflush(g_json_sink) != 0) abort();
+    }
     if (snapshot != NULL) pkg_snapshot_destroy(snapshot);
     if (status == PKG_ERR_INTERNAL) abort();
 }
