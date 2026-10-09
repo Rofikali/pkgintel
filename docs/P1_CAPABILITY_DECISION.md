@@ -4,7 +4,7 @@
 
 **Decision:** SELECTED — Versioned machine-readable JSON export of the existing pkgintel observation model.
 
-**Decision scope:** P1 product-selection and requirements gate. The selection is now followed by the reviewed HLD/LLD and frozen schema; implementation is tracked in PR #7 and remains subject to applicable evidence gates.
+**Decision scope:** P1 product-selection and requirements gate. The selection was followed by the reviewed HLD/LLD and frozen schema. The implementation outcome and exact evidence provenance are recorded in the final section of this document and in `docs/P1_JSON_EXPORT_HANDOFF.md`.
 
 **Decision basis:** current `main` after PR #6 merge, commit `9bbbdbb237a1f7601686e818e1df2cbb416f905a`.
 
@@ -496,7 +496,7 @@ Authoritative implementation contract:
 
 The implementation remains intentionally CLI-private and does not add a public C JSON ABI.
 
-Implementation acceptance is not implied by the product decision. PR #7 must still establish build, sanitizer, independent-parser, fuzz, ABI, performance, and exact-SHA review evidence before merge.
+At the time this decision was written, implementation acceptance was not implied by the product decision. PR #7 subsequently established the documented exact-head evidence and was merged; see the implementation outcome section below.
 
 
 ## Implementation outcome — 2026-10-09
