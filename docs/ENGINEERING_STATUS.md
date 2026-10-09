@@ -460,4 +460,4 @@ This checkpoint supersedes older statements that JSON export remains planned or 
 
 ### Current next action
 
-P1 JSON export is delivered. Select the next capability from actual product/customer value and existing backlog, document the decision and non-goals, and only then implement. Before any change, inspect the current `main` SHA and read the onboarding/workflow/provenance documents. Tie new evidence to the exact SHA and never promote SKIP to PASS.
+P1 JSON export is delivered. The next gate is downstream-consumer validation, not an automatic new parser or backend. No customer requirement or open backlog issue currently establishes which expansion has the highest value. See `docs/P2_CONSUMER_VALIDATION_DECISION.md`; do not select a production capability until that validation yields evidence. Before any change, inspect the current `main` SHA and read the onboarding/workflow/provenance documents. Tie new evidence to the exact SHA and never promote SKIP to PASS.
