@@ -1,43 +1,46 @@
 # Branch Provenance and Anti-Duplication Record
 
-> **Authoritative branch snapshot — 2026-10-10 UTC**
+> **Live branch/PR reconciliation — 2026-10-10 UTC**
 >
-> This section is the current branch/PR inventory at the exact observed GitHub state below. Older checkpoints retained later in this file are historical records, not current branch-status claims. Re-query GitHub before each implementation or release decision.
+> This snapshot was refreshed after PR #14 merged and PR #15 opened. GitHub currently reports **17 remote branches**. Re-query GitHub before each implementation or release decision; retained refs and historical SHAs below are not proof of active work.
 
 ## Canonical integration point
 
 - Repository: `Rofikali/pkgintel`
 - Default branch: `main`
-- Observed `main` SHA: `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f`
-- Latest commit: `fix: reject ambiguous JSON in reference consumer`
-- PR #12: merged at this SHA.
-- Current product stage: P0 foundation and P1 JSON export are merged; P2 reference-consumer validation exists and now rejects duplicate JSON keys and non-standard JSON constants.
-- New work must start from the latest fetched `main`, not a historical feature branch.
+- Current `main` SHA: `9f1b59390813076200c880903545a588aa80c7ab`
+- Latest merged PR: **#14**, `fix: normalize JSON decoder failures in reference consumer`
+- PR #14 merge commit: `9f1b59390813076200c880903545a588aa80c7ab`
+- Current product stage: P0 foundation, P1 JSON export, and the internal P2 reference-consumer validation experiment are integrated. PR #15 is the only known active implementation/security PR in this snapshot.
+- New implementation work must start from current `main`, not a retained feature branch.
 
-## Branch inventory
+## Live branch inventory
 
-GitHub reported **14 remote branches** in this snapshot. There are more than the three historical P0 branches. Branch names are retained refs, not evidence that work is active or missing from `main`.
+The following 17 branch names were returned by GitHub on 2026-10-10 UTC. The head SHA is recorded where current PR or prior checkpoint evidence supplies it; for other retained refs, refresh the ref directly before checkout, deletion, or reuse. Historical SHAs are not asserted to be current heads.
 
-| Remote branch | Observed head | PR / state | Classification and action |
-|---|---|---|---|
-| `main` | `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f` | Canonical | Only integration base for new work |
-| `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | Historical; incorporated into cumulative P0 | Do not replay |
-| `codex/p0-module-architecture` | `1a99cbe2e8bfeea427775a38877f70c34766c234` | PR #1 merged | Historical cumulative P0 implementation; do not replay |
-| `codex/p0-post-merge-reconciliation` | `ee98282111136c2b37686bfbac756a36cf3b76c5` | PR #2 merged | Historical reconciliation; do not use as base |
-| `codex/p1-capability-decision` | `a75214124d0d1027c1eb1e9eedd2a358832a84c1` | PR #7 merged | P1 JSON-export implementation history; inspect current main before any change |
-| `codex/p1-product-charter` | `998f39a1b5d405a5d278a1bf70c27596c5539dcf` | PR #6 merged | Product charter is already on main |
-| `codex/p2-reference-consumer` | `7ca3584e53b67d048e34fa967cb998323a1aa233` | PR #10 merged | Original reference-consumer experiment is already on main; strict parsing was added by PR #12 |
-| `docs/finalize-current-main-pointer` | `b63fc970f14cbe4bb719ce3c31f916b64721e587` | PR #5 merged | Historical provenance docs |
-| `docs/finalize-p0-provenance` | `ae5bf0e45ed9c7869504f4c51c9b3ea521594594` | PR #4 merged | Historical provenance docs |
-| `docs/p1-json-export-handoff` | `268480032ca7c9ffd9f7832ecdba120e77da482c` | PR #8 merged | Handoff docs are on main; use current version |
-| `docs/p2-consumer-validation-decision` | `289e7e6feaaf37acf8a5e7fd0f26b147395479e0` | PR #9 merged | P2 decision docs are on main; use current version |
-| `docs/reconcile-agent-branch-state` | `9b738699427d5fa9857e5ca3698d9569a5b85f6f` | PR #3 merged | Historical agent/provenance docs |
-| `docs/reconcile-current-branch-provenance` | `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` | PR #11 open, draft | Stale snapshot based on old main SHA; superseded by this inventory and should not be merged unchanged |
-| `fix/p2-strict-json-input` | `8ed81e2e3ec4e4253366278f1373a8007ecab49a` | PR #12 merged | Strict JSON parsing is on main; branch is historical |
+| Remote branch | Classification / action |
+|---|---|
+| `main` | Canonical integration line; SHA `9f1b59390813076200c880903545a588aa80c7ab` |
+| `codex/p0-foundation` | Historical foundation; do not replay |
+| `codex/p0-module-architecture` | Historical cumulative P0 implementation, PR #1 merged; do not replay |
+| `codex/p0-post-merge-reconciliation` | Historical reconciliation; inspect only for provenance |
+| `codex/p1-capability-decision` | P1 implementation history; current behavior is on `main` |
+| `codex/p1-product-charter` | Historical product-charter branch; current doc is on `main` |
+| `codex/p2-reference-consumer` | Historical reference-consumer branch; merged through PR #10 |
+| `docs/branch-inventory-current` | Retained documentation branch; purpose/head must be inspected before reuse |
+| `docs/finalize-current-main-pointer` | Historical provenance docs; PR #5 merged |
+| `docs/finalize-p0-provenance` | Historical provenance docs; PR #4 merged |
+| `docs/p1-json-export-handoff` | Historical handoff docs; PR #8 merged |
+| `docs/p2-consumer-validation-decision` | Historical decision docs; PR #9 merged |
+| `docs/reconcile-agent-branch-state` | Historical agent/provenance docs; PR #3 merged |
+| `docs/reconcile-current-branch-provenance` | Stale branch associated with superseded draft PR #11; do not merge unchanged |
+| `fix/p2-json-parser-failure-normalization` | PR #14 merged; current `main` contains the decoder-error normalization. Do not replay |
+| `fix/p2-strict-json-input` | PR #12 merged; strict JSON validation is on `main`. Do not replay |
+| `security/reject-nul-in-dpkg-records` | PR #15 open; head SHA `7c326f5df8721fbea86d38a018a54e39476641e0`; awaiting independent reviewer approval |
 
 ## Pull-request ledger
 
-| PR | Topic | State | Merge commit / head |
+| PR | Topic | State | Integration / head reference |
 |---|---|---|---|
 | #1 | P0 module architecture and security release candidate | Merged | `ec44a111cf215337d16e3c8800574248e109a3f1` |
 | #2 | P0 post-merge reconciliation | Merged | `a9da03acda5bc60329f309df0c484c1859fc4a0b` |
@@ -49,10 +52,13 @@ GitHub reported **14 remote branches** in this snapshot. There are more than the
 | #8 | P1 JSON-export handoff | Merged | `d1ea8908576e90a048943f2710acfe72789754ff` |
 | #9 | P2 consumer-validation decision | Merged | `9a8391689d723a7721746bb972c953493ff45d45` |
 | #10 | Internal downstream reference consumer | Merged | `95bbfb5e4088dd600a62babc790a77fad9cf5bd0` |
-| #11 | Branch provenance / anti-duplication | Open draft; stale base snapshot | Head `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` |
+| #11 | Branch provenance / anti-duplication | Superseded stale draft; not merged unchanged | Superseded by PR #13 |
 | #12 | Strict JSON parsing in reference consumer | Merged | `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f` |
+| #13 | Branch inventory / anti-duplication | Merged | `b6fd43c64916653b3bb2dbca521c8cd6cd4a1220` |
+| #14 | Normalize JSON decoder failures | Merged | `9f1b59390813076200c880903545a588aa80c7ab` |
+| #15 | Reject embedded NUL in dpkg records | Open; do not merge yet | Head `7c326f5df8721fbea86d38a018a54e39476641e0`; independent review required |
 
-PR status is authoritative for whether a change was merged. A retained branch can still point to the original pre-squash commit after its PR was merged.
+PR status is authoritative for integration. Because this repository uses squash merges, the original feature branch commits may not be ancestors of the merge commit even when their content is integrated.
 
 ## How to interpret branch comparisons safely
 
