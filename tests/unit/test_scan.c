@@ -115,7 +115,7 @@ int test_scan_behaviour(void) {
             assert(pkg_scan_result_package_count(uncorrelated_result) == 1U);
             assert(pkg_snapshot_artifact_count(uncorrelated_result) == 0U);
             assert(pkg_scan_result_package_file_count(uncorrelated_result, 0U) == 0U);
-            assert(pkg_snapshot_diagnostic_count(uncorrelated_result) == 1U);
+            assert(pkg_scan_result_diagnostic_count(uncorrelated_result) == 1U);
             {
                 const pkg_diagnostic *diagnostic = NULL;
                 pkg_string_view code;
