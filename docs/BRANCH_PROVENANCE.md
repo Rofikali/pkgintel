@@ -1,26 +1,26 @@
 # Branch Provenance and Anti-Duplication Record
 
-> **Live branch/PR reconciliation — 2026-10-10 UTC**
+> **Live branch/PR reconciliation — 2026-10-10 UTC (post-PR #16)**
 >
-> This snapshot was refreshed after PR #14 merged and PR #15 opened. GitHub currently reports **17 remote branches**. Re-query GitHub before each implementation or release decision; retained refs and historical SHAs below are not proof of active work.
+> This snapshot was refreshed after PR #16 merged. GitHub currently reports **18 remote branches**, including retained historical feature and documentation refs. Re-query GitHub before each implementation or release decision; retained refs and historical SHAs below are not proof of active work.
 
 ## Canonical integration point
 
 - Repository: `Rofikali/pkgintel`
 - Default branch: `main`
-- Current `main` SHA: `9f1b59390813076200c880903545a588aa80c7ab`
-- Latest merged PR: **#14**, `fix: normalize JSON decoder failures in reference consumer`
-- PR #14 merge commit: `9f1b59390813076200c880903545a588aa80c7ab`
+- Current `main` SHA: `3ee787722516acb3f1b59e6d474228a22c1be879`
+- Latest merged PR: **#16**, `docs: refresh branch provenance after PR 14`
+- PR #16 merge commit: `3ee787722516acb3f1b59e6d474228a22c1be879`
 - Current product stage: P0 foundation, P1 JSON export, and the internal P2 reference-consumer validation experiment are integrated. PR #15 is the only known active implementation/security PR in this snapshot.
 - New implementation work must start from current `main`, not a retained feature branch.
 
 ## Live branch inventory
 
-The following 17 branch names were returned by GitHub on 2026-10-10 UTC. The head SHA is recorded where current PR or prior checkpoint evidence supplies it; for other retained refs, refresh the ref directly before checkout, deletion, or reuse. Historical SHAs are not asserted to be current heads.
+The following 18 branch names were returned by GitHub on 2026-10-10 UTC after PR #16 merged. The head SHA is recorded where current PR or prior checkpoint evidence supplies it; for other retained refs, refresh the ref directly before checkout, deletion, or reuse. Historical SHAs are not asserted to be current heads.
 
 | Remote branch | Classification / action |
 |---|---|
-| `main` | Canonical integration line; SHA `9f1b59390813076200c880903545a588aa80c7ab` |
+| `main` | Canonical integration line; SHA `3ee787722516acb3f1b59e6d474228a22c1be879` |
 | `codex/p0-foundation` | Historical foundation; do not replay |
 | `codex/p0-module-architecture` | Historical cumulative P0 implementation, PR #1 merged; do not replay |
 | `codex/p0-post-merge-reconciliation` | Historical reconciliation; inspect only for provenance |
