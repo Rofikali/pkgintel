@@ -1,5 +1,72 @@
 # Branch Provenance and Anti-Duplication Record
 
+> **Current-state addendum — 2026-10-10 UTC**
+>
+> This section supersedes older branch-head snapshots and historical statements below where they disagree. Branch names and heads are point-in-time observations; re-check Git refs before each new implementation or release decision.
+
+## Current canonical source of truth
+
+**Use `main` for new work.** The current GitHub `main` head at this snapshot is:
+
+- Branch: `main`
+- SHA: `95bbfb5e4088dd600a62babc790a77fad9cf5bd0`
+- Latest commit: `test: validate P1 JSON through reference consumer`
+- Product/release stage: P0 foundation merged; P1 versioned CLI JSON export merged; P2 downstream/reference-consumer validation is the current engineering gate.
+
+The current source of truth is the latest `main` commit, not a retained feature branch or an older local checkout. Before implementation, fetch and inspect the latest `origin/main`, then branch from it. Do not merge or fast-forward a dirty worktree until local changes and untracked evidence have been inventoried and preserved.
+
+## P0 branch reconciliation
+
+| Branch | Observed remote head | Current role |
+|---|---|---|
+| `main` | `95bbfb5e4088dd600a62babc790a77fad9cf5bd0` | Canonical integration and new-work base |
+| `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | Historical foundation branch; its work is incorporated through the cumulative P0 branch |
+| `codex/p0-module-architecture` | `1a99cbe2e8bfeea427775a38877f70c34766c234` | Historical cumulative P0 branch; merged to `main` through PR #1 |
+| `codex/p0-post-merge-reconciliation` | `ee98282111136c2b37686bfbac756a36cf3b76c5` | Historical P0 documentation-reconciliation branch; not the current integration line |
+
+The observed P0 history establishes that `codex/p0-foundation` is an ancestor of `codex/p0-module-architecture`. PR #1 merged the cumulative module-architecture line into `main` at merge commit `ec44a111cf215337d16e3c8800574248e109a3f1`. Do not replay the foundation or module-architecture implementation on top of current `main`.
+
+At this snapshot, GitHub comparison reports that `main` is 18 commits ahead of `codex/p0-post-merge-reconciliation`. That branch is retained historical context, not a suitable base for new work. Its five P0 post-merge documentation commits are already superseded by later mainline product, P1, and P2 work.
+
+## Other observed work branches
+
+The following remote refs were also present during this audit:
+
+| Branch | Observed head | Interpretation |
+|---|---|---|
+| `codex/p1-capability-decision` | `a75214124d0d1027c1eb1e9eedd2a358832a84c1` | Historical P1 capability/JSON-export implementation branch; JSON export is merged to `main` |
+| `codex/p1-product-charter` | `998f39a1b5d405a5d278a1bf70c27596c5539dcf` | Historical product-charter branch; charter is present on `main` |
+| `codex/p2-reference-consumer` | `7ca3584e53b67d048e34fa967cb998323a1aa233` | Historical P2 consumer-validation branch; inspect current `main` before continuing |
+| `docs/finalize-current-main-pointer` | `b63fc970f14cbe4bb719ce3c31f916b64721e587` | Historical documentation branch |
+| `docs/finalize-p0-provenance` | `ae5bf0e45ed9c7869504f4c51c9b3ea521594594` | Historical documentation branch |
+| `docs/p1-json-export-handoff` | `268480032ca7c9ffd9f7832ecdba120e77da482c` | Historical documentation handoff branch |
+| `docs/p2-consumer-validation-decision` | `289e7e6feaaf37acf8a5e7fd0f26b147395479e0` | Historical P2 decision branch |
+| `docs/reconcile-agent-branch-state` | `9b738699427d5fa9857e5ca3698d9569a5b85f6f` | Historical agent/provenance reconciliation branch |
+
+These rows are a snapshot, not a permanent assertion that each branch is open, merged, or safe to delete. Confirm pull-request state and ancestry before deleting any ref. The commits remain the provenance record.
+
+## Current anti-duplication decision
+
+Before implementing a requested capability:
+
+1. Check the actual local branch, `HEAD`, worktree, untracked files, remotes, and fetched remote heads.
+2. Treat `main` as canonical only after fetching it and confirming the current remote SHA.
+3. Search `docs/ENGINEERING_STATUS.md`, `docs/RELEASE_EVIDENCE.md`, `docs/BRANCH_PROVENANCE.md`, the relevant ADRs, tests, and the P1/P2 handoff documents.
+4. Compare the proposed change with the existing implementation and its verification SHA.
+5. Classify the gap as implementation, contract, test, documentation, evidence, operational, or product/business work.
+6. Reuse valid evidence only after proving that the production-relevant source, configuration, toolchain, and runtime assumptions have not changed.
+7. Create one focused branch from the latest `main`; do not implement the same feature independently on historical branches.
+
+The local developer checkout observed during this audit was on `codex/p0-module-architecture` at `40b1d37d3eba5b3ba1d5207b495dbf00f3efb867`, with a modified `instructions.md` and numerous untracked build/install directories and fuzz-corpus files. This state is not equivalent to the current remote `main`. Preserve it until the developer has reviewed the diff and classified the untracked artifacts. Do not run cleanup or destructive checkout/reset commands as part of branch reconciliation.
+
+## Verification provenance boundary
+
+Security-test results from the dedicated `pkgintel-security-verify` container apply to the exact source/build state actually tested. The normal development container is named `pkgintel-dev`; `pkgintel` is the Docker Compose project/service naming context, not the actual development container name. Record container name, image, mounts, privilege, OS/kernel, source SHA, build directory, and exact command with each runtime result.
+
+This audit observed five passing configurations for the genuine mount-boundary/procfs magic-link test on the local verification checkout. Those results are evidence for that test surface and tested source state; they are not proof that all pkgintel security properties or the current `main` tree have been reverified.
+
+
+
 ## Repository
 
 Rofikali/pkgintel
