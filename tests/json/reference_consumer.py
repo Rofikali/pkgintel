@@ -43,7 +43,13 @@ def parse_json_document(text):
             object_pairs_hook=_reject_duplicate_keys,
             parse_constant=_reject_non_json_constant,
         )
-    except json.JSONDecodeError as exc:
+    except ConsumerError:
+        # Duplicate-key and non-standard-constant failures are intentional,
+        # specific validation errors; preserve their messages.
+        raise
+    except (ValueError, RecursionError) as exc:
+        # The stdlib decoder can raise ValueError for integer-conversion limits
+        # and RecursionError for deeply nested input, not only JSONDecodeError.
         raise ConsumerError(f"invalid JSON document: {exc}") from exc
 
 

@@ -30,6 +30,7 @@ reference consumer
 
 - stdout is untrusted input, even when produced by a local executable.
 - JSON parsing rejects duplicate object keys and non-standard constants (`NaN`, `Infinity`, `-Infinity`) rather than accepting ambiguous or non-RFC JSON values.
+- Decoder `ValueError` failures (including integer-string conversion limits) and `RecursionError` failures are converted into explicit consumer rejection instead of escaping as an unhandled traceback. This does not impose a maximum stdout/document size; the O(document size) buffering limitation below remains.
 - stderr is forwarded separately and never parsed as data.
 - The command is an argument vector; shell interpolation is not used.
 - Unknown schema versions and unknown enum values fail closed.
@@ -56,7 +57,9 @@ The unit test exercises:
 - unknown artifact state;
 - booleans rejected where unsigned integers are required;
 - duplicate JSON object keys rejected;
-- non-standard JSON constants rejected.
+- non-standard JSON constants rejected;
+- integer-conversion-limit errors normalized;
+- decoder recursion errors normalized.
 
 The end-to-end CTest invokes the actual built `pkgintel` executable. A successful complete scan should result in exit 0 and `accept_complete`. A valid resource-limited scan remains exit 3 and `reject_incomplete`; that is correct consumer behavior, not a failed complete-scan test. Other producer failures or invalid output are rejected.
 

@@ -2,7 +2,9 @@
 """Contract-focused unit tests for the P2 reference consumer."""
 import importlib.util
 import pathlib
+import sys
 import unittest
+from unittest import mock
 
 HERE = pathlib.Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location(
@@ -73,6 +75,31 @@ class ReferenceConsumerTests(unittest.TestCase):
                     CONSUMER.ConsumerError, "non-standard JSON constant"
                 ):
                     CONSUMER.parse_json_document('{"value":' + constant + '}')
+
+    @unittest.skipUnless(
+        hasattr(sys, "set_int_max_str_digits"),
+        "Python runtime has no configurable integer-string conversion limit",
+    )
+    def test_normalizes_integer_conversion_limit_errors(self):
+        previous_limit = sys.get_int_max_str_digits()
+        try:
+            sys.set_int_max_str_digits(640)
+            text = '{"value":' + ("9" * 700) + '}'
+            with self.assertRaisesRegex(
+                CONSUMER.ConsumerError, "invalid JSON document"
+            ):
+                CONSUMER.parse_json_document(text)
+        finally:
+            sys.set_int_max_str_digits(previous_limit)
+
+    def test_normalizes_decoder_recursion_errors(self):
+        with mock.patch.object(
+            CONSUMER.json, "loads", side_effect=RecursionError("nesting too deep")
+        ):
+            with self.assertRaisesRegex(
+                CONSUMER.ConsumerError, "invalid JSON document"
+            ):
+                CONSUMER.parse_json_document("{}")
 
     def test_rejects_unknown_schema_version(self):
         data = document()
