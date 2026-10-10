@@ -19,8 +19,8 @@
 /*
  * Read one metadata record without allowing the input to grow an attacker-sized
  * heap buffer. The returned record excludes the line terminator and is always
- * NUL-terminated. A return value of -2 means the record exceeded the hard byte
- * bound; the caller must treat that as a resource-limit event.
+ * NUL-terminated when valid. Return -2 for a record exceeding the hard byte
+ * bound, and -3 for a record containing an embedded NUL byte.
  */
 static int read_bounded_record(FILE *file, char *buffer, size_t buffer_size) {
     size_t length = 0U;
