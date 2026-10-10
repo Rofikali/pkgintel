@@ -7,9 +7,24 @@
 
 ## Decision
 
-**Review outcome: no confirmed defect found in the reviewed change; verification evidence supports proceeding to the repository's normal merge/review process.**
+**Current outcome: a follow-up source review found a status-record finalization-order defect in the initial fix. A corrective change and regression assertion are now present on the PR branch; exact-head CI and independent review are still required before merge.**
 
 This is a scoped review of embedded-NUL handling in dpkg status and package file-list records. It is not a general security certification or a claim that all pkgintel attack surfaces are exhaustively tested.
+
+## Follow-up finding and correction — 2026-10-10
+
+The first review did not catch that `pkg_dpkg_scan()` could leave its record-reading loop with `read_rc == -3` and still enter post-loop package finalization before setting `parse_error`. If a NUL-bearing status record had already populated `Package:`, `Version:`, and `Architecture:` fields, the partial identity could be appended to the result even though the function ultimately returned `PKG_ERR_PARSE`.
+
+Correction now on the PR branch:
+
+- Set `parse_error` immediately when the bounded status reader returns `-3`, before post-loop package finalization.
+- Strengthen the public-API regression to assert that the single-record NUL-bearing status fixture exposes zero package identities when the result object is non-NULL.
+- Source correction commit: `e1cc9594ace7e61928b0d786b1e5a881415d837c`.
+- Regression-test commit: `e4ddf39f99a4f9109ff7868cee5e89fa18675fc8`.
+- Current PR head at this report update: `dd4c4295b7337109679b2a4f569cfd261b53350b` (a comment-only clarification after the source/test changes).
+- CI for the corrected head is pending; no passing result is claimed for this correction yet.
+
+The earlier runtime evidence below applies to the original implementation checkpoint, not to this newly corrected source. The new source change requires fresh CI and exact-SHA verification. This correction does not establish an out-of-root path escape; it addresses fail-closed parser/evidence integrity.
 
 ## Security behavior reviewed
 
