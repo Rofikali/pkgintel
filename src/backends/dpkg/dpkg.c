@@ -401,6 +401,12 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
             else installed_size = kib * UINT64_C(1024);
         }
     }
+    /*
+     * A malformed or unreadable status record must not be finalized as a
+     * package. In particular, read_bounded_record returns -3 for embedded NUL
+     * bytes; the current record may already have populated one or more fields.
+     */
+    if (read_rc == -3) parse_error = 1;
     if (truncated == 0 && parse_error == 0 && allocation_error == 0 &&
         name != NULL && version != NULL && architecture != NULL) {
         pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
