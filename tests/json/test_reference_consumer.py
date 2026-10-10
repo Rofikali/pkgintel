@@ -60,6 +60,20 @@ class ReferenceConsumerTests(unittest.TestCase):
         self.assertEqual(result["decision"], "reject_incomplete")
         self.assertEqual(result["scan_status"], "resource_limit")
 
+    def test_rejects_duplicate_json_object_keys(self):
+        with self.assertRaisesRegex(CONSUMER.ConsumerError, "duplicate JSON object key"):
+            CONSUMER.parse_json_document(
+                '{"schema":{"version":1,"version":2}}'
+            )
+
+    def test_rejects_non_standard_json_constants(self):
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant):
+                with self.assertRaisesRegex(
+                    CONSUMER.ConsumerError, "non-standard JSON constant"
+                ):
+                    CONSUMER.parse_json_document('{"value":' + constant + '}')
+
     def test_rejects_unknown_schema_version(self):
         data = document()
         data["schema"]["version"] = 2

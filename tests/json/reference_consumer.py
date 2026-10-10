@@ -20,6 +20,33 @@ def _require(condition, message):
         raise ConsumerError(message)
 
 
+def _reject_duplicate_keys(pairs):
+    """Reject duplicate object keys instead of silently keeping the last key."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ConsumerError(f"duplicate JSON object key: {key}")
+        result[key] = value
+    return result
+
+
+def _reject_non_json_constant(value):
+    """Reject Python json's non-standard NaN and Infinity extensions."""
+    raise ConsumerError(f"non-standard JSON constant: {value}")
+
+
+def parse_json_document(text):
+    """Parse strict JSON, rejecting duplicate keys and non-standard constants."""
+    try:
+        return json.loads(
+            text,
+            object_pairs_hook=_reject_duplicate_keys,
+            parse_constant=_reject_non_json_constant,
+        )
+    except json.JSONDecodeError as exc:
+        raise ConsumerError(f"invalid JSON document: {exc}") from exc
+
+
 def _is_uint(value):
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
@@ -160,9 +187,11 @@ def main(argv):
             sys.stderr.buffer.flush()
         try:
             text = process.stdout.decode("utf-8", errors="strict")
-            document = json.loads(text)
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise ConsumerError(f"producer stdout is not one complete UTF-8 JSON document: {exc}") from exc
+        except UnicodeDecodeError as exc:
+            raise ConsumerError(
+                f"producer stdout is not one complete UTF-8 JSON document: {exc}"
+            ) from exc
+        document = parse_json_document(text)
 
         decision = evaluate_document(document, process.returncode)
         print(json.dumps(decision, sort_keys=True, separators=(",", ":")))
