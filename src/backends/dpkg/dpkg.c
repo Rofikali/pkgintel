@@ -25,19 +25,21 @@
 static int read_bounded_record(FILE *file, char *buffer, size_t buffer_size) {
     size_t length = 0U;
     int ch;
+    int has_nul = 0;
     if (file == NULL || buffer == NULL || buffer_size < 2U) return -1;
     while ((ch = fgetc(file)) != EOF) {
         if (ch == '\n') {
             buffer[length] = '\0';
-            return 1;
+            return has_nul != 0 ? -3 : 1;
         }
         if (length + 1U >= buffer_size) return -2;
+        if (ch == '\0') has_nul = 1;
         buffer[length++] = (char)ch;
     }
     if (ferror(file) != 0) return -1;
     if (length == 0U) return 0;
     buffer[length] = '\0';
-    return 1;
+    return has_nul != 0 ? -3 : 1;
 }
 
 static char *trim_newline(char *value) {
@@ -256,6 +258,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         (void)fclose(file);
         return 2;
     }
+    if (read_rc == -3) {
+        package->file_count = count;
+        package->missing_file_count = missing;
+        package->invalid_path_count = invalid;
+        (void)fclose(file);
+        return 4;
+    }
     if (read_rc < 0) {
         (void)fclose(file);
         return -1;
@@ -293,6 +302,14 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
             result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_PACKAGE_NAME_INVALID", "package name is invalid for filesystem correlation");
+            if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
+            if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+            continue;
+        }
+        if (rc == 4) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
+            int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_FILELIST_MALFORMED", "package file list contains an invalid binary record");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
             continue;
