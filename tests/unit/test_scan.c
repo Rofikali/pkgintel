@@ -84,6 +84,66 @@ int test_scan_behaviour(void) {
         pkg_scan_result_destroy(uncorrelated_result); uncorrelated_result = NULL;
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad/name.list", fixture) > 0); assert(unlink(path) == 0);
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/info/bad", fixture) > 0); assert(rmdir(path) == 0);
+
+        /*
+         * Security regression: binary NUL bytes must never truncate hostile
+         * dpkg text into a different, apparently valid package path/name.
+         */
+        {
+            char status_path[512], list_path[512], target_path[512];
+            FILE *nul_file;
+            pkg_scan_options nul_options = PKG_SCAN_OPTIONS_INIT;
+            nul_options.flags = PKG_SCAN_CORRELATE_FILES;
+
+            assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/status", fixture) > 0);
+            assert(snprintf(list_path, sizeof(list_path), "%s/var/lib/dpkg/info/nul-test.list", fixture) > 0);
+            assert(snprintf(target_path, sizeof(target_path), "%s/nul-target", fixture) > 0);
+
+            nul_file = fopen(target_path, "wb"); assert(nul_file != NULL);
+            assert(fclose(nul_file) == 0);
+            nul_file = fopen(status_path, "wb"); assert(nul_file != NULL);
+            assert(fputs("Package: nul-test\nVersion: 1.0\nArchitecture: amd64\nStatus: install ok installed\n\n", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+            nul_file = fopen(list_path, "wb"); assert(nul_file != NULL);
+            assert(fputs("/nul-target", nul_file) >= 0);
+            assert(fputc('\0', nul_file) == 0);
+            assert(fputs("/ignored\n", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+
+            assert(pkg_scan(context, target, &nul_options, &uncorrelated_result) == PKG_OK);
+            assert(uncorrelated_result != NULL);
+            assert(pkg_scan_result_package_count(uncorrelated_result) == 1U);
+            assert(pkg_snapshot_artifact_count(uncorrelated_result) == 0U);
+            assert(pkg_scan_result_package_file_count(uncorrelated_result, 0U) == 0U);
+            assert(pkg_scan_result_diagnostic_count(uncorrelated_result) == 1U);
+            {
+                const pkg_diagnostic *diagnostic = NULL;
+                pkg_string_view code;
+                assert(pkg_snapshot_diagnostic_at(uncorrelated_result, 0U, &diagnostic) == PKG_OK);
+                code = pkg_diagnostic_code(diagnostic);
+                assert(code.size == strlen("PKG_DPKG_FILELIST_MALFORMED"));
+                assert(memcmp(code.data, "PKG_DPKG_FILELIST_MALFORMED", code.size) == 0);
+            }
+            pkg_scan_result_destroy(uncorrelated_result); uncorrelated_result = NULL;
+
+            /* A NUL-bearing status record must fail parsing, not create a truncated identity. */
+            nul_file = fopen(status_path, "wb"); assert(nul_file != NULL);
+            assert(fputs("Package: nul", nul_file) >= 0);
+            assert(fputc('\0', nul_file) == 0);
+            assert(fputs("-test\nVersion: 1.0\nArchitecture: amd64\nStatus: install ok installed\n\n", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+            assert(pkg_scan(context, target, &nul_options, &uncorrelated_result) == PKG_ERR_PARSE);
+            if (uncorrelated_result != NULL) {
+                /* No partially parsed identity may escape in the failed result. */
+                assert(pkg_scan_result_package_count(uncorrelated_result) == 0U);
+                pkg_scan_result_destroy(uncorrelated_result);
+                uncorrelated_result = NULL;
+            }
+
+            assert(unlink(list_path) == 0);
+            assert(unlink(target_path) == 0);
+        }
+
         assert(snprintf(path, sizeof(path), "%s/var/lib/dpkg/status", fixture) > 0);
         file = fopen(path, "wb"); assert(file != NULL);
         assert(fputs("Package: fixture-pkg\nVersion: 1.2.3\nArchitecture: amd64\nStatus: install ok installed\nInstalled-Size: 10\n\nPackage: removed-pkg\nVersion: 9.9\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 999\n", file) >= 0);
