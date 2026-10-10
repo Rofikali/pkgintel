@@ -1,5 +1,104 @@
 # Branch Provenance and Anti-Duplication Record
 
+> **Authoritative branch snapshot — 2026-10-10 UTC**
+>
+> This section is the current branch/PR inventory at the exact observed GitHub state below. Older checkpoints retained later in this file are historical records, not current branch-status claims. Re-query GitHub before each implementation or release decision.
+
+## Canonical integration point
+
+- Repository: `Rofikali/pkgintel`
+- Default branch: `main`
+- Observed `main` SHA: `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f`
+- Latest commit: `fix: reject ambiguous JSON in reference consumer`
+- PR #12: merged at this SHA.
+- Current product stage: P0 foundation and P1 JSON export are merged; P2 reference-consumer validation exists and now rejects duplicate JSON keys and non-standard JSON constants.
+- New work must start from the latest fetched `main`, not a historical feature branch.
+
+## Branch inventory
+
+GitHub reported **14 remote branches** in this snapshot. There are more than the three historical P0 branches. Branch names are retained refs, not evidence that work is active or missing from `main`.
+
+| Remote branch | Observed head | PR / state | Classification and action |
+|---|---|---|---|
+| `main` | `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f` | Canonical | Only integration base for new work |
+| `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | Historical; incorporated into cumulative P0 | Do not replay |
+| `codex/p0-module-architecture` | `1a99cbe2e8bfeea427775a38877f70c34766c234` | PR #1 merged | Historical cumulative P0 implementation; do not replay |
+| `codex/p0-post-merge-reconciliation` | `ee98282111136c2b37686bfbac756a36cf3b76c5` | PR #2 merged | Historical reconciliation; do not use as base |
+| `codex/p1-capability-decision` | `a75214124d0d1027c1eb1e9eedd2a358832a84c1` | PR #7 merged | P1 JSON-export implementation history; inspect current main before any change |
+| `codex/p1-product-charter` | `998f39a1b5d405a5d278a1bf70c27596c5539dcf` | PR #6 merged | Product charter is already on main |
+| `codex/p2-reference-consumer` | `7ca3584e53b67d048e34fa967cb998323a1aa233` | PR #10 merged | Original reference-consumer experiment is already on main; strict parsing was added by PR #12 |
+| `docs/finalize-current-main-pointer` | `b63fc970f14cbe4bb719ce3c31f916b64721e587` | PR #5 merged | Historical provenance docs |
+| `docs/finalize-p0-provenance` | `ae5bf0e45ed9c7869504f4c51c9b3ea521594594` | PR #4 merged | Historical provenance docs |
+| `docs/p1-json-export-handoff` | `268480032ca7c9ffd9f7832ecdba120e77da482c` | PR #8 merged | Handoff docs are on main; use current version |
+| `docs/p2-consumer-validation-decision` | `289e7e6feaaf37acf8a5e7fd0f26b147395479e0` | PR #9 merged | P2 decision docs are on main; use current version |
+| `docs/reconcile-agent-branch-state` | `9b738699427d5fa9857e5ca3698d9569a5b85f6f` | PR #3 merged | Historical agent/provenance docs |
+| `docs/reconcile-current-branch-provenance` | `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` | PR #11 open, draft | Stale snapshot based on old main SHA; superseded by this inventory and should not be merged unchanged |
+| `fix/p2-strict-json-input` | `8ed81e2e3ec4e4253366278f1373a8007ecab49a` | PR #12 merged | Strict JSON parsing is on main; branch is historical |
+
+## Pull-request ledger
+
+| PR | Topic | State | Merge commit / head |
+|---|---|---|---|
+| #1 | P0 module architecture and security release candidate | Merged | `ec44a111cf215337d16e3c8800574248e109a3f1` |
+| #2 | P0 post-merge reconciliation | Merged | `a9da03acda5bc60329f309df0c484c1859fc4a0b` |
+| #3 | Agent branch-state reconciliation | Merged | `8f425bfd7e40fc047c80fa91f8a5cc54208ec313` |
+| #4 | P0 provenance | Merged | `5fa5e9e89e93ea8320a5d92740906b4b23f5464b` |
+| #5 | Current-main pointer | Merged | `6f49bb01c0264cce2a1fd2e4861ad668b60d7f15` |
+| #6 | Product charter | Merged | `9bbbdbb237a1f7601686e818e1df2cbb416f905a` |
+| #7 | P1 JSON-export capability | Merged | `8b4380d4f353017854a2104ac5a39a8029675c66` |
+| #8 | P1 JSON-export handoff | Merged | `d1ea8908576e90a048943f2710acfe72789754ff` |
+| #9 | P2 consumer-validation decision | Merged | `9a8391689d723a7721746bb972c953493ff45d45` |
+| #10 | Internal downstream reference consumer | Merged | `95bbfb5e4088dd600a62babc790a77fad9cf5bd0` |
+| #11 | Branch provenance / anti-duplication | Open draft; stale base snapshot | Head `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` |
+| #12 | Strict JSON parsing in reference consumer | Merged | `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f` |
+
+PR status is authoritative for whether a change was merged. A retained branch can still point to the original pre-squash commit after its PR was merged.
+
+## How to interpret branch comparisons safely
+
+This repository uses squash merges. Therefore, commit-graph ahead/behind counts alone can mislead: the original feature branch commits may not be ancestors of the squash-merge commit even though their content was integrated. Before replaying anything:
+
+1. Check the PR state and merge commit.
+2. Compare the branch's actual file tree with current `main`.
+3. Inspect the current implementation, tests, documentation, and exact verification SHA.
+4. Cherry-pick/reimplement only a demonstrably missing change, never just because Git reports commits on a retained branch.
+
+The three P0 branches are historical, not three competing active development lines. The other P1/P2/documentation branches listed above are also historical except the stale draft PR #11, which must be reconciled or closed. No historical branch should be deleted until branch provenance is confirmed and deletion is deliberately chosen; this task does not delete branches.
+
+## Anti-duplication gate before each change
+
+Before editing source or tests, establish:
+
+- current remote `main` SHA and working branch;
+- all relevant open/merged PRs and branch heads;
+- the introducing commit and current code path;
+- existing tests and ADRs;
+- what exact property remains unimplemented or unverified;
+- whether the gap is code, contract, test, documentation, platform evidence, release operations, or product validation;
+- the precise evidence SHA and whether it remains applicable.
+
+If behavior exists but evidence is missing, add evidence rather than a second implementation. If code is wrong, fix the existing path. If no concrete user/business requirement justifies a new production capability, do not invent one merely to create activity.
+
+## Verification and platform evidence
+
+The user's authoritative runtime is Windows 11 host → Docker Desktop → Ubuntu 24.04. Provide exact commands for the user to run when a claim depends on that runtime. Never claim those commands ran here.
+
+For security evidence, record source SHA, container/image, mounts, privilege/capabilities, kernel, build directory, command, result, and limitations. `SKIP` is not `PASS`. Reuse earlier evidence only after checking production-relevant source/configuration deltas.
+
+## Staff/principal, security, and business decision discipline
+
+- **Staff/principal engineering:** architecture, ownership/lifetime, API/ABI, portability, resource bounds, maintainability, release sequencing.
+- **Principal security engineering:** attacker-controlled input, trust boundaries, fail-closed behavior, memory/integer safety, exhaustion behavior, runtime assumptions, strength of evidence.
+- **CA/finance:** incremental cost, operational burden, maintenance and opportunity cost when economically material; do not invent ROI without data.
+- **MBA/management/product:** user value, dependency ordering, delivery risk, support ownership, scope, and reversibility when choosing priorities.
+
+Apply each lens where it changes the decision; avoid ceremonial documentation that does not improve correctness or business outcomes.
+
+## Historical checkpoints
+
+The remainder of this file preserves prior branch/release notes for provenance. Any branch heads, statuses, current-main pointers, or "current" labels in that historical material refer to their original checkpoints and are not authoritative over the snapshot above.
+
+
 ## Repository
 
 Rofikali/pkgintel
