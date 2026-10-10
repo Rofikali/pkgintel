@@ -27,7 +27,7 @@ The commands below were run against the code at the reviewed commit, before the 
 |---|---|---|
 | Development container, `/tmp/pkgintel-nul-review` | Focused `pkgintel.unit.core` CTest | PASS |
 | Development container | ASAN/UBSAN build | PASS |
-| Development container | Full ASAN/UBSAN CTest suite | 4 tests passed; `pkgintel.security.mounts` skipped because this environment could not provide the required mount capability |
+| Development container | Full ASAN/UBSAN CTest suite | 4 tests passed; `pkgintel.security.mounts` was skipped (the recorded CTest output did not preserve the specific skip reason) |
 | Security container, `/tmp/pkgintel-nul-security-review` | Debug build | PASS (55/55 build steps) |
 | Security container | Full CTest suite, including `pkgintel.security.mounts` | PASS (5/5; zero skipped) |
 | Security container | `git diff --check origin/main...HEAD` | PASS |
