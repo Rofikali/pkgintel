@@ -134,6 +134,8 @@ int test_scan_behaviour(void) {
             assert(fclose(nul_file) == 0);
             assert(pkg_scan(context, target, &nul_options, &uncorrelated_result) == PKG_ERR_PARSE);
             if (uncorrelated_result != NULL) {
+                /* No partially parsed identity may escape in the failed result. */
+                assert(pkg_scan_result_package_count(uncorrelated_result) == 0U);
                 pkg_scan_result_destroy(uncorrelated_result);
                 uncorrelated_result = NULL;
             }
