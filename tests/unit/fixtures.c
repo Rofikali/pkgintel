@@ -130,7 +130,10 @@ void make_state_fixture(char *root, size_t root_size) {
         "Package: partial-pkg\nVersion: 2.0\nArchitecture: amd64\nStatus: install ok unpacked\nInstalled-Size: 2\n\n"
         "Package: removed-pkg\nVersion: 3.0\nArchitecture: amd64\nStatus: deinstall ok config-files\nInstalled-Size: 3\n\n"
         "Package: broken-pkg\nVersion: 4.0\nArchitecture: amd64\nStatus: install reinstreq installed\nInstalled-Size: 4\n\n"
-        "Package: unknown-pkg\nVersion: 5.0\nArchitecture: amd64\nStatus: install ok future-state\nInstalled-Size: 5\n",
+        "Package: unknown-pkg\nVersion: 5.0\nArchitecture: amd64\nStatus: install ok future-state\nInstalled-Size: 5\n\n"
+        "Package: malformed-flag-pkg\nVersion: 6.0\nArchitecture: amd64\nStatus: install suspicious installed\nInstalled-Size: 6\n\n"
+        "Package: malformed-want-pkg\nVersion: 7.0\nArchitecture: amd64\nStatus: deploy ok installed\nInstalled-Size: 7\n\n"
+        "Package: unknown-want-pkg\nVersion: 8.0\nArchitecture: amd64\nStatus: unknown ok installed\nInstalled-Size: 8\n",
         file) >= 0);
     assert(fclose(file) == 0);
 }
