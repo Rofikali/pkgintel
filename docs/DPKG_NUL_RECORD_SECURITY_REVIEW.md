@@ -1,8 +1,8 @@
 # Dpkg Embedded-NUL Security Review
 
-**Review date:** 2026-10-10  
-**Repository:** `Rofikali/pkgintel`  
-**Code commit reviewed and tested:** `4ca351e33c72d56c0a7bdda39880b6d737ec9a05`  
+**Review date:** 2026-10-11
+**Repository:** `Rofikali/pkgintel`
+**Original code checkpoint:** `4ca351e33c72d56c0a7bdda39880b6d737ec9a05`
 **Branch:** `security/reject-nul-in-dpkg-records`
 
 ## Decision
@@ -21,8 +21,10 @@ Correction now on the PR branch:
 - Strengthen the public-API regression to assert that the single-record NUL-bearing status fixture exposes zero package identities when the result object is non-NULL.
 - Source correction commit: `e1cc9594ace7e61928b0d786b1e5a881415d837c`.
 - Regression-test commit: `e4ddf39f99a4f9109ff7868cee5e89fa18675fc8`.
-- Current PR head at this report update: `dd4c4295b7337109679b2a4f569cfd261b53350b` (a comment-only clarification after the source/test changes).
-- CI for the corrected head is pending; no passing result is claimed for this correction yet.
+- Current PR head at this report update: `2fc801f160d1f5aa8ceb86d2bbd4b5c9b830ccc9` (documentation-only follow-up after the source/test correction).
+- Exact-head GitHub Actions run `38052890575` completed successfully: all 7 jobs passed, including sanitized tests, JSON fuzzing, and the genuine Linux filesystem security gate.
+- Exact-head local verification: GCC Debug build passed in both development and security containers; development CTest passed 4 tests with the privileged mount test skipped; security-container CTest passed 5/5 with zero skips. The development Clang ASAN/UBSAN configure was blocked by missing Clang ASAN runtime libraries, so it is not counted as a local sanitizer pass.
+- The latest development-container `git diff --check origin/main...HEAD` found trailing whitespace in the first three metadata lines of this report; those whitespace defects are corrected in this documentation update. Re-run the check against the updated head before merge.
 
 The earlier runtime evidence below applies to the original implementation checkpoint, not to this newly corrected source. The new source change requires fresh CI and exact-SHA verification. This correction does not establish an out-of-root path escape; it addresses fail-closed parser/evidence integrity.
 
@@ -36,7 +38,7 @@ The earlier runtime evidence below applies to the original implementation checkp
 
 ## Verification evidence
 
-The commands below were run against the code at the reviewed commit, before the documentation-only commit that adds this report and clarifies the security contract.
+The original runtime evidence below was collected against the earlier implementation checkpoint and is retained as historical evidence. The follow-up correction has separate exact-head CI and container results recorded above.
 
 | Environment | Verification | Result |
 |---|---|---|
