@@ -2,23 +2,23 @@
 
 > **Live branch/PR reconciliation — 2026-10-11 UTC**
 >
-> This live snapshot was checked against GitHub's branch API on 2026-10-11 UTC. GitHub returned **19 remote branches**. These are refs, not 19 active workstreams. Re-query before any branch deletion, reuse, merge, or release decision. Historical sections below preserve old checkpoints and are not current-state authority.
+> This live snapshot was checked against GitHub's branch API on 2026-10-11 UTC, after PR #18 merged and before this documentation-refresh branch was created. GitHub returned **20 remote branches** at that snapshot. These are refs, not 20 active workstreams. Re-query before any branch deletion, reuse, merge, or release decision. Historical sections below preserve old checkpoints and are not current-state authority.
 
 ## Canonical integration point
 
 - Repository: `Rofikali/pkgintel`
 - Default branch: `main`
-- `main` SHA at inventory capture: `3ee787722516acb3f1b59e6d474228a22c1be879`. PR #17 subsequently advanced `main` to `f6029a2db0b97daff2777c485d8c76c64bd9ccbe` with documentation-only changes.
-- Latest merged PR: **#17**, live branch inventory reconciliation; merge commit `f6029a2db0b97daff2777c485d8c76c64bd9ccbe`.
-- Active implementation/security PR: **#15**, embedded-NUL rejection in dpkg records; do not merge until independent reviewer approval.
-- PR #17 is merged; its branch remains as a historical ref. The branch inventory table records heads observed immediately before PR #17 merged.
+- `main` SHA at this inventory capture: `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`, the squash-merge commit for PR #18. PR #15 had already merged as `01852345ba39ea867a2073c5c218373df7a96c0c`.
+- Latest merged PR at inventory capture: **#18**, EOF-terminated embedded-NUL regression coverage; merge commit `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`.
+- PR **#15 is merged**: embedded-NUL rejection in dpkg records; merge commit `01852345ba39ea867a2073c5c218373df7a96c0c`. PR **#18 is merged**: EOF-terminated NUL regression coverage; merge commit `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`.
+- PR #17 is merged; its branch remains as a historical ref. The table above is the post-PR-18 snapshot, captured before this documentation-refresh branch was created.
 - All new implementation work starts from current `main`, never from a retained feature branch without an explicit, reviewed reason.
 
 ## Live remote branch inventory (exact heads observed 2026-10-11 UTC)
 
 | Remote branch | Exact observed head | Classification / anti-duplication action |
 |---|---|---|
-| `main` | `3ee787722516acb3f1b59e6d474228a22c1be879` | Canonical integration line. |
+| `main` | `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1` | Canonical integration line; PR #18 merged. |
 | `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | Historical P0 foundation; fully behind current main in commit comparison; do not replay. |
 | `codex/p0-module-architecture` | `1a99cbe2e8bfeea427775a38877f70c34766c234` | Historical cumulative P0 release line from merged PR #1; fully behind current main in commit comparison; do not replay. |
 | `codex/p0-post-merge-reconciliation` | `ee98282111136c2b37686bfbac756a36cf3b76c5` | Historical reconciliation branch; inspect only for provenance. |
@@ -33,10 +33,11 @@
 | `docs/reconcile-agent-branch-state` | `9b738699427d5fa9857e5ca3698d9569a5b85f6f` | Historical agent/provenance docs; PR #3 merged. |
 | `docs/reconcile-branch-inventory-after-pr14` | `716b437a06b568e51e047fab676486bae8efe256` | Historical branch for merged PR #16; no longer active. |
 | `docs/reconcile-current-branch-provenance` | `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` | Stale branch associated with superseded PR #11; do not merge unchanged. |
-| `docs/refresh-provenance-post-pr16` | `61d76b4f88af644c9253500e1c6982553b693e2e` | PR #17 head at snapshot time; documentation-only inventory correction in progress. Head will change when this correction is committed. |
+| `docs/refresh-provenance-post-pr16` | `02052a0d56b44caa7b7a6a940268984905ff3e2b` | Historical documentation branch for merged PR #17; retained ref, not an active queue. |
 | `fix/p2-json-parser-failure-normalization` | `0d97cc1e772bb141c8fce68bccc7ddfebdf42b45` | PR #14 merged; decoder-error normalization is integrated in main. Do not replay. |
 | `fix/p2-strict-json-input` | `8ed81e2e3ec4e4253366278f1373a8007ecab49a` | PR #12 merged; strict JSON parsing is integrated in main. Do not replay. |
-| `security/reject-nul-in-dpkg-records` | `37d84acd6c5bcc8e14d1f815cf0e1596144a65de` | PR #15 open; active security fix. Exact-head CI and dedicated security-container evidence pass; independent approval remains a merge gate. |
+| `security/reject-nul-in-dpkg-records` | `4c0a7538189d6dc4d98a9651e0c10227943c58f4` | PR #15 merged as `01852345ba39ea867a2073c5c218373df7a96c0c`; retained feature ref, not an active queue. |
+| `test/dpkg-nul-eof-records` | `4238cb9f8fb4dc7947b9711952866feb7a02bf8b` | PR #18 merged; retained test branch, not an active queue. |
 
 ### Three-branch P0 history — the duplication concern
 
@@ -46,8 +47,9 @@ The three historical P0 branches are `codex/p0-foundation`, `codex/p0-module-arc
 
 - **PR #14 — merged:** normalize Python JSON decoder `ValueError`/`RecursionError` to conservative consumer errors. Merge commit: `9f1b59390813076200c880903545a588aa80c7ab`. Do not replay.
 - **PR #16 — merged:** branch inventory/provenance refresh after PR #14. Merge commit: `3ee787722516acb3f1b59e6d474228a22c1be879`.
-- **PR #15 — open:** reject embedded NUL in dpkg status/file-list records. Head: `37d84acd6c5bcc8e14d1f815cf0e1596144a65de`. Exact-head CI run [#38140067140](https://github.com/Rofikali/pkgintel/actions/runs/38140067140) completed successfully with 7/7 jobs; the dedicated security container passed 55/55 build steps and 5/5 CTest tests with zero skipped. Independent reviewer approval is still required.
-- **PR #17 — merged:** documentation-only branch inventory correction; merge commit `f6029a2db0b97daff2777c485d8c76c64bd9ccbe`. The 19-ref table is a point-in-time snapshot taken before PR #17 merged.
+- **PR #15 — merged:** reject embedded NUL in dpkg status/file-list records. Merge commit: `01852345ba39ea867a2073c5c218373df7a96c0c`. Exact-head CI run [#38140608881](https://github.com/Rofikali/pkgintel/actions/runs/38140608881) passed 7/7 jobs; dedicated security-container evidence passed 55/55 build steps and 5/5 CTest tests with zero skipped. The PR was merged without an independent approval visible in the review list; the repository did not enforce that stated gate. Treat this as a governance gap, not as evidence that independent review occurred.
+- **PR #17 — merged:** documentation-only branch inventory correction; merge commit `f6029a2db0b97daff2777c485d8c76c64bd9ccbe`. Its 19-ref table is a historical snapshot, superseded by the 20-ref snapshot above.
+- **PR #18 — merged:** EOF-terminated embedded-NUL regression tests; merge commit `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`. Exact-head CI run [#38151917559](https://github.com/Rofikali/pkgintel/actions/runs/38151917559) passed 7/7 jobs. The performance-measurement steps in GCC/Clang Release jobs were skipped, so this run is not performance evidence.
 
 
 ## Pull-request ledger
@@ -68,9 +70,10 @@ The three historical P0 branches are `codex/p0-foundation`, `codex/p0-module-arc
 | #12 | Strict JSON parsing in reference consumer | Merged | `044bf56bdeca14e9b23c5b6cf94cd301a5d27b5f` |
 | #13 | Branch inventory / anti-duplication | Merged | `b6fd43c64916653b3bb2dbca521c8cd6cd4a1220` |
 | #14 | Normalize JSON decoder failures | Merged | `9f1b59390813076200c880903545a588aa80c7ab` |
-| #15 | Reject embedded NUL in dpkg records | Open; do not merge yet | Current head `37d84acd6c5bcc8e14d1f815cf0e1596144a65de`; independent review required |
+| #15 | Reject embedded NUL in dpkg records | Merged | Merge commit `01852345ba39ea867a2073c5c218373df7a96c0c`; exact-head CI run #38140608881 passed 7/7; dedicated security-container evidence passed |
 | #16 | Branch inventory / anti-duplication refresh after PR #14 | Merged | `3ee787722516acb3f1b59e6d474228a22c1be879` |
 | #17 | Live branch inventory reconciliation | Merged | `f6029a2db0b97daff2777c485d8c76c64bd9ccbe` |
+| #18 | EOF-terminated embedded-NUL regression coverage | Merged | `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`; exact-head CI run #38151917559 passed 7/7 |
 
 PR status is authoritative for integration. Because this repository uses squash merges, the original feature branch commits may not be ancestors of the merge commit even when their content is integrated.
 
