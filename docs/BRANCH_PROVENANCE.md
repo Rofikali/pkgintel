@@ -1,42 +1,54 @@
 # Branch Provenance and Anti-Duplication Record
 
-> **Live branch/PR reconciliation — 2026-10-10 UTC**
+> **Live branch/PR reconciliation — 2026-10-11 UTC**
 >
-> This snapshot was refreshed after PR #14 merged and PR #15 opened. GitHub currently reports **17 remote branches**. Re-query GitHub before each implementation or release decision; retained refs and historical SHAs below are not proof of active work.
+> This live snapshot was checked against GitHub's branch API on 2026-10-11 UTC. GitHub returned **19 remote branches**. These are refs, not 19 active workstreams. Re-query before any branch deletion, reuse, merge, or release decision. Historical sections below preserve old checkpoints and are not current-state authority.
 
 ## Canonical integration point
 
 - Repository: `Rofikali/pkgintel`
 - Default branch: `main`
-- Current `main` SHA: `9f1b59390813076200c880903545a588aa80c7ab`
-- Latest merged PR: **#14**, `fix: normalize JSON decoder failures in reference consumer`
-- PR #14 merge commit: `9f1b59390813076200c880903545a588aa80c7ab`
-- Current product stage: P0 foundation, P1 JSON export, and the internal P2 reference-consumer validation experiment are integrated. PR #15 is the only known active implementation/security PR in this snapshot.
-- New implementation work must start from current `main`, not a retained feature branch.
+- Current `main` SHA: `3ee787722516acb3f1b59e6d474228a22c1be879`
+- Latest merged PR: **#16**, provenance refresh after PR #14.
+- Active implementation/security PR: **#15**, embedded-NUL rejection in dpkg records; do not merge until independent reviewer approval.
+- Active documentation/provenance PR: **#17**, this branch; it must describe the live branch set accurately.
+- All new implementation work starts from current `main`, never from a retained feature branch without an explicit, reviewed reason.
 
-## Live branch inventory
+## Live remote branch inventory (exact heads observed 2026-10-11 UTC)
 
-The following 17 branch names were returned by GitHub on 2026-10-10 UTC. The head SHA is recorded where current PR or prior checkpoint evidence supplies it; for other retained refs, refresh the ref directly before checkout, deletion, or reuse. Historical SHAs are not asserted to be current heads.
+| Remote branch | Exact observed head | Classification / anti-duplication action |
+|---|---|---|
+| `main` | `3ee787722516acb3f1b59e6d474228a22c1be879` | Canonical integration line. |
+| `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | Historical P0 foundation; fully behind current main in commit comparison; do not replay. |
+| `codex/p0-module-architecture` | `1a99cbe2e8bfeea427775a38877f70c34766c234` | Historical cumulative P0 release line from merged PR #1; fully behind current main in commit comparison; do not replay. |
+| `codex/p0-post-merge-reconciliation` | `ee98282111136c2b37686bfbac756a36cf3b76c5` | Historical reconciliation branch; inspect only for provenance. |
+| `codex/p1-capability-decision` | `a75214124d0d1027c1eb1e9eedd2a358832a84c1` | Historical P1 capability work; current integrated behavior/docs must be checked on main before changes. |
+| `codex/p1-product-charter` | `998f39a1b5d405a5d278a1bf70c27596c5539dcf` | Historical product charter; do not replay. |
+| `codex/p2-reference-consumer` | `7ca3584e53b67d048e34fa967cb998323a1aa233` | Historical reference-consumer work, integrated via PR #10; do not replay. |
+| `docs/branch-inventory-current` | `01498adfca3ec736862f99e5fa915c5da02d3f1e` | Retained documentation branch; inspect its exact diff before any reuse. |
+| `docs/finalize-current-main-pointer` | `b63fc970f14cbe4bb719ce3c31f916b64721e587` | Historical provenance docs; PR #5 merged. |
+| `docs/finalize-p0-provenance` | `ae5bf0e45ed9c7869504f4c51c9b3ea521594594` | Historical provenance docs; PR #4 merged. |
+| `docs/p1-json-export-handoff` | `268480032ca7c9ffd9f7832ecdba120e77da482c` | Historical P1 handoff docs; PR #8 merged. |
+| `docs/p2-consumer-validation-decision` | `289e7e6feaaf37acf8a5e7fd0f26b147395479e0` | Historical P2 decision docs; PR #9 merged. |
+| `docs/reconcile-agent-branch-state` | `9b738699427d5fa9857e5ca3698d9569a5b85f6f` | Historical agent/provenance docs; PR #3 merged. |
+| `docs/reconcile-branch-inventory-after-pr14` | `716b437a06b568e51e047fab676486bae8efe256` | Historical branch for merged PR #16; no longer active. |
+| `docs/reconcile-current-branch-provenance` | `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` | Stale branch associated with superseded PR #11; do not merge unchanged. |
+| `docs/refresh-provenance-post-pr16` | `61d76b4f88af644c9253500e1c6982553b693e2e` | PR #17 head at snapshot time; documentation-only inventory correction in progress. Head will change when this correction is committed. |
+| `fix/p2-json-parser-failure-normalization` | `0d97cc1e772bb141c8fce68bccc7ddfebdf42b45` | PR #14 merged; decoder-error normalization is integrated in main. Do not replay. |
+| `fix/p2-strict-json-input` | `8ed81e2e3ec4e4253366278f1373a8007ecab49a` | PR #12 merged; strict JSON parsing is integrated in main. Do not replay. |
+| `security/reject-nul-in-dpkg-records` | `37d84acd6c5bcc8e14d1f815cf0e1596144a65de` | PR #15 open; active security fix. Exact-head CI and dedicated security-container evidence pass; independent approval remains a merge gate. |
 
-| Remote branch | Classification / action |
-|---|---|
-| `main` | Canonical integration line; SHA `9f1b59390813076200c880903545a588aa80c7ab` |
-| `codex/p0-foundation` | Historical foundation; do not replay |
-| `codex/p0-module-architecture` | Historical cumulative P0 implementation, PR #1 merged; do not replay |
-| `codex/p0-post-merge-reconciliation` | Historical reconciliation; inspect only for provenance |
-| `codex/p1-capability-decision` | P1 implementation history; current behavior is on `main` |
-| `codex/p1-product-charter` | Historical product-charter branch; current doc is on `main` |
-| `codex/p2-reference-consumer` | Historical reference-consumer branch; merged through PR #10 |
-| `docs/branch-inventory-current` | Retained documentation branch; purpose/head must be inspected before reuse |
-| `docs/finalize-current-main-pointer` | Historical provenance docs; PR #5 merged |
-| `docs/finalize-p0-provenance` | Historical provenance docs; PR #4 merged |
-| `docs/p1-json-export-handoff` | Historical handoff docs; PR #8 merged |
-| `docs/p2-consumer-validation-decision` | Historical decision docs; PR #9 merged |
-| `docs/reconcile-agent-branch-state` | Historical agent/provenance docs; PR #3 merged |
-| `docs/reconcile-current-branch-provenance` | Stale branch associated with superseded draft PR #11; do not merge unchanged |
-| `fix/p2-json-parser-failure-normalization` | PR #14 merged; current `main` contains the decoder-error normalization. Do not replay |
-| `fix/p2-strict-json-input` | PR #12 merged; strict JSON validation is on `main`. Do not replay |
-| `security/reject-nul-in-dpkg-records` | PR #15 open; head SHA `7c326f5df8721fbea86d38a018a54e39476641e0`; awaiting independent reviewer approval |
+### Three-branch P0 history — the duplication concern
+
+The three historical P0 branches are `codex/p0-foundation`, `codex/p0-module-architecture`, and canonical `main`. They are **not three current implementation queues**. The foundation work is incorporated into the cumulative module-architecture history; PR #1 integrated that release line; current work proceeds from main. Live compare results show both retained P0 branches are behind main with zero commits ahead. Do not cherry-pick or reimplement their features based solely on their old branch names or stale commit counts.
+
+### Current work ledger
+
+- **PR #14 — merged:** normalize Python JSON decoder `ValueError`/`RecursionError` to conservative consumer errors. Merge commit: `9f1b59390813076200c880903545a588aa80c7ab`. Do not replay.
+- **PR #16 — merged:** branch inventory/provenance refresh after PR #14. Merge commit: `3ee787722516acb3f1b59e6d474228a22c1be879`.
+- **PR #15 — open:** reject embedded NUL in dpkg status/file-list records. Head: `37d84acd6c5bcc8e14d1f815cf0e1596144a65de`. Exact-head CI run [#38140067140](https://github.com/Rofikali/pkgintel/actions/runs/38140067140) completed successfully with 7/7 jobs; the dedicated security container passed 55/55 build steps and 5/5 CTest tests with zero skipped. Independent reviewer approval is still required.
+- **PR #17 — open:** this documentation-only refresh. The live branch inventory found 19 refs, not 18; this PR must be corrected before merge.
+
 
 ## Pull-request ledger
 
