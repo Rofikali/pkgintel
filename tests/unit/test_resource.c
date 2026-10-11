@@ -79,7 +79,7 @@ int test_snapshot_resource_budgets(void) {
     reset_allocator_observation();
     assert(pkg_scan(context, target, NULL, &result) == PKG_OK);
     assert(result != NULL);
-    assert(pkg_scan_result_package_count(result) == 5U);
+    assert(pkg_scan_result_package_count(result) == 8U);
     const size_t malloc_calls = test_malloc_calls;
     const size_t calloc_calls = test_calloc_calls;
     const size_t realloc_calls = test_realloc_calls;
