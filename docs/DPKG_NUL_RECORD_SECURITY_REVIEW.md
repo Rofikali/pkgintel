@@ -21,7 +21,7 @@ Correction now on the PR branch:
 - Strengthen the public-API regression to assert that the single-record NUL-bearing status fixture exposes zero package identities when the result object is non-NULL.
 - Source correction commit: `e1cc9594ace7e61928b0d786b1e5a881415d837c`.
 - Regression-test commit: `e4ddf39f99a4f9109ff7868cee5e89fa18675fc8`.
-- Current PR head at this report update: `2fc801f160d1f5aa8ceb86d2bbd4b5c9b830ccc9` (documentation-only follow-up after the source/test correction).
+- The source/test correction was verified at PR head `2fc801f160d1f5aa8ceb86d2bbd4b5c9b830ccc9`; the later changes to this report are documentation-only and require their own exact-head CI/whitespace confirmation before merge.
 - Exact-head GitHub Actions run `38052890575` completed successfully: all 7 jobs passed, including sanitized tests, JSON fuzzing, and the genuine Linux filesystem security gate.
 - Exact-head local verification: GCC Debug build passed in both development and security containers; development CTest passed 4 tests with the privileged mount test skipped; security-container CTest passed 5/5 with zero skips. The development Clang ASAN/UBSAN configure was blocked by missing Clang ASAN runtime libraries, so it is not counted as a local sanitizer pass.
 - The latest development-container `git diff --check origin/main...HEAD` found trailing whitespace in the first three metadata lines of this report; those whitespace defects are corrected in this documentation update. Re-run the check against the updated head before merge.
