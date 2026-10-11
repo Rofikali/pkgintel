@@ -374,13 +374,16 @@ int test_scan_behaviour(void) {
         assert(pkg_target_create_rootfs(context, state_fixture, &target) == PKG_OK);
         assert(pkg_scan(context, target, NULL, &state_result) == PKG_OK);
         assert(state_result != NULL);
-        assert(pkg_scan_result_package_count(state_result) == 5U);
+        assert(pkg_scan_result_package_count(state_result) == 8U);
         /* Ordering is name/architecture/version, independent of dpkg's discovery order. */
         assert(strcmp(pkg_scan_result_package_name(state_result, 0U), "broken-pkg") == 0);
         assert(strcmp(pkg_scan_result_package_name(state_result, 1U), "installed-pkg") == 0);
-        assert(strcmp(pkg_scan_result_package_name(state_result, 2U), "partial-pkg") == 0);
-        assert(strcmp(pkg_scan_result_package_name(state_result, 3U), "removed-pkg") == 0);
-        assert(strcmp(pkg_scan_result_package_name(state_result, 4U), "unknown-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 2U), "malformed-flag-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 3U), "malformed-want-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 4U), "partial-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 5U), "removed-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 6U), "unknown-pkg") == 0);
+        assert(strcmp(pkg_scan_result_package_name(state_result, 7U), "unknown-want-pkg") == 0);
         {
             const pkg_package *package = NULL;
             assert(pkg_snapshot_package_at(state_result, 0U, &package) == PKG_OK);
@@ -388,14 +391,21 @@ int test_scan_behaviour(void) {
             assert(pkg_snapshot_package_at(state_result, 1U, &package) == PKG_OK);
             assert(pkg_package_get_state(package) == PKG_INSTALLATION_INSTALLED);
             assert(pkg_snapshot_package_at(state_result, 2U, &package) == PKG_OK);
-            assert(pkg_package_get_state(package) == PKG_INSTALLATION_PARTIAL);
-            assert(pkg_snapshot_package_at(state_result, 3U, &package) == PKG_OK);
-            assert(pkg_package_get_state(package) == PKG_INSTALLATION_REMOVED);
-            assert(pkg_snapshot_package_at(state_result, 4U, &package) == PKG_OK);
             assert(pkg_package_get_state(package) == PKG_INSTALLATION_UNKNOWN);
+            assert(pkg_snapshot_package_at(state_result, 3U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_UNKNOWN);
+            assert(pkg_snapshot_package_at(state_result, 4U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_PARTIAL);
+            assert(pkg_snapshot_package_at(state_result, 5U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_REMOVED);
+            assert(pkg_snapshot_package_at(state_result, 6U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_UNKNOWN);
+            /* The valid desired-action token "unknown" does not override state. */
+            assert(pkg_snapshot_package_at(state_result, 7U, &package) == PKG_OK);
+            assert(pkg_package_get_state(package) == PKG_INSTALLATION_INSTALLED);
         }
         /* Selection intent ("hold") does not change the installation state. */
-        assert(pkg_scan_result_diagnostic_count(state_result) == 6U);
+        assert(pkg_scan_result_diagnostic_count(state_result) == 11U);
         {
             size_t diagnostic_count = pkg_scan_result_diagnostic_count(state_result);
             int found_unknown_status = 0;
