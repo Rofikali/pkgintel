@@ -126,3 +126,15 @@ For each non-main branch, immediately before deleting:
 - [ ] branch absence is verified afterward.
 
 Do not delete `main`. Do not use force-push/reset as a substitute for deleting a feature-branch ref. Do not claim a deletion succeeded without checking the live branch list afterward.
+
+
+## 9. Temporary branch created for this handover PR
+
+The 22-ref baseline above was captured before the handover branch was created. This documentation change currently uses:
+
+- Branch: `docs/complete-agent-handover-branch-cleanup`
+- Audited head before this correction: `b3ebb601303f7ae4274fff76542efc0d7f901779` (recheck after any further update)
+- PR: [#21](https://github.com/Rofikali/pkgintel/pull/21), documentation-only handover/ledger refresh.
+- Intended disposition: after PR #21 merges, verify the resulting `main` SHA, verify post-merge CI, re-fetch this branch's current head, then delete this temporary branch if no follow-up commit was added.
+
+This branch is **not part of the 22-ref baseline snapshot**. A live inventory during PR #21 therefore includes this additional temporary branch. The final branch cleanup must include it rather than leaving the cleanup branch behind.
