@@ -27,6 +27,10 @@ The normal developer workflow is:
 docker compose build
 docker compose up -d
 docker compose exec pkgintel bash
+
+docker compose up -d pkgintel-security
+docker compose exec pkgintel-security bash
+
 ~~~
 
 The developer's intended real OS verification environment is Ubuntu 24.04 running inside Docker Desktop on a Windows 11 host.
