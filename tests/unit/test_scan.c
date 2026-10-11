@@ -126,6 +126,32 @@ int test_scan_behaviour(void) {
             }
             pkg_scan_result_destroy(uncorrelated_result); uncorrelated_result = NULL;
 
+            /*
+             * EOF is also a record terminator. An embedded NUL in an
+             * EOF-terminated file-list record must not expose its prefix path.
+             */
+            nul_file = fopen(list_path, "wb"); assert(nul_file != NULL);
+            assert(fputs("/nul-target", nul_file) >= 0);
+            assert(fputc('\0', nul_file) == 0);
+            assert(fputs("/ignored", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+
+            assert(pkg_scan(context, target, &nul_options, &uncorrelated_result) == PKG_OK);
+            assert(uncorrelated_result != NULL);
+            assert(pkg_scan_result_package_count(uncorrelated_result) == 1U);
+            assert(pkg_snapshot_artifact_count(uncorrelated_result) == 0U);
+            assert(pkg_scan_result_package_file_count(uncorrelated_result, 0U) == 0U);
+            assert(pkg_scan_result_diagnostic_count(uncorrelated_result) == 1U);
+            {
+                const pkg_diagnostic *diagnostic = NULL;
+                pkg_string_view code;
+                assert(pkg_snapshot_diagnostic_at(uncorrelated_result, 0U, &diagnostic) == PKG_OK);
+                code = pkg_diagnostic_code(diagnostic);
+                assert(code.size == strlen("PKG_DPKG_FILELIST_MALFORMED"));
+                assert(memcmp(code.data, "PKG_DPKG_FILELIST_MALFORMED", code.size) == 0);
+            }
+            pkg_scan_result_destroy(uncorrelated_result); uncorrelated_result = NULL;
+
             /* A NUL-bearing status record must fail parsing, not create a truncated identity. */
             nul_file = fopen(status_path, "wb"); assert(nul_file != NULL);
             assert(fputs("Package: nul", nul_file) >= 0);
@@ -155,6 +181,30 @@ int test_scan_behaviour(void) {
                          "X-Invalid: prefix", nul_file) >= 0);
             assert(fputc('\0', nul_file) == 0);
             assert(fputs("suffix\n", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+
+            assert(pkg_scan(context, target, &nul_options,
+                            &uncorrelated_result) == PKG_ERR_PARSE);
+            if (uncorrelated_result != NULL) {
+                assert(pkg_scan_result_package_count(
+                           uncorrelated_result) == 0U);
+                pkg_scan_result_destroy(uncorrelated_result);
+                uncorrelated_result = NULL;
+            }
+
+            /*
+             * A NUL-bearing status record at EOF (without LF) must fail
+             * before finalization, even when all identity fields came first.
+             */
+            nul_file = fopen(status_path, "wb");
+            assert(nul_file != NULL);
+            assert(fputs("Package: nul-test\n"
+                         "Version: 1.0\n"
+                         "Architecture: amd64\n"
+                         "Status: install ok installed\n"
+                         "X-Invalid: prefix", nul_file) >= 0);
+            assert(fputc('\0', nul_file) == 0);
+            assert(fputs("suffix", nul_file) >= 0);
             assert(fclose(nul_file) == 0);
 
             assert(pkg_scan(context, target, &nul_options,
