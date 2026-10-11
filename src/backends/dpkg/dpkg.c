@@ -61,14 +61,31 @@ static int parse_u64_decimal(const char *value, uint64_t *out) {
     return 0;
 }
 
+static int is_valid_dpkg_want(const char *want) {
+    static const char *const valid[] = {
+        "unknown", "install", "hold", "deinstall", "purge"
+    };
+    size_t i;
+    if (want == NULL) return 0;
+    for (i = 0U; i < sizeof(valid) / sizeof(valid[0]); ++i) {
+        if (strcmp(want, valid[i]) == 0) return 1;
+    }
+    return 0;
+}
+
+static int is_valid_dpkg_eflag(const char *eflag) {
+    return eflag != NULL &&
+           (strcmp(eflag, "ok") == 0 || strcmp(eflag, "reinstreq") == 0);
+}
+
 static pkg_installation_state installation_state_from_dpkg_status(const char *status) {
     char want[32], eflag[32], state[32], extra[2];
     int fields;
     if (status == NULL) return PKG_INSTALLATION_UNKNOWN;
 
     fields = sscanf(status, "%31s %31s %31s %1s", want, eflag, state, extra);
-    if (fields != 3) return PKG_INSTALLATION_UNKNOWN;
-    (void)want;
+    if (fields != 3 || !is_valid_dpkg_want(want) || !is_valid_dpkg_eflag(eflag))
+        return PKG_INSTALLATION_UNKNOWN;
 
     if (strcmp(eflag, "reinstreq") == 0) return PKG_INSTALLATION_PARTIAL;
     if (strcmp(state, "installed") == 0) return PKG_INSTALLATION_INSTALLED;
