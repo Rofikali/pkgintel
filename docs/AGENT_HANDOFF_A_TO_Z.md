@@ -268,7 +268,7 @@ From a CA/Finance and management perspective, prioritize correctness/security an
 
 ## 16. Branch cleanup acceptance
 
-The 2026-10-11 inventory found 22 refs including `main`. The 21 non-main refs and their exact observed heads/PR dispositions are listed in `docs/BRANCH_CLEANUP_LEDGER.md`. The intended end state is one canonical remote branch, `main`, after all other refs have been individually reconciled and safely deleted. This document alone does not claim that deletion has occurred.
+The 2026-10-11 baseline inventory found 22 refs including `main`, before this handover branch was created. Its 21 non-main refs and exact observed heads/PR dispositions are listed in `docs/BRANCH_CLEANUP_LEDGER.md`. The temporary `docs/complete-agent-handover-branch-cleanup` branch exists only to deliver PR #21; after merge, it is also a deletion candidate once the merged docs and post-merge CI are verified. The intended end state is one canonical remote branch, `main`, after every other ref has been individually reconciled and safely deleted. This document alone does not claim that deletion has occurred.
 
 Do not delete:
 - `main`;
