@@ -229,7 +229,7 @@ Apply CA/Finance analysis when there is material cost or business consequence: C
 - For every change, record branch, prior SHA, new SHA, files, tests, exact CI run, review state, known gaps, and merge SHA.
 - After merge, verify the exact `main` commit and post-merge CI.
 - Branch cleanup must follow `docs/BRANCH_CLEANUP_LEDGER.md`; no non-main branch is to be deleted before its unique work and PR disposition are documented.
-- GitHub branch-protection status observed on this snapshot is **unprotected** for every listed branch. This means the repository's written PR/approval policy is not equivalent to an enforced GitHub ruleset. See the governance note in `docs/BRANCH_CLEANUP_LEDGER.md`; do not claim branch protection is active.
+- The GitHub branch-list API reported `protected: false` for the 22 baseline refs. The connected integration could not read the branch-protection endpoint (403), so the full branch-protection/ruleset configuration is **not verified** by this audit. Confirm it with owner-level settings access before claiming any rule is or is not enforced. See `docs/BRANCH_CLEANUP_LEDGER.md`.
 
 ## 13. Current next work — investigate, do not assume
 
