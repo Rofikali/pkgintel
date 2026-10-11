@@ -9,7 +9,7 @@
 - Repository: `Rofikali/pkgintel`
 - Default branch: `main`
 - `main` SHA at this inventory capture: `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`, the squash-merge commit for PR #18. PR #15 had already merged as `01852345ba39ea867a2073c5c218373df7a96c0c`.
-- Latest merged PR: **#18**, EOF-terminated embedded-NUL regression coverage; merge commit `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`.
+- Latest merged PR at inventory capture: **#18**, EOF-terminated embedded-NUL regression coverage; merge commit `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`.
 - PR **#15 is merged**: embedded-NUL rejection in dpkg records; merge commit `01852345ba39ea867a2073c5c218373df7a96c0c`. PR **#18 is merged**: EOF-terminated NUL regression coverage; merge commit `a945b0968a3900e36ea142cf4f57a35ef6ebe0e1`.
 - PR #17 is merged; its branch remains as a historical ref. The table above is the post-PR-18 snapshot, captured before this documentation-refresh branch was created.
 - All new implementation work starts from current `main`, never from a retained feature branch without an explicit, reviewed reason.
