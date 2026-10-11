@@ -14,8 +14,8 @@ The objective is not maximum code or maximum abstraction. The objective is a sys
 main   <-- canonical integration line
 ```
 
-Snapshot recorded 2026-10-11 UTC:
-- canonical `main` SHA: `7c324f1fdc8a26ad4b8eab3d9d4d211f1311d0eb`;
+Pre-handover documentation baseline recorded 2026-10-11 UTC (before PR #21):
+- `main` SHA at baseline: `7c324f1fdc8a26ad4b8eab3d9d4d211f1311d0eb`;
 - P0 foundation/module architecture is integrated;
 - P1 versioned CLI JSON export and P2 reference-consumer validation are integrated;
 - strict JSON input and decoder-failure normalization are integrated;
