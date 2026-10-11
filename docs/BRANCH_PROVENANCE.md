@@ -1,10 +1,12 @@
 # Branch Provenance and Anti-Duplication Record
 
-> **Live branch/PR reconciliation — 2026-10-11 UTC**
+> **Authoritative current snapshot — 2026-10-11 UTC**
 >
-> This live snapshot was checked against GitHub's branch API on 2026-10-11 UTC, after PR #18 merged and before this documentation-refresh branch was created. GitHub returned **20 remote branches** at that snapshot. These are refs, not 20 active workstreams. Re-query before any branch deletion, reuse, merge, or release decision. Historical sections below preserve old checkpoints and are not current-state authority.
+> The latest checked GitHub branch inventory for this cleanup contains **22 remote refs**: `main` plus 21 non-main refs. Current canonical `main` at the snapshot is `7c324f1fdc8a26ad4b8eab3d9d4d211f1311d0eb`. The exact per-branch heads, associated PRs, merge states, unique-work cautions, and deletion checklist are maintained in `docs/BRANCH_CLEANUP_LEDGER.md`. The A-to-Z continuation contract is `docs/AGENT_HANDOFF_A_TO_Z.md`.
 
-## Canonical integration point
+> This document contains historical snapshots below. Do not read an older count or SHA as live state. Re-query GitHub before branch deletion, reuse, merge, or release decisions. Branch cleanup is not complete until each non-main branch is rechecked, deleted by an authorized operation, and its absence verified.
+
+## Historical canonical integration point (post-PR #18 snapshot)
 
 - Repository: `Rofikali/pkgintel`
 - Default branch: `main`
@@ -14,7 +16,7 @@
 - PR #17 is merged; its branch remains as a historical ref. The table above is the post-PR-18 snapshot, captured before this documentation-refresh branch was created.
 - All new implementation work starts from current `main`, never from a retained feature branch without an explicit, reviewed reason.
 
-## Live remote branch inventory (exact heads observed 2026-10-11 UTC)
+## Historical remote branch inventory (captured after PR #18, before PR #19 and #20)
 
 | Remote branch | Exact observed head | Classification / anti-duplication action |
 |---|---|---|
@@ -482,8 +484,8 @@ Do not confuse a skipped security test with PASS.
 ```
 
 
-## Final post-merge reconciliation
+## Historical final post-merge reconciliation (P0 checkpoint)
 
-Current canonical main SHA at this documentation checkpoint: `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`.
+Canonical main SHA at that historical documentation checkpoint: `5fa5e9e89e93ea8320a5d92740906b4b23f5464b`. It is not the current main SHA.
 
 PR #2 and PR #3 completed documentation reconciliation after PR #1. PR #3 updated the agent contract to make current `main` the canonical development line. The historical P0 branches may be removed as branch references when repository maintenance permits; no implementation work depends on keeping them alive.
