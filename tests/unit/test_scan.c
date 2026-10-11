@@ -140,6 +140,32 @@ int test_scan_behaviour(void) {
                 uncorrelated_result = NULL;
             }
 
+            /*
+             * Regression: required identity fields are already populated
+             * when a later NUL-bearing record terminates the status parser.
+             * No blank-line delimiter is present, so EOF finalization must
+             * not append the partially accumulated package.
+             */
+            nul_file = fopen(status_path, "wb");
+            assert(nul_file != NULL);
+            assert(fputs("Package: nul-test\n"
+                         "Version: 1.0\n"
+                         "Architecture: amd64\n"
+                         "Status: install ok installed\n"
+                         "X-Invalid: prefix", nul_file) >= 0);
+            assert(fputc('\0', nul_file) == 0);
+            assert(fputs("suffix\n", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+
+            assert(pkg_scan(context, target, &nul_options,
+                            &uncorrelated_result) == PKG_ERR_PARSE);
+            if (uncorrelated_result != NULL) {
+                assert(pkg_scan_result_package_count(
+                           uncorrelated_result) == 0U);
+                pkg_scan_result_destroy(uncorrelated_result);
+                uncorrelated_result = NULL;
+            }
+
             assert(unlink(list_path) == 0);
             assert(unlink(target_path) == 0);
         }
