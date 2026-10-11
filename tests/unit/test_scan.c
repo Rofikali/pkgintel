@@ -132,7 +132,7 @@ int test_scan_behaviour(void) {
              */
             nul_file = fopen(list_path, "wb"); assert(nul_file != NULL);
             assert(fputs("/nul-target", nul_file) >= 0);
-            assert(fputc('\\0', nul_file) == 0);
+            assert(fputc('\0', nul_file) == 0);
             assert(fputs("/ignored", nul_file) >= 0);
             assert(fclose(nul_file) == 0);
 
@@ -181,6 +181,30 @@ int test_scan_behaviour(void) {
                          "X-Invalid: prefix", nul_file) >= 0);
             assert(fputc('\0', nul_file) == 0);
             assert(fputs("suffix\n", nul_file) >= 0);
+            assert(fclose(nul_file) == 0);
+
+            assert(pkg_scan(context, target, &nul_options,
+                            &uncorrelated_result) == PKG_ERR_PARSE);
+            if (uncorrelated_result != NULL) {
+                assert(pkg_scan_result_package_count(
+                           uncorrelated_result) == 0U);
+                pkg_scan_result_destroy(uncorrelated_result);
+                uncorrelated_result = NULL;
+            }
+
+            /*
+             * A NUL-bearing status record at EOF (without LF) must fail
+             * before finalization, even when all identity fields came first.
+             */
+            nul_file = fopen(status_path, "wb");
+            assert(nul_file != NULL);
+            assert(fputs("Package: nul-test\n"
+                         "Version: 1.0\n"
+                         "Architecture: amd64\n"
+                         "Status: install ok installed\n"
+                         "X-Invalid: prefix", nul_file) >= 0);
+            assert(fputc('\0', nul_file) == 0);
+            assert(fputs("suffix", nul_file) >= 0);
             assert(fclose(nul_file) == 0);
 
             assert(pkg_scan(context, target, &nul_options,
