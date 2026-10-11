@@ -20,29 +20,33 @@ A new engineer or agent should read, in this order:
 6. docs/API_CONTRACT.md
 7. docs/SECURITY.md
 8. docs/ADR/README.md
+9. docs/AGENT_HANDOFF_A_TO_Z.md
+10. docs/BRANCH_CLEANUP_LEDGER.md
+11. docs/BRANCH_PROVENANCE.md
+12. docs/RELEASE_EVIDENCE.md
 
-Then inspect the current branch and recent history before editing.
+Then fetch current GitHub refs, inspect the exact current `main` SHA, check open PRs, and inspect the actual local worktree/untracked files before editing. GitHub state does not establish local worktree cleanliness.
 
-## 3. Branch model
+## 3. Branch model and cleanup state
 
-The three established branches are a progression, not three independent implementations:
+The three P0 branches were a historical progression, not three independent implementations:
 
-~~~
-main
-  |
-  +-- 50 commits --> codex/p0-foundation
-                         |
-                         +-- 193 commits --> codex/p0-module-architecture
-~~~
+```
+codex/p0-foundation
+       |
+       v
+codex/p0-module-architecture -- PR #1 --> main
+```
 
-At the current P0 checkpoint, codex/p0-module-architecture contains the foundation branch plus the module-architecture work.
+That historical explanation remains useful for P0 provenance, but it is not a current inventory. The 2026-10-11 GitHub snapshot found 22 remote refs (main + 21 non-main). The exact heads, PR dispositions, unique-work cautions, and deletion checklist are in `docs/BRANCH_CLEANUP_LEDGER.md`.
 
-Therefore:
-
-- do not reimplement foundation work;
-- do not cherry-pick an ancestor's work into its descendant;
-- do not assume a branch is a separate product version;
-- use commit comparison to establish what is actually new.
+Current policy:
+- `main` is the only canonical integration line.
+- P0/P1/P2 and dpkg security work listed in the ledger is already integrated by its recorded PRs; do not replay it.
+- Squash-merged branches may appear ahead/diverged in GitHub comparisons because their feature commits are not ancestors of the squash merge. Compare PR diffs and current source content, not ahead/behind alone.
+- PR #11 was closed without merge because its stale provenance snapshot was superseded by PR #13; it was not an implementation PR.
+- Do not delete a branch until its current head, PR state, any post-PR commits, unique files, and evidence dependencies have been reconciled.
+- Branch cleanup is not complete merely because the ledger exists. The intended final state is main only, after each non-main ref has been safely deleted and the absence verified.
 
 ## 4. Current architectural direction
 

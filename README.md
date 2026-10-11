@@ -42,6 +42,8 @@ New agents and engineers must start with:
 - `docs/AGENT_ONBOARDING.md`
 - `docs/ENGINEERING_STATUS.md`
 - `docs/ENGINEERING_WORKFLOW.md`
+- `docs/AGENT_HANDOFF_A_TO_Z.md` — complete new-agent/engineer handover, current implementation scope, security invariants, evidence rules, and next investigation.
+- `docs/BRANCH_CLEANUP_LEDGER.md` — complete observed remote-branch inventory, PR mapping, exact heads, squash-merge caveats, and safe-deletion checklist.
 - `docs/BRANCH_PROVENANCE.md`
 
 These documents define branch provenance, anti-duplication rules, evidence standards, security verification, and the Staff/Principal Engineer + CA/MBA/Management review discipline.

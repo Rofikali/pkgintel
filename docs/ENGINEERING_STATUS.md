@@ -1,3 +1,20 @@
+# Authoritative pre-handover baseline — 2026-10-11 UTC
+
+This checkpoint records the mainline immediately before the handover/branch-cleanup documentation PR. Once that PR merges, its merge SHA and post-merge CI become the latest mainline evidence; this baseline remains historical provenance. Older sections further below are also historical snapshots and must not be interpreted as current status.
+
+- Canonical branch: `main`.
+- Canonical `main` SHA at the pre-handover baseline: `7c324f1fdc8a26ad4b8eab3d9d4d211f1311d0eb`.
+- Baseline `main` post-merge GitHub CI: run 38153120422, 7/7 jobs passed: https://github.com/Rofikali/pkgintel/actions/runs/38153120422.
+- PR #20 dpkg status-token validation merged; PR #19 provenance refresh merged; PR #18 EOF-terminated NUL regressions merged; PR #15 embedded-NUL rejection merged.
+- P0 architecture, P1 JSON export, P2 reference-consumer validation, strict JSON input, and decoder-failure normalization are already integrated. Do not repeat them without evidence of a remaining defect.
+- The 2026-10-11 branch snapshot contains 22 refs (main + 21 non-main). See `docs/BRANCH_CLEANUP_LEDGER.md` for the exact heads and per-branch disposition. Branch cleanup is pending until refs are deleted and absence is verified; do not claim it is complete.
+- Comprehensive continuation instructions: `docs/AGENT_HANDOFF_A_TO_Z.md`.
+- Governance gap: live branch metadata reported all observed refs, including main, as unprotected. PR #15 merged without independent approval visible in the recorded review list. The written policy and GitHub-enforced controls must not be conflated.
+- Evidence qualification: exact main CI passed, but each job proves only its exercised behavior. Conditional/skipped benchmark steps are not comparative performance evidence. Security runtime evidence applies only to the exact source/environment tested.
+- Next candidate for investigation, **not a confirmed defect**: determine whether relative target-root paths can change identity if process working directory changes between target creation and scan. Inspect current code, public contract, ADR-0038, callers, and tests before implementation.
+
+---
+
 
 ### Dedicated security-verification runtime created
 

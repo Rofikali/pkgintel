@@ -8,25 +8,31 @@ pkgintel is a security-sensitive systems project. Work must meet the applicable 
 
 The objective is not maximum code or maximum abstraction. The objective is a system whose behavior, security claims, costs, interfaces, and verification evidence are explainable and reproducible.
 
-## Current working branch
+## Current working branch and canonical state
 
-~~~
-main   <-- canonical P0 + P1 JSON-export integration line
-~~~
+```
+main   <-- canonical integration line
+```
 
-Historical P0 branches:
-- `codex/p0-module-architecture` — cumulative P0 integration branch, merged by PR #1.
-- `codex/p0-foundation` — ancestor of the cumulative P0 branch; no separate merge into `main` was required.
+Pre-handover documentation baseline recorded 2026-10-11 UTC (before PR #21):
+- `main` SHA at baseline: `7c324f1fdc8a26ad4b8eab3d9d4d211f1311d0eb`;
+- P0 foundation/module architecture is integrated;
+- P1 versioned CLI JSON export and P2 reference-consumer validation are integrated;
+- strict JSON input and decoder-failure normalization are integrated;
+- dpkg embedded-NUL rejection, EOF regression coverage, and dpkg status-token validation are integrated;
+- exact main post-merge CI run 38153120422 passed 7/7 jobs;
+- 22 remote branch refs were observed, including main. The other 21 are under cleanup review, not yet all deleted.
 
-Current source of truth: `main` at the latest merged commit. P0 is closed and P1 versioned CLI JSON export is implemented. Read `docs/ENGINEERING_STATUS.md` and `docs/P1_JSON_EXPORT_HANDOFF.md` for exact evidence and security qualifications. New implementation work should branch from current `main` unless an explicit workflow decision says otherwise.
+The live branch ledger is `docs/BRANCH_CLEANUP_LEDGER.md`; the A-to-Z handover is `docs/AGENT_HANDOFF_A_TO_Z.md`. These supersede older point-in-time branch counts in historical docs. Re-query live GitHub refs before deletion, reuse, merge, or release decisions.
 
-Do not repeat work already present on an ancestor branch. Before changing code:
+New implementation work must branch from freshly fetched current `main`. Historical P0 branches are provenance only. P1/P2 feature branches are also historical when their PR is merged. Do not repeat their work. Check current code, tests, ADRs, PRs, and exact-SHA evidence before editing.
 
-1. identify the current branch and commit;
+Before changing code:
+1. identify current branch and commit;
 2. inspect ancestry and recent commits;
-3. search for an existing implementation, test, ADR, or documented decision;
-4. determine whether the problem is implementation debt, contract debt, evidence debt, or documentation debt;
-5. make the smallest change that closes the actual gap.
+3. search for an existing implementation, test, ADR, PR, or documented decision;
+4. determine whether the gap is implementation, contract, test, evidence, documentation, operations, performance, or product debt;
+5. make the smallest change that closes the proven gap.
 
 ## Engineering roles
 
@@ -105,6 +111,8 @@ Do not start with a pattern, data structure, optimization, abstraction, or imple
 - `docs/ADR/README.md` — architectural decision history.
 - `docs/RELEASE_EVIDENCE.md` — canonical release-gate evidence ledger, including exact source SHA, branch provenance, runtime environment, verification commands/results, evidence class, and remaining gaps.
 - `docs/PR_MERGE_RELEASE_POLICY.md` — canonical pull-request, review, merge, exact-SHA approval, post-merge, and release-decision policy.
+- `docs/AGENT_HANDOFF_A_TO_Z.md` — complete A-to-Z new-engineer/agent handover and current limitations.
+- `docs/BRANCH_CLEANUP_LEDGER.md` — complete branch/PR inventory, exact observed heads, squash-merge caveats, and deletion checklist.
 
 Before substantial work, read `SKILLS.md` plus the canonical documents relevant to the change.
 
