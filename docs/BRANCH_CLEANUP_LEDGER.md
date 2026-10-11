@@ -95,11 +95,11 @@ At this inventory snapshot, the all-state PR listing contained PRs #1–#20 and 
 
 ## 6. Governance gap: written review policy vs actual controls
 
-The live branch API reported `protected: false` for all 22 observed refs, including `main`. The repository's written policy calls for exact-SHA review and CI gates, but the branch protection/ruleset state did not demonstrate that those gates were enforced by GitHub settings.
+The live branch-list API reported `protected: false` for all 22 baseline refs, including `main`. However, the connected GitHub integration received HTTP 403 when reading the branch-protection endpoint, and therefore this audit could not establish the full branch-protection or ruleset configuration. Do not infer that no rulesets exist solely from the branch-list field. Owner-level settings access is required to verify required status checks, PR requirements, bypass actors, and ruleset targeting.
 
-PR #15 merged without independent approval visible in the recorded review list. This is recorded as a governance gap, not as evidence that the parser fix is wrong.
+PR #15 merged without independent approval visible in the recorded review list. This is a review-provenance gap, not evidence that the parser fix is wrong, and by itself it does not prove whether CI checks were technically enforced.
 
-Before changing controls, inspect current branch protection and rulesets. For a solo maintainer, choose an enforceable configuration that requires PR workflow and mandatory CI without locking the owner out; if independent review cannot be required by the available account/team structure, document that limitation explicitly. Never describe a written policy as an enforced technical control.
+Before changing controls, inspect current branch protection and rulesets with owner-level access. For a solo maintainer, choose an enforceable configuration that requires PR workflow and mandatory CI without locking the owner out; if independent review cannot be required by the available account/team structure, document that limitation explicitly. Never describe a written policy as an enforced technical control.
 
 ## 7. Verification references
 
