@@ -52,6 +52,8 @@ Every offset, length, count, multiplication, addition, and allocation must be ra
 
 The v0.1 dpkg parser uses a hard maximum of **65,536 bytes of record content before the LF delimiter**. A 65,536-byte record is accepted; the next byte of record content is rejected as `PKG_ERR_RESOURCE_LIMIT`. EOF without a final LF is accepted as a complete record. CRLF input is accepted, with the CR participating in the bounded record content and removed during normalization. This boundary applies before semantic field interpretation and therefore limits both valid and malformed records.
 
+Embedded NUL bytes are malformed record content, not string terminators that may be trusted to hide a suffix. The bounded record reader detects NUL bytes before a record is interpreted as a C string, including records terminated by LF and a final record terminated by EOF. A NUL-bearing dpkg status record causes parsing to fail with `PKG_ERR_PARSE`. A NUL-bearing package file-list record is rejected for correlation: the package's correlation state is `PKG_CORRELATION_INCOMPLETE`, the scan emits the stable `PKG_DPKG_FILELIST_MALFORMED` diagnostic, and neither the prefix nor suffix is accepted as a correlated path. Regression tests cover both status metadata and package file lists.
+
 Malformed input must produce a diagnostic or controlled error, never an out-of-bounds access, integer overflow, use-after-free, or process crash.
 
 ## Resource exhaustion

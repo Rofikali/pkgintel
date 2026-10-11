@@ -19,25 +19,27 @@
 /*
  * Read one metadata record without allowing the input to grow an attacker-sized
  * heap buffer. The returned record excludes the line terminator and is always
- * NUL-terminated. A return value of -2 means the record exceeded the hard byte
- * bound; the caller must treat that as a resource-limit event.
+ * NUL-terminated when valid. Return -2 for a record exceeding the hard byte
+ * bound, and -3 for a record containing an embedded NUL byte.
  */
 static int read_bounded_record(FILE *file, char *buffer, size_t buffer_size) {
     size_t length = 0U;
     int ch;
+    int has_nul = 0;
     if (file == NULL || buffer == NULL || buffer_size < 2U) return -1;
     while ((ch = fgetc(file)) != EOF) {
         if (ch == '\n') {
             buffer[length] = '\0';
-            return 1;
+            return has_nul != 0 ? -3 : 1;
         }
         if (length + 1U >= buffer_size) return -2;
+        if (ch == '\0') has_nul = 1;
         buffer[length++] = (char)ch;
     }
     if (ferror(file) != 0) return -1;
     if (length == 0U) return 0;
     buffer[length] = '\0';
-    return 1;
+    return has_nul != 0 ? -3 : 1;
 }
 
 static char *trim_newline(char *value) {
@@ -256,6 +258,13 @@ static int package_file_list(pkg_target *target, pkg_snapshot *result, pkg_packa
         (void)fclose(file);
         return 2;
     }
+    if (read_rc == -3) {
+        package->file_count = count;
+        package->missing_file_count = missing;
+        package->invalid_path_count = invalid;
+        (void)fclose(file);
+        return 4;
+    }
     if (read_rc < 0) {
         (void)fclose(file);
         return -1;
@@ -293,6 +302,14 @@ static pkg_status correlate_package_files(pkg_target *target, pkg_snapshot *resu
             result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
             int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
                 "PKG_DPKG_PACKAGE_NAME_INVALID", "package name is invalid for filesystem correlation");
+            if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
+            if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
+            continue;
+        }
+        if (rc == 4) {
+            result->packages[i].correlation_state = PKG_CORRELATION_INCOMPLETE;
+            int diagnostic_rc = pkg_snapshot_add_diagnostic(result, PKG_ERR_PARSE, PKG_DIAGNOSTIC_WARNING, PKG_EVIDENCE_DPKG,
+                "PKG_DPKG_FILELIST_MALFORMED", "package file list contains an invalid binary record");
             if (diagnostic_rc == -2) return PKG_ERR_RESOURCE_LIMIT;
             if (diagnostic_rc != 0) return PKG_ERR_INTERNAL;
             continue;
@@ -384,6 +401,11 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
             else installed_size = kib * UINT64_C(1024);
         }
     }
+    /*
+     * An embedded-NUL status record must not be finalized as a package:
+     * fields from its prefix may already have been parsed before -3 is seen.
+     */
+    if (read_rc == -3) parse_error = 1;
     if (truncated == 0 && parse_error == 0 && allocation_error == 0 &&
         name != NULL && version != NULL && architecture != NULL) {
         pkg_installation_state installation_state = installation_state_from_dpkg_status(status);
