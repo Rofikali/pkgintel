@@ -14,7 +14,7 @@ For Linux target-relative filesystem operations:
 1. Open and retain the target root directory descriptor during target creation, using `O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC`. Target creation fails if the root cannot be opened safely.
 2. Interpret a relative root path against the process working directory at target creation time; later working-directory changes must not retarget an existing target.
 3. Keep using the retained descriptor for the lifetime of the target; renaming or replacing the original pathname must not retarget the target.
-2. Resolve target-relative paths with `openat2()` using:
+4. Resolve target-relative paths with `openat2()` using:
    - `RESOLVE_IN_ROOT`
    - `RESOLVE_NO_MAGICLINKS`
    - `RESOLVE_NO_XDEV`
