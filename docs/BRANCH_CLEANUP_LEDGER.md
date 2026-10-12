@@ -138,3 +138,42 @@ The 22-ref baseline above was captured before the handover branch was created. T
 - Intended disposition: after PR #21 merges, verify the resulting `main` SHA, verify post-merge CI, re-fetch this branch's current head, then delete this temporary branch if no follow-up commit was added.
 
 This branch is **not part of the 22-ref baseline snapshot**. A live inventory during PR #21 therefore includes this additional temporary branch. The final branch cleanup must include it rather than leaving the cleanup branch behind.
+
+
+## 4. Live snapshot after PR #22 (2026-10-12 UTC)
+
+Canonical `main` now points to `714a0b42612b95622dcdb6e5c1983ece27c2b06d` (PR #22, pinned target-root identity at creation). PR #22 merged successfully after the exact PR-head workflow passed all seven jobs. The post-merge `main` workflow is a separate gate and was still in progress when this snapshot was recorded; see [run 38206240187](https://github.com/Rofikali/pkgintel/actions/runs/38206240187). There were zero open pull requests at the time of the snapshot.
+
+This is the fresh live branch-ref inventory. The historical table in section 3 retains its 2026-10-11 heads for provenance; use this list for current ref names and SHAs. A `protected:false` API field is not proof that no repository rulesets or other merge controls apply.
+
+| Current branch | Exact head SHA | Disposition |
+|---|---|---|
+| `codex/p0-foundation` | `9a3ddd9f3dc0faa12eeec3bda30800df045f2518` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `codex/p0-module-architecture` | `1a99cbe2e8bfeea427775a38877f70c34766c234` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `codex/p0-post-merge-reconciliation` | `ee98282111136c2b37686bfbac756a36cf3b76c5` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `codex/p1-capability-decision` | `a75214124d0d1027c1eb1e9eedd2a358832a84c1` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `codex/p1-product-charter` | `998f39a1b5d405a5d278a1bf70c27596c5539dcf` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `codex/p2-reference-consumer` | `7ca3584e53b67d048e34fa967cb998323a1aa233` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/branch-inventory-current` | `01498adfca3ec736862f99e5fa915c5da02d3f1e` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/complete-agent-handover-branch-cleanup` | `2fbcf55a351a66978d47262cdacf66a555bf8e21` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/finalize-current-main-pointer` | `b63fc970f14cbe4bb719ce3c31f916b64721e587` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/finalize-p0-provenance` | `ae5bf0e45ed9c7869504f4c51c9b3ea521594594` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/p1-json-export-handoff` | `268480032ca7c9ffd9f7832ecdba120e77da482c` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/p2-consumer-validation-decision` | `289e7e6feaaf37acf8a5e7fd0f26b147395479e0` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/post-pr22-cleanup-ledger` | `714a0b42612b95622dcdb6e5c1983ece27c2b06d` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/reconcile-agent-branch-state` | `9b738699427d5fa9857e5ca3698d9569a5b85f6f` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/reconcile-branch-inventory-after-pr14` | `716b437a06b568e51e047fab676486bae8efe256` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/reconcile-current-branch-provenance` | `b01fe04d2689c1dec0602dc8bc44e7c7d4a4ec4f` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/reconcile-provenance-after-pr18` | `b07c2e46bda2630a1778321114cff72d3a7edb2a` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `docs/refresh-provenance-post-pr16` | `02052a0d56b44caa7b7a6a940268984905ff3e2b` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `fix/dpkg-status-token-validation` | `07e2b74f059e5c3a5032c9989259a926f34d58d9` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `fix/p2-json-parser-failure-normalization` | `0d97cc1e772bb141c8fce68bccc7ddfebdf42b45` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `fix/p2-strict-json-input` | `8ed81e2e3ec4e4253366278f1373a8007ecab49a` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `fix/pin-target-root-at-creation` | `ce6cb46686fe86275dbaf898a06e2e23f5594aa4` | Delete candidate after post-merge verification; PR #22 is merged |
+| `main` | `714a0b42612b95622dcdb6e5c1983ece27c2b06d` | **KEEP — canonical** |
+| `security/reject-nul-in-dpkg-records` | `4c0a7538189d6dc4d98a9651e0c10227943c58f4` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+| `test/dpkg-nul-eof-records` | `4238cb9f8fb4dc7947b9711952866feb7a02bf8b` | Delete candidate only after confirming its documented work is integrated and no unique work remains |
+
+## 5. Branch-deletion execution status
+
+The user authorized repository administration, including branch deletion. The available GitHub connector operations in this session expose branch creation/ref movement and file deletion, but no branch/ref deletion operation. I have not simulated deletion by moving refs or claimed any branch was deleted. To finish the requested one-branch state, use an authorized GitHub branch-delete operation after rechecking the exact refs above. Preserve `main` and all tags/releases; this ledger does not authorize deleting the repository or tags.
