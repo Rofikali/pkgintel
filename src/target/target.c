@@ -21,8 +21,9 @@ static pkg_status target_open_error_status(int error_number) {
 static pkg_status target_create(pkg_context *context, pkg_target_type type, const char *root, pkg_target **out_target) {
     pkg_target *target;
     pkg_status status;
-    if (context == NULL || root == NULL || out_target == NULL || root[0] == '\0') return PKG_ERR_INVALID_ARGUMENT;
+    if (out_target == NULL) return PKG_ERR_INVALID_ARGUMENT;
     *out_target = NULL;
+    if (context == NULL || root == NULL || root[0] == '\0') return PKG_ERR_INVALID_ARGUMENT;
     target = calloc(1, sizeof(*target));
     if (target == NULL) return PKG_ERR_INTERNAL;
     target->root_fd = -1;
