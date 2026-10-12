@@ -478,3 +478,16 @@ This checkpoint supersedes older statements that JSON export remains planned or 
 ### Current next action
 
 P1 JSON export is delivered. The next gate is downstream-consumer validation, not an automatic new parser or backend. No customer requirement or open backlog issue currently establishes which expansion has the highest value. See `docs/P2_CONSUMER_VALIDATION_DECISION.md`; do not select a production capability until that validation yields evidence. Before any change, inspect the current `main` SHA and read the onboarding/workflow/provenance documents. Tie new evidence to the exact SHA and never promote SKIP to PASS.
+
+
+## State refresh — 2026-10-12 UTC
+
+This refresh supersedes stale main-SHA and post-merge-CI statements elsewhere in this document where they conflict.
+
+- Canonical `main`: `e7366500ba0de548bcc7e490124196b510d38746`.
+- PR #22 target-root identity pinning is merged. The root directory FD is opened and retained at target creation; relative paths are anchored to the creation-time CWD, and unsafe/unopenable roots fail during creation. API contract and ADR-0038 reflect this behavior.
+- PR #22 CI: 7/7 passed at the exact PR head. PR #23 documentation CI: 7/7 passed at the exact PR head. Post-merge `main` CI: 7/7 passed at [run 38206440486](https://github.com/Rofikali/pkgintel/actions/runs/38206440486).
+- Open PR count: 0 at the time of refresh.
+- Branch cleanup is not complete. The observed inventory had 25 refs including `main`; a temporary documentation branch was created for this refresh after that inventory. The available GitHub connector exposes no branch/ref deletion action. Do not claim branches were deleted or use `update_ref` as a substitute.
+- Next gate: validate downstream-consumer requirements/evidence per `docs/P2_CONSUMER_VALIDATION_DECISION.md` before selecting a production feature. Do not treat absence of a requirement as approval to add complexity.
+- CI evidence is not a substitute for real Ubuntu 24.04 runtime evidence for privileged filesystem/mount behavior. Keep `PASS`, `SKIP_UNAVAILABLE`, and `FAIL` distinct.

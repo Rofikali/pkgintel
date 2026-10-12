@@ -177,3 +177,13 @@ This is the fresh live branch-ref inventory. The historical table in section 3 r
 ## 5. Branch-deletion execution status
 
 The user authorized repository administration, including branch deletion. The available GitHub connector operations in this session expose branch creation/ref movement and file deletion, but no branch/ref deletion operation. I have not simulated deletion by moving refs or claimed any branch was deleted. To finish the requested one-branch state, use an authorized GitHub branch-delete operation after rechecking the exact refs above. Preserve `main` and all tags/releases; this ledger does not authorize deleting the repository or tags.
+
+
+## 6. Post-merge CI closure and handoff refresh (2026-10-12 UTC)
+
+- PR #22 merged as `714a0b42612b95622dcdb6e5c1983ece27c2b06d`; its exact-head workflow passed 7/7 jobs.
+- PR #23 merged as `e7366500ba0de548bcc7e490124196b510d38746`; its exact-head workflow passed 7/7 jobs.
+- The post-merge workflow for current `main`, SHA `e7366500ba0de548bcc7e490124196b510d38746`, completed successfully with all 7/7 jobs passing: [run 38206440486](https://github.com/Rofikali/pkgintel/actions/runs/38206440486).
+- This confirmation closes the post-merge CI gate; it does **not** close branch deletion. Re-fetch the live branch list before cleanup because a temporary documentation branch was created after the inventory in section 4. The inventory is a snapshot, not a self-updating list.
+- Keep `main` as canonical. Do not delete a non-main branch until its exact head, PR disposition, and unique commits/content have been reviewed. Squash-merge ancestry makes ahead/behind counts insufficient by themselves.
+- The current GitHub connector exposes no branch/ref deletion operation. No branch has been deleted in this cleanup pass; do not substitute moving refs for deletion.
