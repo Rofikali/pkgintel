@@ -25,14 +25,37 @@ int test_scan_behaviour(void) {
     assert(pkg_context_create(NULL, &context) == PKG_OK); assert(context != NULL);
     make_fixture(fixture, sizeof(fixture));
     {
+        char original_cwd[512];
+        char relative_root[256];
+        pkg_scan_result *relative_result = NULL;
+        assert(getcwd(original_cwd, sizeof(original_cwd)) != NULL);
+        assert(strncmp(fixture, "/tmp/", 5U) == 0);
+        assert(strlen(fixture + 5U) < sizeof(relative_root));
+        (void)strcpy(relative_root, fixture + 5U);
+        assert(chdir("/tmp") == 0);
+        assert(pkg_target_create_rootfs(context, relative_root, &target) == PKG_OK);
+        assert(target != NULL);
+        /*
+         * The target must retain the directory selected at creation even if
+         * the process working directory changes before the first scan.
+         */
+        assert(chdir("/") == 0);
+        assert(pkg_scan(context, target, NULL, &relative_result) == PKG_OK);
+        assert(relative_result != NULL);
+        assert(pkg_scan_result_package_count(relative_result) == 2U);
+        pkg_scan_result_destroy(relative_result);
+        relative_result = NULL;
+        pkg_target_destroy(target);
+        target = NULL;
+        assert(chdir(original_cwd) == 0);
+    }
+    {
         char root_link[512];
         assert(snprintf(root_link, sizeof(root_link), "%s-root-link", fixture) > 0);
         assert(symlink(fixture, root_link) == 0);
-        assert(pkg_target_create_rootfs(context, root_link, &target) == PKG_OK);
-        assert(target != NULL);
-        assert(pkg_scan(context, target, NULL, &limited_result) != PKG_OK);
-        assert(limited_result == NULL);
-        pkg_target_destroy(target); target = NULL;
+        /* A symlinked root is rejected when the target is created. */
+        assert(pkg_target_create_rootfs(context, root_link, &target) != PKG_OK);
+        assert(target == NULL);
         assert(unlink(root_link) == 0);
     }
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK); assert(target != NULL);
@@ -461,6 +484,6 @@ int test_scan_behaviour(void) {
         pkg_target_destroy(target);
         remove_multi_package_fixture(multi_fixture);
     }
-    assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_OK); assert(pkg_scan(context, target, NULL, &result) == PKG_ERR_NOT_FOUND); assert(result == NULL); pkg_target_destroy(target);
+    assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_ERR_NOT_FOUND); assert(target == NULL);
     pkg_context_destroy(context); assert(strcmp(pkg_status_string(PKG_ERR_PARSE), "corrupt data") == 0); return 0;
 }

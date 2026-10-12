@@ -12,17 +12,38 @@
 #include "alloc_probe_macros.h"
 #endif
 
+static pkg_status target_open_error_status(int error_number) {
+    if (error_number == EACCES || error_number == EPERM) return PKG_ERR_PERMISSION;
+    if (error_number == ENOENT) return PKG_ERR_NOT_FOUND;
+    return PKG_ERR_IO;
+}
+
 static pkg_status target_create(pkg_context *context, pkg_target_type type, const char *root, pkg_target **out_target) {
     pkg_target *target;
-    if (context == NULL || root == NULL || out_target == NULL || root[0] == '\0') return PKG_ERR_INVALID_ARGUMENT;
+    pkg_status status;
+    if (out_target == NULL) return PKG_ERR_INVALID_ARGUMENT;
     *out_target = NULL;
+    if (context == NULL || root == NULL || root[0] == '\0') return PKG_ERR_INVALID_ARGUMENT;
     target = calloc(1, sizeof(*target));
     if (target == NULL) return PKG_ERR_INTERNAL;
+    target->root_fd = -1;
     target->root = pkg_strdup_internal(root);
     if (target->root == NULL) { free(target); return PKG_ERR_INTERNAL; }
+    /*
+     * Pin the caller-selected directory now, not at first scan. Relative paths
+     * must not be reinterpreted if the process working directory later changes,
+     * and renames/replacements of the pathname must not retarget this object.
+     */
+    target->root_fd = open(target->root, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+    if (target->root_fd < 0) {
+        int saved_errno = errno;
+        status = target_open_error_status(saved_errno);
+        free(target->root);
+        free(target);
+        return status;
+    }
     target->context = context;
     target->type = type;
-    target->root_fd = -1;
     *out_target = target;
     return PKG_OK;
 }
@@ -58,11 +79,7 @@ pkg_status pkg_target_open_root(pkg_target *target) {
     if (target == NULL || target->root == NULL) return PKG_ERR_INVALID_ARGUMENT;
     if (target->root_fd >= 0) return PKG_OK;
     target->root_fd = open(target->root, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
-    if (target->root_fd < 0) {
-        if (errno == EACCES || errno == EPERM) return PKG_ERR_PERMISSION;
-        if (errno == ENOENT) return PKG_ERR_NOT_FOUND;
-        return PKG_ERR_IO;
-    }
+    if (target->root_fd < 0) return target_open_error_status(errno);
     return PKG_OK;
 }
 
