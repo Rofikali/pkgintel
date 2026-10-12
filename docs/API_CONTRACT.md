@@ -71,9 +71,16 @@ An installation state is not a package identity.
 
 ## 8. Filesystem safety
 
-A target root path is not itself a security boundary. The implementation uses a
-root descriptor and descriptor-relative resolution. Traversal outside the target,
-magic-link traversal, and unsafe path resolution must fail closed.
+A target root path is not itself a security boundary. Target creation opens and pins
+the root directory descriptor; if opening the root fails, target creation fails and
+the output target is NULL. A relative root path is interpreted against the process
+working directory at target creation time. Later working-directory changes and
+pathname rename/replacement must not retarget an existing target. The descriptor is
+held until target destruction.
+
+The implementation uses descriptor-relative resolution for paths inside the target.
+Traversal outside the target, magic-link traversal, and unsafe path resolution must
+fail closed.
 
 Symlink observation must not require following the symlink. Broken, inaccessible,
 and missing artifacts are distinct observations.
