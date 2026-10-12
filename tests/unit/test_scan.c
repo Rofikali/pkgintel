@@ -484,6 +484,6 @@ int test_scan_behaviour(void) {
         pkg_target_destroy(target);
         remove_multi_package_fixture(multi_fixture);
     }
-    assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_OK); assert(pkg_scan(context, target, NULL, &result) == PKG_ERR_NOT_FOUND); assert(result == NULL); pkg_target_destroy(target);
+    assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_ERR_NOT_FOUND); assert(target == NULL);
     pkg_context_destroy(context); assert(strcmp(pkg_status_string(PKG_ERR_PARSE), "corrupt data") == 0); return 0;
 }
