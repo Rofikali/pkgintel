@@ -82,6 +82,11 @@ The implementation uses descriptor-relative resolution for paths inside the targ
 Traversal outside the target, magic-link traversal, and unsafe path resolution must
 fail closed.
 
+The legacy `pkg_scan_result_target_root()` accessor preserves the caller-supplied
+path spelling as a diagnostic label; it is not the target identity or a promise that
+the pathname will continue to resolve after a rename. The retained directory
+descriptor defines target identity.
+
 Symlink observation must not require following the symlink. Broken, inaccessible,
 and missing artifacts are distinct observations.
 
