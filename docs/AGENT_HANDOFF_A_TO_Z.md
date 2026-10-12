@@ -296,3 +296,14 @@ A handover is successful only when the next agent can identify:
 - who owns the next action and what evidence will close it.
 
 If any of those cannot be established from current source and documented evidence, investigate before implementing.
+
+
+## State refresh — 2026-10-12 UTC (supersedes older snapshot fields)
+
+- Current canonical branch: `main` at `e7366500ba0de548bcc7e490124196b510d38746` (PR #23, handoff/cleanup ledger refresh).
+- PR #22 merged target-root identity pinning at `714a0b42612b95622dcdb6e5c1983ece27c2b06d`. Target creation now opens and retains the root directory FD; relative roots are resolved at creation, symlink roots fail at creation, and the public contract/ADR/tests were updated together.
+- PR #22 exact-head CI passed 7/7. PR #23 exact-head CI passed 7/7. Post-merge CI for current `main` passed 7/7 at [run 38206440486](https://github.com/Rofikali/pkgintel/actions/runs/38206440486).
+- There are zero open PRs. A live inventory immediately after PR #23 reported 25 branch refs (including `main`), of which 24 were non-main. A temporary handoff refresh branch was subsequently created; re-fetch live refs before any cleanup decision.
+- Branch deletion remains unexecuted: the available GitHub connector has no delete-branch/ref operation. Do not use ref movement as a deletion substitute. Keep `main`; verify exact live heads and PR disposition before deleting via an authorized GitHub operation.
+- Next engineering gate remains evidence-led downstream-consumer validation as specified in `docs/P2_CONSUMER_VALIDATION_DECISION.md`. No new production capability is justified by customer evidence in the repository snapshot. Do not invent a feature or claim customer validation occurred.
+- The GitHub Actions checks are repository-hosted evidence. Do not represent them as a local run inside Windows 11 → Docker Desktop → Ubuntu 24.04. Privileged OS/VFS/mount claims still require the documented real-runtime evidence.
