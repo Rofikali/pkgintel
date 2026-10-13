@@ -51,11 +51,21 @@ int test_scan_behaviour(void) {
     }
     {
         char root_link[512];
+        char root_link_slash[514];
+        char root_link_dot[514];
         assert(snprintf(root_link, sizeof(root_link), "%s-root-link", fixture) > 0);
         assert(symlink(fixture, root_link) == 0);
-        /* A symlinked root is rejected when the target is created. */
+
+        /* Reject the symlink itself and aliases that make it a non-final component. */
         assert(pkg_target_create_rootfs(context, root_link, &target) != PKG_OK);
         assert(target == NULL);
+        assert(snprintf(root_link_slash, sizeof(root_link_slash), "%s/", root_link) > 0);
+        assert(pkg_target_create_rootfs(context, root_link_slash, &target) != PKG_OK);
+        assert(target == NULL);
+        assert(snprintf(root_link_dot, sizeof(root_link_dot), "%s/.", root_link) > 0);
+        assert(pkg_target_create_rootfs(context, root_link_dot, &target) != PKG_OK);
+        assert(target == NULL);
+
         assert(unlink(root_link) == 0);
     }
     assert(pkg_target_create_rootfs(context, fixture, &target) == PKG_OK); assert(target != NULL);
