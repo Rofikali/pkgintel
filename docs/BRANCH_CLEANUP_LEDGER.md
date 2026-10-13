@@ -187,3 +187,30 @@ The user authorized repository administration, including branch deletion. The av
 - This confirmation closes the post-merge CI gate; it does **not** close branch deletion. Re-fetch the live branch list before cleanup because a temporary documentation branch was created after the inventory in section 4. The inventory is a snapshot, not a self-updating list.
 - Keep `main` as canonical. Do not delete a non-main branch until its exact head, PR disposition, and unique commits/content have been reviewed. Squash-merge ancestry makes ahead/behind counts insufficient by themselves.
 - The current GitHub connector exposes no branch/ref deletion operation. No branch has been deleted in this cleanup pass; do not substitute moving refs for deletion.
+
+
+## 7. Live branch state after PR #25 — 2026-10-13 UTC
+
+This section is a current-state refresh; older inventories above remain historical snapshots and must not be treated as live refs.
+
+At the live inventory immediately before the PR #25 documentation reconciliation branch was created, GitHub returned:
+
+| Branch | Observed head / purpose | Disposition |
+|---|---|---|
+| `main` | `f77f1e2ca1b40e59f0897131f539483eb5736ecd` — canonical merge commit for PR #25 | **KEEP — canonical** |
+| `security/reject-symlink-root-path-aliases` | `3ebc9bf7d812980bd4e5212c85b7b693623b04fe` — source branch for merged PR #25 | Deletion candidate only after post-merge provenance is recorded and absence of unique work is confirmed |
+
+PR #25 is merged. The source branch's security fix is reachable from `main`; it is not a second unmerged implementation. The PR-head tree and merge tree are identical (`3f0dec6001fedc39d63616ff2072554a81c3a41c)).
+
+A temporary branch named `docs/reconcile-pr25-post-merge-evidence` was created from the merge SHA solely to submit this documentation reconciliation. It contains documentation/provenance updates, not a second implementation of the security fix. Re-fetch its final head and PR disposition after this change is submitted.
+
+The available GitHub connector in this session has no branch/ref deletion operation. No branch deletion has been performed. Do not claim the intended one-branch state is achieved, and do not use ref movement as a substitute for deletion. Keep `main`; delete non-main refs only after the exact head, merged PR, and unique-work disposition are verified through an authorized branch-delete operation.
+
+## 8. PR #25 provenance and next gate
+
+- PR: https://github.com/Rofikali/pkgintel/pull/25
+- Reviewed PR head: `3ebc9bf7d812980bd4e5212c85b7b693623b04fe`
+- Merge SHA: `f77f1e2ca1b40e59f0897131f539483eb5736ecd`
+- Post-merge CI: 7/7 passed at https://github.com/Rofikali/pkgintel/actions/runs/38351908633.
+- Review governance: only a COMMENTED review was recorded; no independent approval was recorded before merge. This is a process gap and must not be rewritten as approval.
+- Next engineering gate: downstream-consumer validation. See `docs/P2_CONSUMER_VALIDATION_DECISION.md`; no speculative production feature is justified by the current evidence.
