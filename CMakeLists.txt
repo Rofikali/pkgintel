@@ -179,6 +179,10 @@ set_source_files_properties(src/backends/dpkg/dpkg.c PROPERTIES COMPILE_DEFINITI
         tests/unit/test_json.c
         tests/unit/fixtures.c)
     target_link_libraries(pkgintel_unit_tests PRIVATE pkgintel_test)
+    # Keep assert-based test checks active in Release builds. CMake's default
+    # Release flags define NDEBUG; without this override, test_main's assert
+    # calls (including the calls that execute the test functions) disappear.
+    target_compile_options(pkgintel_unit_tests PRIVATE -UNDEBUG)
     target_include_directories(pkgintel_unit_tests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit
         ${CMAKE_CURRENT_SOURCE_DIR}/src)
