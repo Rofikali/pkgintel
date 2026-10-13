@@ -359,7 +359,7 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
     int read_rc;
     char *name = NULL, *version = NULL, *architecture = NULL, *status = NULL;
     uint64_t installed_size = 0U;
-    int parse_error = 0, allocation_error = 0, truncated = 0;
+    int parse_error = 0, allocation_error = 0, truncated = 0, io_error = 0;
     if (context == NULL || target == NULL || result == NULL || target->root_fd < 0) return PKG_ERR_INVALID_ARGUMENT;
     fd = pkg_target_open_path(target, "/var/lib/dpkg/status", O_RDONLY | O_CLOEXEC);
     if (fd < 0) {
@@ -437,12 +437,14 @@ pkg_status pkg_dpkg_scan(pkg_context *context, pkg_target *target, const pkg_sca
         }
     }
     if (read_rc == -2) truncated = 1;
-    else if (read_rc < 0) parse_error = 1;
+    else if (read_rc == -1) io_error = 1;
+    else if (read_rc == -3) parse_error = 1;
     free(name); free(version); free(architecture); free(status);
-    if (fclose(file) != 0 && parse_error == 0) parse_error = 1;
+    if (fclose(file) != 0) io_error = 1;
     if (allocation_error != 0) return PKG_ERR_INTERNAL;
     if (parse_error != 0) return PKG_ERR_PARSE;
     if (truncated != 0) return PKG_ERR_RESOURCE_LIMIT;
+    if (io_error != 0) return PKG_ERR_IO;
     {
         /* Keep package ordering deterministic before generating package-owned artifact ranges. */
         if (result->package_count > 1U) qsort(result->packages, result->package_count, sizeof(result->packages[0]), package_record_compare);
