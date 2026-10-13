@@ -412,3 +412,26 @@ PR #1 then merged into `main` at `ec44a111cf215337d16e3c8800574248e109a3f1`. Pos
 - Remaining action: routine deletion of obsolete branch references after final provenance cleanup.
 
 **P0 release integration: CLOSED.**
+
+
+## PR #25 post-merge integration record — 2026-10-13 UTC
+
+**Disposition: merged; post-merge CI PASS.**
+
+- Repository: `Rofikali/pkgintel`
+- PR: https://github.com/Rofikali/pkgintel/pull/25
+- Base: `main`
+- Head branch: `security/reject-symlink-root-path-aliases`
+- Reviewed PR head SHA: `3ebc9bf7d812980bd4e5212c85b7b693623b04fe`
+- Merge SHA / canonical `main`: `f77f1e2ca1b40e59f0897131f539483eb5736ecd`
+- PR-head tree SHA and merge tree SHA: `3f0dec6001fedc39d63616ff2072554a81c3a41c` (identical)
+- Production-relevant delta: reject root path spellings that place a symlink before a trailing slash or terminal `/.`; normalize those suffixes in a temporary path before applying `O_NOFOLLOW`; retain original spelling for diagnostics; regression coverage for `link`, `link/`, and `link/.`. No public API/ABI or struct-layout change.
+- Exact merge-SHA GitHub Actions: [run 38351908633](https://github.com/Rofikali/pkgintel/actions/runs/38351908633) — 7/7 jobs PASS: GCC Debug, GCC Release, Clang Debug, Clang Release, ASan/UBSan, JSON fuzz, strict Linux security runtime.
+- User-run Ubuntu 24.04 / Docker Desktop evidence on the identical source tree: developer container CTest 4 PASS / 1 SKIP; dedicated security container CTest 5 PASS / 0 SKIP, including `pkgintel.security.mounts`. The skipped developer-container mount test remains a skip.
+- Source tree identity means local evidence from the PR head applies to the same tracked source content as the merge commit. It does not claim that the merge SHA was separately rebuilt inside the user's containers.
+- Review qualification: the recorded PR review was COMMENTED, with no independent approval in the review list. Merge was executed by the repository owner; record this as a governance gap, not an independent review.
+- Known limitations: evidence is bounded to the tested code, Ubuntu 24.04 CI/runtime configurations, and the documented Docker Desktop/WSL2 environment. It does not establish correctness on every Linux distribution/kernel or a production deployment.
+- Business/operational impact: closes a filesystem root-path alias handling gap without new dependencies or public contract changes. No new feature, recurring service cost, or customer-demand claim follows from this security fix.
+- Next action: downstream-consumer validation per `docs/P2_CONSUMER_VALIDATION_DECISION.md`; do not choose another production capability until a concrete consumer job and integration gaps are evidenced.
+
+**PR #25 integration: CLOSED.**

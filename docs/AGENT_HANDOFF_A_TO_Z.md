@@ -307,3 +307,19 @@ If any of those cannot be established from current source and documented evidenc
 - Branch deletion remains unexecuted: the available GitHub connector has no delete-branch/ref operation. Do not use ref movement as a deletion substitute. Keep `main`; verify exact live heads and PR disposition before deleting via an authorized GitHub operation.
 - Next engineering gate remains evidence-led downstream-consumer validation as specified in `docs/P2_CONSUMER_VALIDATION_DECISION.md`. No new production capability is justified by customer evidence in the repository snapshot. Do not invent a feature or claim customer validation occurred.
 - The GitHub Actions checks are repository-hosted evidence. Do not represent them as a local run inside Windows 11 → Docker Desktop → Ubuntu 24.04. Privileged OS/VFS/mount claims still require the documented real-runtime evidence.
+
+
+## State refresh — 2026-10-13 UTC (PR #25 post-merge)
+
+- Canonical `main` SHA: `f77f1e2ca1b40e59f0897131f539483eb5736ecd`.
+- PR #25 merged the symlinked target-root alias rejection fix: https://github.com/Rofikali/pkgintel/pull/25.
+- Reviewed PR head: `3ebc9bf7d812980bd4e5212c85b7b693623b04fe`.
+- Merge commit: `f77f1e2ca1b40e59f0897131f539483eb5736ecd`.
+- PR-head and merge-commit tree SHA are identical: `3f0dec6001fedc39d63616ff2072554a81c3a41c`.
+- Post-merge CI run 38351908633 passed 7/7 jobs on the merge SHA: https://github.com/Rofikali/pkgintel/actions/runs/38351908633.
+- User-provided local evidence on the identical source tree: developer container 4 passed / 1 skipped (privileged mount test skipped in that environment); dedicated security container 5 passed / 0 skipped (strict mount test passed). Preserve this environment distinction.
+- PR #25's recorded review was COMMENTED rather than an independent approval. This merge therefore has a review-governance gap; do not describe the review as independently approved.
+- The live inventory before this docs reconciliation branch was created contained `main` and `security/reject-symlink-root-path-aliases`. The latter is the merged PR source branch, not duplicate unmerged production work. The docs reconciliation branch is temporary.
+- The current GitHub connector exposes no branch/ref deletion operation. Do not claim cleanup is complete or move refs to imitate deletion.
+- Next: follow `docs/P2_CONSUMER_VALIDATION_DECISION.md`. The existing Python reference consumer is an internal technical-usability experiment, not market/customer validation. Gather a concrete downstream use case and record contract friction before selecting the next production capability. No speculative feature expansion is authorized by the current evidence.
+- Do not rerun local tests merely to change the timestamp: the merged tree is identical to the locally tested PR-head tree. Requalify if production source, tests, configuration, runtime assumptions, or required evidence applicability changes.
