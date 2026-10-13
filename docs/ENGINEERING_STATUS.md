@@ -491,3 +491,19 @@ This refresh supersedes stale main-SHA and post-merge-CI statements elsewhere in
 - Branch cleanup is not complete. The observed inventory had 25 refs including `main`; a temporary documentation branch was created for this refresh after that inventory. The available GitHub connector exposes no branch/ref deletion action. Do not claim branches were deleted or use `update_ref` as a substitute.
 - Next gate: validate downstream-consumer requirements/evidence per `docs/P2_CONSUMER_VALIDATION_DECISION.md` before selecting a production feature. Do not treat absence of a requirement as approval to add complexity.
 - CI evidence is not a substitute for real Ubuntu 24.04 runtime evidence for privileged filesystem/mount behavior. Keep `PASS`, `SKIP_UNAVAILABLE`, and `FAIL` distinct.
+
+
+## Current state refresh — 2026-10-13 UTC (PR #25 post-merge; supersedes stale current-state fields above)
+
+- Canonical branch: `main`.
+- Canonical `main` SHA: `f77f1e2ca1b40e59f0897131f539483eb5736ecd`.
+- PR #25, `fix(security): reject symlinked target-root path aliases`, is merged: https://github.com/Rofikali/pkgintel/pull/25.
+- PR head: `3ebc9bf7d812980bd4e5212c85b7b693623b04fe`; merge commit: `f77f1e2ca1b40e59f0897131f539483eb5736ecd`.
+- The PR-head tree and merge-commit tree are identical: `3f0dec6001fedc39d63616ff2072554a81c3a41c`. The merge introduced no additional tree delta beyond the reviewed PR content.
+- Post-merge GitHub Actions run 38351908633 passed all 7/7 jobs on the exact `main` merge SHA: GCC Debug, GCC Release, Clang Debug, Clang Release, ASan/UBSan, JSON fuzzing, and strict Linux security runtime. Evidence: https://github.com/Rofikali/pkgintel/actions/runs/38351908633.
+- User-run local verification remains tied to the identical PR-head source tree: developer container CTest 4 passed / 1 skipped (the privileged mount test is SKIPPED there); dedicated security container CTest 5 passed / 0 skipped, including the strict mount test. Do not relabel the developer-container skip as a pass.
+- Review governance qualification: the recorded PR review list contained a COMMENTED review, not an independent approval. The PR was merged by the repository owner. Record this as a process gap; do not imply an independent approval occurred.
+- Live branch inventory immediately before this documentation reconciliation branch was created: `main` and `security/reject-symlink-root-path-aliases`. The security branch contains the PR #25 implementation and is already integrated. This docs-only reconciliation branch is temporary and must not be confused with a second security implementation.
+- Branch/ref deletion is not available through the GitHub connector actions in this session. Do not claim branch deletion or simulate it by moving a ref.
+- Next engineering gate: continue evidence-led downstream-consumer validation under `docs/P2_CONSUMER_VALIDATION_DECISION.md`. The internal reference consumer proves technical contract mechanics only; it is not customer validation. Do not add a new backend, ELF inspection, Rust FFI, HTTP service, database, or broader scan capability without a concrete consumer need.
+- No local Docker command is required solely because of the merge: the merged Git tree is identical to the exact PR-head tree already tested locally, and the post-merge CI passed on the merge SHA. Any new OS/kernel/runtime-specific claim still requires the documented Ubuntu 24.04 developer/security-container evidence.
