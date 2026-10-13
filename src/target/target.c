@@ -18,6 +18,52 @@ static pkg_status target_open_error_status(int error_number) {
     return PKG_ERR_IO;
 }
 
+static pkg_status target_open_root_fd(const char *root, int *out_fd) {
+    size_t length;
+    char *open_path;
+    int fd;
+    int saved_errno;
+
+    if (root == NULL || out_fd == NULL) return PKG_ERR_INVALID_ARGUMENT;
+    *out_fd = -1;
+    length = strlen(root);
+    open_path = malloc(length + 1U);
+    if (open_path == NULL) return PKG_ERR_INTERNAL;
+    memcpy(open_path, root, length + 1U);
+
+    /*
+     * O_NOFOLLOW protects only the final pathname component. A trailing slash
+     * or a terminal "/." can make a symlink appear as an earlier component,
+     * bypassing the intended symlink-root rejection. Remove only these
+     * semantically redundant suffixes before opening; retain the caller's
+     * original spelling in target->root for diagnostics.
+     */
+    for (;;) {
+        while (length > 1U && open_path[length - 1U] == '/') {
+            open_path[--length] = '\0';
+        }
+        if (length >= 2U && open_path[length - 1U] == '.' &&
+            open_path[length - 2U] == '/') {
+            if (length == 2U && open_path[0] == '/') {
+                open_path[1] = '\0';
+                length = 1U;
+                break;
+            }
+            length -= 2U;
+            open_path[length] = '\0';
+            continue;
+        }
+        break;
+    }
+
+    fd = open(open_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+    saved_errno = errno;
+    free(open_path);
+    if (fd < 0) return target_open_error_status(saved_errno);
+    *out_fd = fd;
+    return PKG_OK;
+}
+
 static pkg_status target_create(pkg_context *context, pkg_target_type type, const char *root, pkg_target **out_target) {
     pkg_target *target;
     pkg_status status;
@@ -34,10 +80,8 @@ static pkg_status target_create(pkg_context *context, pkg_target_type type, cons
      * must not be reinterpreted if the process working directory later changes,
      * and renames/replacements of the pathname must not retarget this object.
      */
-    target->root_fd = open(target->root, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
-    if (target->root_fd < 0) {
-        int saved_errno = errno;
-        status = target_open_error_status(saved_errno);
+    status = target_open_root_fd(target->root, &target->root_fd);
+    if (status != PKG_OK) {
         free(target->root);
         free(target);
         return status;
@@ -78,9 +122,7 @@ int pkg_target_lstat_path(const pkg_target *target, const char *path, struct sta
 pkg_status pkg_target_open_root(pkg_target *target) {
     if (target == NULL || target->root == NULL) return PKG_ERR_INVALID_ARGUMENT;
     if (target->root_fd >= 0) return PKG_OK;
-    target->root_fd = open(target->root, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
-    if (target->root_fd < 0) return target_open_error_status(errno);
-    return PKG_OK;
+    return target_open_root_fd(target->root, &target->root_fd);
 }
 
 pkg_status pkg_target_create_local(pkg_context *context, pkg_target **out_target) { return target_create(context, PKG_TARGET_LOCAL, "/", out_target); }
