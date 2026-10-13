@@ -12,15 +12,16 @@ A rootfs target is a security boundary. `RESOLVE_IN_ROOT` prevents ordinary abso
 For Linux target-relative filesystem operations:
 
 1. Open and retain the target root directory descriptor during target creation, using `O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC`. Target creation fails if the root cannot be opened safely.
-2. Interpret a relative root path against the process working directory at target creation time; later working-directory changes must not retarget an existing target.
-3. Keep using the retained descriptor for the lifetime of the target; renaming or replacing the original pathname must not retarget the target.
-4. Resolve target-relative paths with `openat2()` using:
+2. Normalize only trailing slashes and terminal `/.` components in a temporary copy before opening the root. This keeps `O_NOFOLLOW` applied to the intended final root component while preserving the caller-supplied spelling for diagnostic labeling.
+3. Interpret a relative root path against the process working directory at target creation time; later working-directory changes must not retarget an existing target.
+4. Keep using the retained descriptor for the lifetime of the target; renaming or replacing the original pathname must not retarget the target.
+5. Resolve target-relative paths with `openat2()` using:
    - `RESOLVE_IN_ROOT`
    - `RESOLVE_NO_MAGICLINKS`
    - `RESOLVE_NO_XDEV`
-3. Treat the supplied target root as a real directory boundary, not a symlink alias.
-4. Observe symlinks with `O_PATH | O_NOFOLLOW`; do not recursively follow them for artifact identity.
-5. Keep special files out of normal content reads.
+6. Treat the supplied target root as a real directory boundary, not a symlink alias.
+7. Observe symlinks with `O_PATH | O_NOFOLLOW`; do not recursively follow them for artifact identity.
+8. Keep special files out of normal content reads.
 
 ## Security rationale
 
