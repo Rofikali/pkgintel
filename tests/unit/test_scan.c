@@ -494,6 +494,28 @@ int test_scan_behaviour(void) {
         pkg_target_destroy(target);
         remove_multi_package_fixture(multi_fixture);
     }
+    {
+        char io_fixture[256];
+        char status_path[512];
+        FILE *file;
+        pkg_scan_result *io_result = NULL;
+
+        make_fixture(io_fixture, sizeof(io_fixture));
+        assert(snprintf(status_path, sizeof(status_path), "%s/var/lib/dpkg/status", io_fixture) > 0);
+        assert(unlink(status_path) == 0);
+        /* Opening a directory as the status file makes stdio report a read error. */
+        assert(mkdir(status_path, 0700) == 0);
+        assert(pkg_target_create_rootfs(context, io_fixture, &target) == PKG_OK);
+        assert(pkg_scan(context, target, NULL, &io_result) == PKG_ERR_IO);
+        assert(io_result == NULL);
+        pkg_target_destroy(target);
+        target = NULL;
+        assert(rmdir(status_path) == 0);
+        file = fopen(status_path, "wb");
+        assert(file != NULL);
+        assert(fclose(file) == 0);
+        remove_fixture(io_fixture);
+    }
     assert(pkg_target_create_rootfs(context, "/definitely/nonexistent/pkgintel", &target) == PKG_ERR_NOT_FOUND); assert(target == NULL);
     pkg_context_destroy(context); assert(strcmp(pkg_status_string(PKG_ERR_PARSE), "corrupt data") == 0); return 0;
 }
