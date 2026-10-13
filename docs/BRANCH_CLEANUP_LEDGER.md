@@ -200,7 +200,7 @@ At the live inventory immediately before the PR #25 documentation reconciliation
 | `main` | `f77f1e2ca1b40e59f0897131f539483eb5736ecd` — canonical merge commit for PR #25 | **KEEP — canonical** |
 | `security/reject-symlink-root-path-aliases` | `3ebc9bf7d812980bd4e5212c85b7b693623b04fe` — source branch for merged PR #25 | Deletion candidate only after post-merge provenance is recorded and absence of unique work is confirmed |
 
-PR #25 is merged. The source branch's security fix is reachable from `main`; it is not a second unmerged implementation. The PR-head tree and merge tree are identical (`3f0dec6001fedc39d63616ff2072554a81c3a41c)).
+PR #25 is merged. The source branch's security fix is reachable from `main`; it is not a second unmerged implementation. The PR-head tree and merge tree are identical (`3f0dec6001fedc39d63616ff2072554a81c3a41c`).
 
 A temporary branch named `docs/reconcile-pr25-post-merge-evidence` was created from the merge SHA solely to submit this documentation reconciliation. It contains documentation/provenance updates, not a second implementation of the security fix. Re-fetch its final head and PR disposition after this change is submitted.
 
