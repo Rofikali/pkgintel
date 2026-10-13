@@ -71,3 +71,30 @@ These are qualitative hypotheses, not measured market scores. Re-rank them when 
 Before implementation, follow `docs/PRINCIPAL_ENGINEERING_REVIEW_PROTOCOL.md`, inspect the exact current `main` SHA and branch ancestry, and write the requirements, non-goals, HLD/LLD, resource model, security invariants, and acceptance tests appropriate to the selected change. Preserve the existing evidence hierarchy: source review, tests, sanitizer/fuzz, real runtime, benchmarks, and production-like validation are different claims.
 
 The P1 implementation evidence remains tied to the reviewed implementation SHA and CI run documented in `docs/P1_JSON_EXPORT_HANDOFF.md`; this decision document does not create new implementation evidence.
+
+
+## Reference-consumer review outcome — 2026-10-13
+
+**Scope:** internal technical-usability experiment only. This is not external customer validation, a production deployment, or evidence of willingness to pay.
+
+### What is demonstrated
+
+- `tests/json/reference_consumer.py` invokes the real `pkgintel scan --json` CLI rather than linking to private C internals.
+- CMake registers both `pkgintel.json.reference_consumer.unit` and `pkgintel.json.reference_consumer`; the latter runs the consumer against the built CLI.
+- The consumer validates schema identity/version, producer exit status against scan status, package/artifact fields and counts, byte-value encoding, enum values, and strict JSON behavior (including duplicate-key and non-standard constant rejection).
+- A `complete` scan can be accepted; a `resource_limit` scan is explicitly rejected as incomplete. The process timeout is 60 seconds.
+
+### Remaining integration/resource limitation
+
+The consumer uses `subprocess.run` with `stdout=PIPE` and `stderr=PIPE`, then decodes and parses the complete stdout JSON document in memory. There is no explicit maximum stdout/stderr byte budget. A 60-second timeout bounds elapsed execution time, but does not bound the amount of captured output or peak memory. Output volume can grow with the number of packages, artifacts, and diagnostics.
+
+This is a **resource-boundary limitation to resolve before any production or untrusted multi-tenant use**, not a claim that the current internal test consumer is itself a remotely exploitable service. Do not invent an arbitrary cap before the intended workload and acceptable scan/output budget are known. If this consumer is promoted beyond a local integration probe, define a resource budget first, then implement and test bounded output handling (including overflow, termination, and cleanup behavior).
+
+### Decision
+
+- **Internal technical contract experiment: useful, with the limitation above.** It exercises the shipped CLI/schema boundary and the incomplete-scan decision.
+- **External/customer validation: not established.** No external user, business workflow, or willingness-to-pay evidence is present in this experiment.
+- **Next production capability: NO-GO for now.** No new package backend, ELF inspection, APT cache analysis, Rust FFI, HTTP service, database, or broader scan capability is justified without a concrete consumer job.
+- **Next evidence to collect:** identify one real downstream job; record expected package/artifact scale, output size, latency and memory budget; capture whether the current schema supports the decision and which specific gap blocks it. If no consumer can be identified, keep the current scope and do not expand production capability.
+
+This outcome closes only the source-level review of the internal reference consumer. It does not replace CI evidence, real-runtime verification, benchmarking, or customer discovery.
